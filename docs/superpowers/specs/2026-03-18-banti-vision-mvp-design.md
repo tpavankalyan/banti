@@ -50,7 +50,19 @@ Apple Silicon (M1 or later) is required. Intel Macs are not supported for this s
 
 ## Deployment Target
 
-This is a macOS `.app` bundle (not a CLI tool). An app bundle is required for ScreenCaptureKit permission prompts to work correctly. `Info.plist` must include:
+This is a **CLI tool wrapped in a minimal `.app` bundle**. The executable behaves like a CLI (no GUI, logs to stdout), but is packaged as an `.app` so macOS TCC (Transparency, Consent, and Control) can present permission prompts automatically.
+
+Bundle structure:
+```
+Banti.app/
+  Contents/
+    MacOS/banti        ← Swift executable, run directly from terminal
+    Info.plist          ← bundle ID + permission usage strings
+```
+
+Run as: `./Banti.app/Contents/MacOS/banti`
+
+`Info.plist` must include:
 - `NSScreenCaptureUsageDescription`
 - `NSCameraUsageDescription`
 - `NSMicrophoneUsageDescription` (reserved for future audio stage)
