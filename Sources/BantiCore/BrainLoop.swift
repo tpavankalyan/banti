@@ -28,6 +28,7 @@ public actor BrainLoop {
     private static let cooldownSeconds: Double = 10.0
     private static let maxTranscripts = 5
 
+    private var currentlySpeaking: String?
     private var lastSpoke: Date?
     private var lastSpokeText: String?
     private var recentTranscripts: [String] = []
@@ -70,7 +71,15 @@ public actor BrainLoop {
 
     public func onFinalTranscript(_ transcript: String) async {
         BrainLoop.appendTranscript(&recentTranscripts, new: transcript, isFinal: true)
-        await evaluate(reason: "speech: \(transcript)")
+
+        let interruption = await speaker.isPlaying && BrainLoop.isInterruptionCandidate(transcript)
+        let capturedSpeech = interruption ? currentlySpeaking : nil
+
+        await evaluate(
+            reason: "speech: \(transcript)",
+            isInterruption: interruption,
+            currentSpeech: capturedSpeech
+        )
     }
 
     // MARK: - Event polling (face / emotion / person — no speech)
@@ -112,9 +121,12 @@ public actor BrainLoop {
 
     // MARK: - Evaluate / fire parallel tracks
 
-    private func evaluate(reason: String) async {
-        guard BrainLoop.shouldTrigger(lastSpoke: lastSpoke) else { return }
+    private func evaluate(reason: String, isInterruption: Bool = false, currentSpeech: String? = nil) async {
+        guard BrainLoop.shouldTrigger(lastSpoke: lastSpoke, isInterruption: isInterruption) else { return }
         guard await sidecar.isRunning else { return }
+
+        // Reset mid-speech tracking before cancelling in-flight tasks
+        currentlySpeaking = nil
 
         // Cancel in-flight tasks from prior trigger
         await speaker.cancelTrack(.reflex)
@@ -128,13 +140,13 @@ public actor BrainLoop {
         logger.log(source: "brain", message: "[\(reason)] firing parallel tracks")
 
         let brain = self
-        activeReflexTask = Task { await brain.streamTrack(.reflex) }
-        activeReasoningTask = Task { await brain.streamTrack(.reasoning) }
+        activeReflexTask = Task { await brain.streamTrack(.reflex, isInterruption: isInterruption, currentSpeech: currentSpeech) }
+        activeReasoningTask = Task { await brain.streamTrack(.reasoning, isInterruption: isInterruption, currentSpeech: currentSpeech) }
     }
 
     // MARK: - Stream a single track
 
-    private func streamTrack(_ track: TrackPriority) async {
+    private func streamTrack(_ track: TrackPriority, isInterruption: Bool = false, currentSpeech: String? = nil) async {
         guard await sidecar.isRunning else { return }
 
         let snapshot = await context.snapshotJSON()
@@ -144,8 +156,8 @@ public actor BrainLoop {
             recent_speech: recentTranscripts,
             last_spoke_seconds_ago: BrainLoop.secondsSince(lastSpoke),
             last_spoke_text: lastSpokeText,
-            is_interruption: false,       // wired in Task 3
-            current_speech: nil           // wired in Task 3
+            is_interruption: isInterruption,
+            current_speech: currentSpeech
         )
 
         guard let url = URL(string: "/brain/stream", relativeTo: sidecar.baseURL),
@@ -170,6 +182,7 @@ public actor BrainLoop {
                 if event.type == "done" { break }
                 if event.type == "sentence", let text = event.text, !text.isEmpty {
                     spokeSentences.append(text)
+                    currentlySpeaking = text                              // track for interruption context
                     await speaker.streamSpeak(text, track: track)
                 }
             }
@@ -217,5 +230,11 @@ public actor BrainLoop {
     /// Returns true when name transitions from nil to a non-nil value (just resolved).
     public static func nameJustResolved(previous: String?, current: String?) -> Bool {
         return previous == nil && current != nil
+    }
+
+    /// Returns true when the transcript has 2+ words — minimum threshold to treat as an
+    /// intentional interruption (single-word fragments may be AEC convergence noise).
+    public static func isInterruptionCandidate(_ transcript: String) -> Bool {
+        transcript.split(separator: " ").count >= 2
     }
 }

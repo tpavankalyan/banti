@@ -178,6 +178,24 @@ final class BrainLoopTests: XCTestCase {
         XCTAssertEqual(event.type, "silent")
     }
 
+    // MARK: - Interruption detection
+
+    func testIsInterruptionCandidateTrueForMultiWord() {
+        XCTAssertTrue(BrainLoop.isInterruptionCandidate("hello there"))
+    }
+
+    func testIsInterruptionCandidateFalseForSingleWord() {
+        XCTAssertFalse(BrainLoop.isInterruptionCandidate("hello"))
+    }
+
+    func testIsInterruptionCandidateFalseForEmptyString() {
+        XCTAssertFalse(BrainLoop.isInterruptionCandidate(""))
+    }
+
+    func testIsInterruptionCandidateTrueForThreeWords() {
+        XCTAssertTrue(BrainLoop.isInterruptionCandidate("wait hold on"))
+    }
+
     // MARK: - BrainStreamBody
 
     func testBrainStreamBodyEncodesInterruptionFields() throws {
