@@ -3,11 +3,10 @@ import Foundation
 import AVFoundation
 
 public final class MicrophoneCapture {
+    private let engine: AVAudioEngine
     private let dispatcher: any AudioChunkDispatcher
     private let soundClassifier: SoundClassifier
     private let logger: Logger
-
-    private let engine = AVAudioEngine()
     private var converter: AVAudioConverter?
     private let targetFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16,
@@ -16,7 +15,11 @@ public final class MicrophoneCapture {
         interleaved: true
     )!
 
-    public init(dispatcher: any AudioChunkDispatcher, soundClassifier: SoundClassifier, logger: Logger) {
+    public init(engine: AVAudioEngine,
+                dispatcher: any AudioChunkDispatcher,
+                soundClassifier: SoundClassifier,
+                logger: Logger) {
+        self.engine = engine
         self.dispatcher = dispatcher
         self.soundClassifier = soundClassifier
         self.logger = logger
@@ -27,8 +30,8 @@ public final class MicrophoneCapture {
     }
 
     public func stop() {
-        engine.stop()
         engine.inputNode.removeTap(onBus: 0)
+        // Do not call engine.stop() — the engine is shared; its lifecycle is owned by main.swift.
     }
 
     // MARK: - Private
@@ -56,6 +59,17 @@ public final class MicrophoneCapture {
 
     private func startCapture() {
         let inputNode = engine.inputNode
+
+        // Enable macOS hardware AEC. Requires playerNode to already be attached to the
+        // same engine (done in CartesiaSpeaker.init via MemoryEngine.init before this is called).
+        // macOS uses the engine's output as the echo reference signal — analogous to the
+        // brain's corollary discharge suppressing predicted self-generated sound.
+        do {
+            try inputNode.setVoiceProcessingEnabled(true)
+        } catch {
+            logger.log(source: "audio", message: "[warn] Voice processing (AEC) unavailable: \(error.localizedDescription)")
+        }
+
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
         // Set up AVAudioConverter: hardware format → 16kHz mono Int16

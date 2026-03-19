@@ -1,6 +1,7 @@
 // Sources/banti/main.swift
 import Foundation
 import AppKit
+import AVFoundation
 import BantiCore
 
 // Shared infrastructure
@@ -40,17 +41,25 @@ Task {
 let audioRouter = AudioRouter(context: context, logger: logger)
 Task { await audioRouter.configure() }
 
-let soundClassifier = SoundClassifier(context: context, logger: logger)
-let micCapture = MicrophoneCapture(dispatcher: audioRouter, soundClassifier: soundClassifier, logger: logger)
-micCapture.start()
+// Shared audio engine — must be created before either CartesiaSpeaker or MicrophoneCapture.
+// CartesiaSpeaker.init (called inside MemoryEngine.init) attaches its playerNode to this engine.
+// MicrophoneCapture.startCapture() then enables voice processing and starts the engine.
+// This ordering gives macOS AEC a complete I/O graph to reference.
+let sharedEngine = AVAudioEngine()
 
-// Memory layer
-let memoryEngine = MemoryEngine(context: context, audioRouter: audioRouter, logger: logger)
+// Memory layer — init is synchronous; CartesiaSpeaker attaches playerNode to sharedEngine here.
+// Must complete before micCapture.start() calls engine.start().
+let memoryEngine = MemoryEngine(context: context, audioRouter: audioRouter, engine: sharedEngine, logger: logger)
 Task {
     let fi = await memoryEngine.faceIdentifier
     await router.setFaceIdentifier(fi)
     await memoryEngine.start()
 }
+
+// Start mic after MemoryEngine.init so playerNode is in the graph before engine.start().
+let soundClassifier = SoundClassifier(context: context, logger: logger)
+let micCapture = MicrophoneCapture(engine: sharedEngine, dispatcher: audioRouter, soundClassifier: soundClassifier, logger: logger)
+micCapture.start()
 
 logger.log(source: "system", message: "banti running. Press Ctrl+C to stop.")
 RunLoop.main.run()
