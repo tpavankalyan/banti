@@ -162,3 +162,21 @@ async def test_brain_decide_returns_silent_on_llm_error():
                 req = BrainDecideRequest(snapshot_json="{}")
                 result = await brain_decide(req)
                 assert result.action == "silent"
+
+@pytest.mark.asyncio
+async def test_brain_decide_endpoint_returns_silent_when_no_key():
+    import os
+    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    with patch.dict(os.environ, env, clear=True):
+        from main import create_app
+        app = create_app(testing=True)
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post("/brain/decide", json={
+                "snapshot_json": "{}",
+                "recent_speech": []
+            })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["action"] == "silent"
+    assert data["text"] is None
+    assert "reason" in data

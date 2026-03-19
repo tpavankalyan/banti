@@ -90,6 +90,13 @@ def create_app(testing: bool = False) -> FastAPI:
         result = await reflect_memory(req.snapshots)
         return ReflectResponse(summary=result.get("summary", ""))
 
+    from models import BrainDecideRequest, ProactiveDecisionResponse
+
+    @app.post("/brain/decide", response_model=ProactiveDecisionResponse)
+    async def brain_decide_endpoint(req: BrainDecideRequest):
+        from memory import brain_decide
+        return await brain_decide(req)
+
     return app
 
 app = create_app()
