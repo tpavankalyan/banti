@@ -61,7 +61,7 @@ async def _reflex_stream(req):
     try:
         async with asyncio.timeout(8):
             stream = await client.chat.completions.create(
-                model="gpt-oss-120b",
+                model="llama3.1-8b",
                 messages=[
                     {"role": "system", "content": REFLEX_SYSTEM_PROMPT},
                     {"role": "user", "content": user_msg},
@@ -75,7 +75,8 @@ async def _reflex_stream(req):
                 sentences, buffer = extract_sentences(buffer)
                 for s in sentences:
                     yield _sse({"type": "sentence", "text": s})
-    except Exception:
+    except Exception as e:
+        print(f"[warn] reflex_stream failed: {e}")
         yield _sse({"type": "error"})
         return
 
