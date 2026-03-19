@@ -180,3 +180,35 @@ async def test_brain_decide_endpoint_returns_silent_when_no_key():
     assert data["action"] == "silent"
     assert data["text"] is None
     assert "reason" in data
+
+@pytest.mark.asyncio
+async def test_query_memory_uses_anthropic_when_key_present():
+    """Verify query_memory calls Anthropic (not OpenAI) for answer fusion."""
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text="Alice is a software engineer.")]
+    with patch("memory.GRAPHITI", None):
+        with patch("memory.MEM0") as mock_mem0:
+            mock_mem0.search.return_value = [{"memory": "Alice is a software engineer"}]
+            with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+                with patch("openai.AsyncOpenAI") as mock_openai:
+                    with patch("anthropic.AsyncAnthropic") as mock_anthropic_cls:
+                        mock_client = MagicMock()
+                        mock_client.messages.create = AsyncMock(return_value=mock_response)
+                        mock_anthropic_cls.return_value = mock_client
+                        from memory import query_memory
+                        result = await query_memory("who is Alice?")
+                        assert result["answer"] == "Alice is a software engineer."
+                        mock_openai.assert_not_called()
+                        mock_anthropic_cls.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_query_memory_silent_when_no_anthropic_key_and_no_openai_key():
+    with patch("memory.MEM0") as mock_mem0:
+        mock_mem0.search.return_value = [{"memory": "some fact"}]
+        with patch("memory.GRAPHITI", None):
+            env = {k: v for k, v in os.environ.items()
+                   if k not in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY")}
+            with patch.dict(os.environ, env, clear=True):
+                from memory import query_memory
+                result = await query_memory("test?")
+                assert result["answer"] == "some fact"

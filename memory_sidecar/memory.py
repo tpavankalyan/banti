@@ -147,26 +147,25 @@ async def query_memory(q: str, context_json: Optional[str] = None) -> dict:
     if not results:
         return {"answer": "", "sources": []}
 
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if not openai_key:
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not anthropic_key:
         return {"answer": ". ".join(results[:3]), "sources": results}
 
     try:
-        from openai import AsyncOpenAI
-        client = AsyncOpenAI(api_key=openai_key)
+        client = anthropic.AsyncAnthropic(api_key=anthropic_key)
         facts = "\n".join(f"- {r}" for r in results)
-        messages = [
-            {"role": "system", "content": "You are banti's memory. Answer the user's question using only the provided facts. Be concise."},
-            {"role": "user", "content": f"Facts:\n{facts}\n\nQuestion: {q}"}
-        ]
+        system_content = "You are banti's memory. Answer the user's question using only the provided facts. Be concise."
         if context_json:
-            messages[0]["content"] += f" Current context: {context_json}"
-        resp = await client.chat.completions.create(
-            model="gpt-4o", messages=messages, max_tokens=200
+            system_content += f" Current context: {context_json}"
+        response = await client.messages.create(
+            model="claude-opus-4-6",
+            max_tokens=200,
+            system=system_content,
+            messages=[{"role": "user", "content": f"Facts:\n{facts}\n\nQuestion: {q}"}],
         )
-        answer = resp.choices[0].message.content or ""
+        answer = response.content[0].text or ""
     except Exception as e:
-        print(f"[warn] GPT-4o query fusion failed: {e}")
+        print(f"[warn] Opus query fusion failed: {e}")
         answer = ". ".join(results[:3])
 
     return {"answer": answer, "sources": results}
