@@ -147,8 +147,10 @@ final class BrainLoopTests: XCTestCase {
 
     func testUnknownPersonDoesNotExceedThresholdAtExactly30Seconds() {
         // threshold is > 30s, so exactly 30s should NOT trigger
-        let firstSeen = Date().addingTimeInterval(-30)
-        XCTAssertFalse(BrainLoop.unknownPersonExceedsThreshold(firstSeen: firstSeen))
+        // inject now: to avoid wall-clock race (same pattern as testShouldTriggerFalseExactlyAt10Seconds)
+        let now = Date()
+        let firstSeen = now.addingTimeInterval(-30)
+        XCTAssertFalse(BrainLoop.unknownPersonExceedsThreshold(firstSeen: firstSeen, now: now))
     }
 
     func testNameJustResolvedFalseWhenNameDisappears() {
