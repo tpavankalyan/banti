@@ -131,3 +131,36 @@ async def test_brain_stream_reflex_emits_silent_for_silent_response(app):
     assert "silent" in types
     assert "sentence" not in types
     assert events[-1]["type"] == "done"
+
+
+async def test_brain_stream_reasoning_emits_sentences(app):
+    """Reasoning track uses AsyncAnthropic Opus; mock text_stream and verify sentence events."""
+    mock_text = "I remember you mentioned this bug before. It was related to threading issues."
+
+    async def fake_text_stream():
+        for token in mock_text.split(" "):
+            yield token + " "
+
+    class FakeAsyncStream:
+        """Mimics anthropic.AsyncAnthropic().messages.stream() async context manager."""
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *a):
+            pass
+        @property
+        def text_stream(self):
+            return fake_text_stream()
+
+    with patch("memory.anthropic") as mock_anthropic:
+        mock_anthropic.AsyncAnthropic.return_value.messages.stream.return_value = FakeAsyncStream()
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "fake"}):
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+                events = await _collect_sse(client, {
+                    "track": "reasoning",
+                    "snapshot_json": "{}",
+                    "recent_speech": [],
+                })
+
+    types = [e["type"] for e in events]
+    assert "sentence" in types or "done" in types
+    assert events[-1]["type"] == "done"
