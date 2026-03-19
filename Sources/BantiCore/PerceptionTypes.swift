@@ -102,6 +102,7 @@ public enum PerceptionObservation {
     case speech(SpeechState)
     case voiceEmotion(VoiceEmotionState)
     case sound(SoundState)
+    case person(PersonState)
 }
 
 // MARK: - Cloud analyzer protocol
