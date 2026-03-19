@@ -44,5 +44,13 @@ let soundClassifier = SoundClassifier(context: context, logger: logger)
 let micCapture = MicrophoneCapture(dispatcher: audioRouter, soundClassifier: soundClassifier, logger: logger)
 micCapture.start()
 
+// Memory layer
+let memoryEngine = MemoryEngine(context: context, audioRouter: audioRouter, logger: logger)
+Task {
+    let fi = await memoryEngine.faceIdentifier
+    await router.setFaceIdentifier(fi)
+    await memoryEngine.start()
+}
+
 logger.log(source: "system", message: "banti running. Press Ctrl+C to stop.")
 RunLoop.main.run()
