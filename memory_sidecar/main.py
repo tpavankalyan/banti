@@ -64,6 +64,32 @@ def create_app(testing: bool = False) -> FastAPI:
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
 
+    from models import IngestRequest
+
+    @app.post("/memory/ingest")
+    async def memory_ingest(req: IngestRequest):
+        from memory import ingest_snapshot
+        from datetime import datetime
+        wall_ts = datetime.fromisoformat(req.wall_ts.replace("Z", "+00:00"))
+        result = await ingest_snapshot(req.snapshot_json, wall_ts)
+        return result
+
+    from models import QueryRequest, QueryResponse
+
+    @app.post("/memory/query", response_model=QueryResponse)
+    async def memory_query(req: QueryRequest):
+        from memory import query_memory
+        result = await query_memory(req.q, req.context_json)
+        return QueryResponse(answer=result["answer"], sources=result.get("sources", []))
+
+    from models import ReflectRequest, ReflectResponse
+
+    @app.post("/memory/reflect", response_model=ReflectResponse)
+    async def memory_reflect(req: ReflectRequest):
+        from memory import reflect_memory
+        result = await reflect_memory(req.snapshots)
+        return ReflectResponse(summary=result.get("summary", ""))
+
     return app
 
 app = create_app()
