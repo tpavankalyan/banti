@@ -9,7 +9,6 @@ public actor AudioRouter: AudioChunkDispatcher {
     private var hume: HumeVoiceAnalyzer?
     private var humeBuffer: Data = Data()
     private var pcmRingBuffer: Data = Data()
-
     /// 3 seconds at 16kHz × 1 channel × 2 bytes/sample = 96,000 bytes.
     static let humeFlushThreshold = 96_000
     /// 5 seconds at 16kHz × 1 channel × 2 bytes/sample = 160,000 bytes.

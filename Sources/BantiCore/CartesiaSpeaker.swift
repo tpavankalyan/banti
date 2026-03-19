@@ -26,6 +26,7 @@ public actor CartesiaSpeaker {
     private var pendingReasoningBuffers: [AVAudioPCMBuffer] = []
 
     public var isAvailable: Bool { apiKey != nil }
+    var isPlaying: Bool { isSpeaking || isSpeakingReflex || playerNode.isPlaying }
 
     public init(logger: Logger,
                 apiKey: String? = ProcessInfo.processInfo.environment["CARTESIA_API_KEY"],
