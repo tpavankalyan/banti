@@ -28,7 +28,7 @@ def create_app(testing: bool = False) -> FastAPI:
         return {"status": "ok"}
 
     from fastapi import HTTPException
-    from models import FaceRequest, IdentityResponse
+    from models import FaceRequest, VoiceRequest, IdentityResponse
 
     @app.post("/identity/face", response_model=IdentityResponse)
     async def identity_face(req: FaceRequest):
@@ -39,6 +39,24 @@ def create_app(testing: bool = False) -> FastAPI:
             person_id, name, confidence = identify_face(jpeg_bytes)
             return IdentityResponse(
                 matched=confidence >= 0.6,
+                person_id=person_id,
+                name=name,
+                confidence=confidence,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/identity/voice", response_model=IdentityResponse)
+    async def identity_voice(req: VoiceRequest):
+        import base64 as _base64
+        from identity import identify_voice, VOICE_MODEL as _voice_model
+        if _voice_model is None:
+            raise HTTPException(status_code=503, detail="Voice identity disabled — HF_TOKEN missing")
+        try:
+            pcm_bytes = _base64.b64decode(req.pcm_b64)
+            person_id, name, confidence = identify_voice(pcm_bytes)
+            return IdentityResponse(
+                matched=confidence >= 0.75,
                 person_id=person_id,
                 name=name,
                 confidence=confidence,

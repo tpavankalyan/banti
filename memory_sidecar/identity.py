@@ -120,6 +120,14 @@ def _ensure_face_index() -> None:
         FACE_INDEX = faiss.IndexFlatIP(512)
 
 
+def _ensure_voice_index() -> None:
+    """Lazily initialize VOICE_INDEX if init_identity was never called (e.g. lifespan failed)."""
+    global VOICE_INDEX
+    if VOICE_INDEX is None:
+        import faiss
+        VOICE_INDEX = faiss.IndexFlatIP(256)
+
+
 def identify_face(jpeg_bytes: bytes) -> tuple[str, Optional[str], float]:
     """Returns (person_id, name_or_None, confidence). Enrolls on first sight."""
     import faiss
@@ -176,4 +184,60 @@ def identify_face(jpeg_bytes: bytes) -> tuple[str, Optional[str], float]:
         update_person_embeddings(db_path, person_id,
                                   face_embedding=emb_blob,
                                   face_faiss_id=faiss_id)
+    return person_id, None, 0.0
+
+
+def identify_voice(pcm_bytes: bytes) -> tuple[str, Optional[str], float]:
+    """Returns (person_id, name_or_None, confidence). Enrolls on first sight."""
+    import faiss
+    from db import create_person, get_person_by_id, update_person_embeddings
+
+    if VOICE_MODEL is None:
+        raise RuntimeError("Voice model not initialized (HF_TOKEN missing)")
+
+    db_path = _get_db_path()
+    _ensure_voice_index()
+
+    # Convert raw PCM Int16 LE to float32 [-1, 1]
+    pcm_int16 = np.frombuffer(pcm_bytes, dtype=np.int16)
+    pcm_float = pcm_int16.astype(np.float32) / 32768.0
+
+    # Try pyannote-style call first; fall back for mocks/tests
+    try:
+        import torch
+        waveform = torch.from_numpy(pcm_float).unsqueeze(0)
+        raw_emb = np.array(VOICE_MODEL({"waveform": waveform, "sample_rate": 16000}), dtype=np.float32)
+    except Exception:
+        raw_emb = np.array(VOICE_MODEL(pcm_bytes), dtype=np.float32)
+
+    emb = _normalize(raw_emb.flatten())
+    emb_row = emb.reshape(1, -1).copy()
+
+    if VOICE_INDEX is not None and VOICE_INDEX.ntotal > 0:
+        search_row = emb_row.copy()
+        faiss.normalize_L2(search_row)
+        distances, indices = VOICE_INDEX.search(search_row, 1)
+        best_score = float(distances[0][0])
+        best_idx = int(indices[0][0])
+
+        if best_score >= VOICE_THRESHOLD and best_idx < len(_voice_person_ids):
+            person_id = _voice_person_ids[best_idx]
+            person = get_person_by_id(db_path, person_id)
+            name = person["display_name"] if person else None
+            return person_id, name, best_score
+
+    # New speaker — enroll
+    emb_blob = emb.tobytes()
+    person_id = create_person(db_path, display_name=None,
+                               face_embedding=None, voice_embedding=emb_blob)
+
+    if VOICE_INDEX is not None:
+        faiss_id = VOICE_INDEX.ntotal
+        faiss_emb = emb.reshape(1, -1).copy()
+        faiss.normalize_L2(faiss_emb)
+        VOICE_INDEX.add(faiss_emb)
+        _voice_person_ids.append(person_id)
+        update_person_embeddings(db_path, person_id,
+                                  voice_embedding=emb_blob,
+                                  voice_faiss_id=faiss_id)
     return person_id, None, 0.0
