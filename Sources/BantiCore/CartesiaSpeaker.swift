@@ -144,11 +144,13 @@ public actor CartesiaSpeaker {
             socket = s
         }
 
+        let contextID = UUID().uuidString.lowercased()
         let body: [String: Any] = [
             "model_id": "sonic-2",
             "transcript": text,
             "voice": ["mode": "id", "id": voiceID],
             "output_format": ["container": "raw", "encoding": "pcm_s16le", "sample_rate": 22050],
+            "context_id": contextID,
         ]
         guard let msgData = try? JSONSerialization.data(withJSONObject: body),
               let msgStr = String(data: msgData, encoding: .utf8) else { return }
@@ -163,15 +165,20 @@ public actor CartesiaSpeaker {
             return
         }
 
-        // Receive PCM frames until done signal (5s timeout per sentence)
+        // Receive chunks until done signal (5s timeout per sentence)
         let deadline = Date().addingTimeInterval(5)
         receiveLoop: while Date() < deadline {
             if Task.isCancelled { break }
             do {
                 let message = try await socket.receive()
                 switch message {
-                case .data(let pcmData):
-                    if let buffer = CartesiaSpeaker.makeBuffer(pcmData) {
+                case .string(let txt):
+                    guard let data = txt.data(using: .utf8),
+                          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+                    else { break }
+                    if let b64 = json["data"] as? String,
+                       let pcmData = Data(base64Encoded: b64),
+                       let buffer = CartesiaSpeaker.makeBuffer(pcmData) {
                         if track == .reflex {
                             playBuffer(buffer)
                         } else {
@@ -179,8 +186,13 @@ public actor CartesiaSpeaker {
                             drainReasoningIfReady()
                         }
                     }
-                case .string(let txt):
-                    if txt.contains("\"done\"") || txt.contains("done") { break receiveLoop }
+                    if json["done"] as? Bool == true { break receiveLoop }
+                case .data(let pcmData):
+                    // Legacy binary frame path (fallback)
+                    if let buffer = CartesiaSpeaker.makeBuffer(pcmData) {
+                        if track == .reflex { playBuffer(buffer) }
+                        else { pendingReasoningBuffers.append(buffer); drainReasoningIfReady() }
+                    }
                 @unknown default: break
                 }
             } catch {
