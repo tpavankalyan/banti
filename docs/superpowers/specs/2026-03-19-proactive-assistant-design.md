@@ -83,11 +83,14 @@ CartesiaSpeaker (Swift actor)               [NEW]
 - Hard minimum 10s between any `speak` action, enforced before calling sidecar
 - `last_spoke_seconds_ago` is sent to sidecar so Opus can apply soft judgment too
 
+**Recent transcript buffer:**
+`BrainLoop` maintains `var recentTranscripts: [String]` (max 5 entries). On each 2-second poll, if `PerceptionContext.speech?.isFinal == true` and the transcript differs from the last entry, it is appended (oldest dropped when full). This buffer is sent as `recent_speech` in the request. If no transcripts have accumulated, an empty array is sent.
+
 **Request payload to `/brain/decide`:**
 ```json
 {
   "snapshot_json": "{ ...PerceptionContext.snapshotJSON() ... }",
-  "recent_speech": ["...last 5 transcript lines..."],
+  "recent_speech": ["last 5 final transcript strings, oldest first"],
   "last_spoke_seconds_ago": 45.2,
   "last_spoke_text": "You seem deep in thought"
 }
@@ -96,12 +99,18 @@ CartesiaSpeaker (Swift actor)               [NEW]
 **Response `ProactiveDecision`:**
 ```json
 { "action": "speak", "text": "Want me to look something up?", "reason": "user staring at blank screen 3 min" }
-{ "action": "silent", "reason": "user focused, spoke 8s ago" }
+{ "action": "silent", "text": null, "reason": "user focused, spoke 8s ago" }
 ```
 
-**On `speak`:** calls `CartesiaSpeaker.speak(text)`.
+`text` is always present in the response but is `null` when `action == "silent"`.
+
+Swift `ProactiveDecision`: `var text: String?` (optional). Python `ProactiveDecisionResponse`: `text: Optional[str] = None`.
+
+**On `speak`:** calls `CartesiaSpeaker.speak(text)` where `text` is non-nil.
 
 **On sidecar unavailable:** logs decision locally, stays silent.
+
+**Timeout:** BrainLoop uses a 10-second timeout for the `/brain/decide` HTTP call (not the default 5s `MemorySidecar.post()` timeout). Call `URLSession` directly with a custom `timeoutInterval: 10` rather than going through `MemorySidecar.post()`.
 
 ---
 
@@ -109,7 +118,24 @@ CartesiaSpeaker (Swift actor)               [NEW]
 
 **New endpoint:** `POST /brain/decide`
 
-**Function:** `brain_decide(snapshot_json, recent_speech, last_spoke_seconds_ago, last_spoke_text)` in `memory.py`
+**Pydantic models** (add to `models.py`):
+
+First, update the typing import in `models.py` from `from typing import Optional` to `from typing import Optional, Literal`.
+
+```python
+class BrainDecideRequest(BaseModel):
+    snapshot_json: str
+    recent_speech: list[str] = []
+    last_spoke_seconds_ago: float = 9999.0
+    last_spoke_text: Optional[str] = None
+
+class ProactiveDecisionResponse(BaseModel):
+    action: Literal["speak", "silent"]
+    text: Optional[str] = None
+    reason: str
+```
+
+**Function:** `async def brain_decide(req: BrainDecideRequest) -> ProactiveDecisionResponse` in `memory.py`
 
 **Assembly steps:**
 1. Parse snapshot, extract key signals (who's present, activity, emotion, screen)
@@ -138,9 +164,11 @@ Stay silent when:
 - You spoke recently and nothing significant has changed
 - You have nothing meaningful to add
 
-Return ONLY valid JSON:
-{"action": "speak"|"silent", "text": "<what to say, 1-2 sentences max>", "reason": "<brief internal note>"}
+Return ONLY valid JSON with no markdown fences:
+{"action": "speak"|"silent", "text": "<what to say, 1-2 sentences max, or null if silent>", "reason": "<brief internal note>"}
 ```
+
+**JSON parsing:** After receiving Opus's response, strip any markdown code fences (` ```json ... ``` ` or ` ``` ... ``` `) before calling `json.loads()`. Use: `content = re.sub(r'^```[a-z]*\n?|\n?```$', '', content.strip())`
 
 **Graceful degradation:**
 - If Graphiti unavailable: skip temporal context
@@ -164,14 +192,18 @@ Return ONLY valid JSON:
 }
 ```
 
-**Headers:** `X-API-Key: <CARTESIA_API_KEY>`, `Cartesia-Version: 2024-06-10`, `Content-Type: application/json`
+**Headers:** `X-API-Key: <CARTESIA_API_KEY>`, `Cartesia-Version: 2024-06-10` (verify this is current before implementation), `Content-Type: application/json`
+
+**PCM format:** Cartesia returns mono PCM. Construct playback format as:
+`AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 22050, channels: 1, interleaved: true)`
+Copy response bytes into `int16ChannelData[0]` of an `AVAudioPCMBuffer` sized to `byteCount / 2` frames.
 
 **Playback:** raw PCM bytes → `AVAudioPCMBuffer` → `AVAudioPlayerNode.scheduleBuffer()` → `AVAudioEngine`
 
 **Queue behavior:**
-- One speech at a time
-- If a new `speak()` call arrives while already speaking: queue it (do not cancel mid-sentence)
-- Queue depth: 1 (drop older queued item if newer arrives before playback starts)
+- One utterance plays at a time via `AVAudioPlayerNode`
+- `CartesiaSpeaker` holds at most one pending `String`. If `speak()` is called while audio is playing, store the new text as the pending item, replacing any previously pending (not yet scheduled) text. Do not interrupt in-progress playback.
+- Implemented as a Swift actor with `var pendingText: String?` and a serial `Task` for TTS fetching + playback
 
 **Graceful degradation:**
 - If `CARTESIA_API_KEY` missing or request fails: log text via `Logger`, stay silent
@@ -180,17 +212,25 @@ Return ONLY valid JSON:
 
 ## Upgraded: Opus 4.6 in Memory Sidecar
 
+**Both upgraded functions:** Add `import re` to the top of `memory.py` (needed for markdown fence stripping).
+
 ### `query_memory` (line ~120 in memory.py)
 Replace `model="gpt-4o"` → `model="claude-opus-4-6"` via Anthropic SDK.
 - Switch from `AsyncOpenAI` client to `AsyncAnthropic` client for this call
-- System prompt and user message structure remain the same
+- Replace the `OPENAI_API_KEY` guard (`if not openai_key: return ...`) with an `ANTHROPIC_API_KEY` guard
+- Anthropic SDK call structure:
+  - `system` param = the existing system message string (including appended `context_json` if provided: `system_content += f" Current context: {context_json}"`)
+  - `messages` = `[{"role": "user", "content": f"Facts:\n{facts}\n\nQuestion: {q}"}]`
 - Max tokens stays 200
 
 ### `reflect_memory` (line ~160 in memory.py)
 Replace `model="gpt-4o"` → `model="claude-opus-4-6"` via Anthropic SDK.
 - Switch client
+- Replace the `OPENAI_API_KEY` guard with an `ANTHROPIC_API_KEY` guard
+- Remove `response_format={"type": "json_object"}` (not supported by Anthropic)
+- Instruct model in the existing prompt to return only valid JSON with no markdown fences (append: `"\n\nReturn ONLY valid JSON with no markdown fences."` to the existing prompt string)
+- After receiving response, strip markdown fences before `json.loads()` (same regex as `brain_decide`)
 - Max tokens stays 500
-- `response_format: json_object` equivalent: instruct in system prompt to return only JSON
 
 ---
 
@@ -204,11 +244,34 @@ Replace `model="gpt-4o"` → `model="claude-opus-4-6"` via Anthropic SDK.
 | `Sources/BantiCore/MemoryEngine.swift` | Modified | Own BrainLoop + CartesiaSpeaker, retire ProactiveIntroducer |
 | `memory_sidecar/memory.py` | Modified | Add `brain_decide()`, upgrade query+reflect to Opus 4.6 |
 | `memory_sidecar/main.py` | Modified | Add `POST /brain/decide` endpoint |
+| `memory_sidecar/models.py` | Modified | Add `BrainDecideRequest`, `ProactiveDecisionResponse` Pydantic models |
 | `memory_sidecar/requirements.txt` | Modified | Add `anthropic` |
 | `.env.example` | Modified | Add `ANTHROPIC_API_KEY`, `CARTESIA_API_KEY`, `CARTESIA_VOICE_ID` |
 
 **Retired:** `Sources/BantiCore/ProactiveIntroducer.swift` (logic absorbed by BrainLoop)
 `ProactiveIntroducer` tests remain but the actor is no longer started from `MemoryEngine`.
+Remove `startPersonObserver()` from `MemoryEngine.start()` — BrainLoop's 2-second event polling replaces it entirely.
+
+**`MemoryEngine` modifications:**
+
+`MemoryEngine.init` adds two new stored properties:
+```swift
+public let brainLoop: BrainLoop       // replaces proactiveIntroducer
+private let cartesiaSpeaker: CartesiaSpeaker
+```
+
+Constructor signatures:
+```swift
+// CartesiaSpeaker owns its own AVAudioEngine internally — no shared engine
+CartesiaSpeaker(logger: Logger)
+
+// BrainLoop needs context (to snapshot), sidecar (to POST /brain/decide),
+// speaker (to call speak()), and logger
+BrainLoop(context: PerceptionContext, sidecar: MemorySidecar,
+          speaker: CartesiaSpeaker, logger: Logger)
+```
+
+`MemoryEngine.start()` calls `await brainLoop.start()` in place of `startPersonObserver()`.
 
 ---
 
