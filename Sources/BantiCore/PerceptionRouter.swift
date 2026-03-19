@@ -10,6 +10,7 @@ public actor PerceptionRouter: PerceptionDispatcher {
     private var activity: GPT4oActivityAnalyzer?
     private var gesture:  GPT4oGestureAnalyzer?
     private var screen:   GPT4oScreenAnalyzer?
+    private var faceIdentifier: FaceIdentifier?
 
     public init(context: PerceptionContext, logger: Logger) {
         self.context = context
@@ -78,7 +79,30 @@ public actor PerceptionRouter: PerceptionDispatcher {
             markFired(analyzerName: "screen")
             Task { if let obs = await analyzer.analyze(jpegData: nil, events: events) { await self.context.update(obs) } }
         }
+
+        // Dispatch FaceIdentifier (throttled 5s)
+        if let identifier = faceIdentifier {
+            if shouldFire(analyzerName: "faceIdentifier", throttleSeconds: 5) {
+                markFired(analyzerName: "faceIdentifier")
+                let faceObs: VNFaceObservation? = events.compactMap { event -> VNFaceObservation? in
+                    if case .faceDetected(let obs) = event { return obs }
+                    return nil
+                }.first
+                if let obs = faceObs {
+                    let capturedJpeg = jpegData
+                    Task { await identifier.dispatch(jpegData: capturedJpeg, faceObservation: obs) }
+                }
+            }
+        }
     }
+
+    // MARK: - FaceIdentifier
+
+    public func setFaceIdentifier(_ identifier: FaceIdentifier) {
+        faceIdentifier = identifier
+    }
+
+    var hasFaceIdentifier: Bool { faceIdentifier != nil }
 
     // MARK: - Throttle helpers (internal for testability)
 

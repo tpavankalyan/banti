@@ -25,4 +25,18 @@ final class PerceptionRouterTests: XCTestCase {
         let result = await router.shouldFire(analyzerName: "test", throttleSeconds: 2.0)
         XCTAssertTrue(result)
     }
+
+    func testSetFaceIdentifierIsStoredOnRouter() async {
+        let router = PerceptionRouter(context: PerceptionContext(), logger: Logger())
+        let sidecar = MemorySidecar(logger: Logger())
+        let identifier = FaceIdentifier(
+            context: PerceptionContext(),
+            sidecar: sidecar,
+            logger: Logger(),
+            sessionID: "test"
+        )
+        await router.setFaceIdentifier(identifier)
+        let has = await router.hasFaceIdentifier
+        XCTAssertTrue(has)
+    }
 }
