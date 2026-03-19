@@ -50,3 +50,10 @@ class ProactiveDecisionResponse(BaseModel):
     action: Literal["speak", "silent"]
     text: Optional[str] = None
     reason: str
+
+class BrainStreamRequest(BaseModel):
+    track: Literal["reflex", "reasoning"]
+    snapshot_json: str = "{}"
+    recent_speech: list[str] = []
+    last_spoke_seconds_ago: float = 9999.0
+    last_spoke_text: Optional[str] = None
