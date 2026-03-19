@@ -54,3 +54,17 @@ public struct MemoryResponse {
         self.sources = sources
     }
 }
+
+// MARK: - ProactiveDecision
+
+public struct ProactiveDecision: Decodable {
+    public let action: String   // "speak" or "silent"
+    public let text: String?
+    public let reason: String
+
+    public init(action: String, text: String?, reason: String) {
+        self.action = action
+        self.text = text
+        self.reason = reason
+    }
+}

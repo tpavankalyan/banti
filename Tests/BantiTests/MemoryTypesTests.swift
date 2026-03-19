@@ -54,4 +54,31 @@ final class MemoryTypesTests: XCTestCase {
         XCTAssertEqual(response.answer, "Alice is a designer")
         XCTAssertEqual(response.sources, ["mem0"])
     }
+
+    func testProactiveDecisionDecodesSpeakWithText() throws {
+        let json = """
+        {"action":"speak","text":"Hello there!","reason":"user looks idle"}
+        """.data(using: .utf8)!
+        let decision = try JSONDecoder().decode(ProactiveDecision.self, from: json)
+        XCTAssertEqual(decision.action, "speak")
+        XCTAssertEqual(decision.text, "Hello there!")
+        XCTAssertEqual(decision.reason, "user looks idle")
+    }
+
+    func testProactiveDecisionDecodesSilentWithNilText() throws {
+        let json = """
+        {"action":"silent","text":null,"reason":"focused"}
+        """.data(using: .utf8)!
+        let decision = try JSONDecoder().decode(ProactiveDecision.self, from: json)
+        XCTAssertEqual(decision.action, "silent")
+        XCTAssertNil(decision.text)
+    }
+
+    func testProactiveDecisionDecodesSilentWithMissingText() throws {
+        let json = """
+        {"action":"silent","reason":"nothing to add"}
+        """.data(using: .utf8)!
+        let decision = try JSONDecoder().decode(ProactiveDecision.self, from: json)
+        XCTAssertNil(decision.text)
+    }
 }
