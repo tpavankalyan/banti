@@ -32,6 +32,72 @@ def extract_sentences(buffer: str, min_words: int = 4) -> tuple[list[str], str]:
     return sentences, remaining
 
 
+from openai import AsyncOpenAI
+
+REFLEX_SYSTEM_PROMPT = """\
+You are banti, an ambient AI assistant watching over the user's Mac.
+Speak in short, natural sentences — like a thoughtful friend nearby.
+React only to what's genuinely happening right now. 1-2 sentences max.
+Respond with plain prose only. No JSON. No markdown. No preamble.
+If there is truly nothing worth saying, respond with exactly: [silent]"""
+
+
+def _sse(event: dict) -> str:
+    return f"data: {json.dumps(event)}\n\n"
+
+
+async def _reflex_stream(req):
+    """Async generator: yields SSE strings for the reflex track."""
+    cerebras_key = os.environ.get("CEREBRAS_API_KEY")
+    if not cerebras_key:
+        yield _sse({"type": "error"})
+        return
+
+    client = AsyncOpenAI(base_url="https://api.cerebras.ai/v1", api_key=cerebras_key)
+    user_msg = f"Snapshot:\n{req.snapshot_json}\n\nRecent speech:\n" + "\n".join(req.recent_speech)
+
+    buffer = ""
+    try:
+        import asyncio
+        async with asyncio.timeout(8):
+            stream = await client.chat.completions.create(
+                model="gpt-oss-120b",
+                messages=[
+                    {"role": "system", "content": REFLEX_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_msg},
+                ],
+                stream=True,
+                max_tokens=120,
+            )
+            async for chunk in stream:
+                delta = chunk.choices[0].delta.content or ""
+                buffer += delta
+                sentences, buffer = extract_sentences(buffer)
+                for s in sentences:
+                    yield _sse({"type": "sentence", "text": s})
+    except Exception:
+        yield _sse({"type": "error"})
+        return
+
+    # Flush remaining buffer
+    remaining = buffer.strip()
+    if remaining == "[silent]":
+        yield _sse({"type": "silent"})
+    elif remaining:
+        yield _sse({"type": "sentence", "text": remaining})
+
+
+async def brain_stream_generate(req):
+    """Top-level SSE generator — routes to reflex or reasoning track."""
+    if req.track == "reflex":
+        async for event in _reflex_stream(req):
+            yield event
+    else:
+        # Reasoning track added in Task 4
+        yield _sse({"type": "error"})
+    yield _sse({"type": "done"})
+
+
 GRAPHITI = None
 MEM0 = None
 
