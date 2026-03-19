@@ -1,6 +1,6 @@
 // Tests/BantiTests/DeduplicatorTests.swift
 import XCTest
-@testable import banti
+@testable import BantiCore
 
 final class DeduplicatorTests: XCTestCase {
 

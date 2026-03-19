@@ -1,6 +1,6 @@
 // Tests/BantiTests/LocalVisionTests.swift
 import XCTest
-@testable import banti
+@testable import BantiCore
 
 // URLProtocol stub to intercept Ollama HTTP calls without a real server
 final class MockOllamaProtocol: URLProtocol {

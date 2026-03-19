@@ -1,6 +1,6 @@
 // Tests/BantiTests/LoggerTests.swift
 import XCTest
-@testable import banti
+@testable import BantiCore
 
 final class LoggerTests: XCTestCase {
 
