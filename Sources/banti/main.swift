@@ -36,5 +36,13 @@ Task {
     await screenCapture.start()
 }
 
+// Audio pipeline
+let audioRouter = AudioRouter(context: context, logger: logger)
+Task { await audioRouter.configure() }
+
+let soundClassifier = SoundClassifier(context: context, logger: logger)
+let micCapture = MicrophoneCapture(dispatcher: audioRouter, soundClassifier: soundClassifier, logger: logger)
+micCapture.start()
+
 logger.log(source: "system", message: "banti running. Press Ctrl+C to stop.")
 RunLoop.main.run()
