@@ -1,6 +1,6 @@
 # memory_sidecar/models.py
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 
 class FaceRequest(BaseModel):
     jpeg_b64: str           # base64-encoded JPEG
@@ -39,3 +39,14 @@ class ReflectRequest(BaseModel):
 
 class ReflectResponse(BaseModel):
     summary: str
+
+class BrainDecideRequest(BaseModel):
+    snapshot_json: str
+    recent_speech: list[str] = []
+    last_spoke_seconds_ago: float = 9999.0
+    last_spoke_text: Optional[str] = None
+
+class ProactiveDecisionResponse(BaseModel):
+    action: Literal["speak", "silent"]
+    text: Optional[str] = None
+    reason: str

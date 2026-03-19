@@ -97,3 +97,27 @@ async def test_reflect_returns_summary(app_with_mock_memory):
 def test_anthropic_importable():
     import anthropic
     assert hasattr(anthropic, "AsyncAnthropic")
+
+def test_brain_decide_request_defaults():
+    from models import BrainDecideRequest
+    req = BrainDecideRequest(snapshot_json="{}")
+    assert req.recent_speech == []
+    assert req.last_spoke_seconds_ago == 9999.0
+    assert req.last_spoke_text is None
+
+def test_proactive_decision_response_speak():
+    from models import ProactiveDecisionResponse
+    r = ProactiveDecisionResponse(action="speak", text="Hello!", reason="test")
+    assert r.action == "speak"
+    assert r.text == "Hello!"
+
+def test_proactive_decision_response_silent_text_is_none():
+    from models import ProactiveDecisionResponse
+    r = ProactiveDecisionResponse(action="silent", reason="focused")
+    assert r.text is None
+
+def test_proactive_decision_response_rejects_invalid_action():
+    from models import ProactiveDecisionResponse
+    import pytest
+    with pytest.raises(Exception):
+        ProactiveDecisionResponse(action="shout", reason="bad")
