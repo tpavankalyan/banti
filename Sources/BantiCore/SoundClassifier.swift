@@ -57,7 +57,6 @@ extension SoundClassifier: SNResultsObserving {
         lastEmittedAt = now
 
         let state = SoundState(label: top.identifier, confidence: Float(top.confidence), updatedAt: now)
-        logger.log(source: "sound", message: "\(top.identifier) (\(String(format: "%.2f", top.confidence)))")
         Task { await self.context.update(.sound(state)) }
     }
 

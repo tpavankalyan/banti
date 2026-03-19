@@ -49,19 +49,7 @@ public actor PerceptionContext {
         return str
     }
 
-    /// Called from main.swift after wiring. Timer fires every 2 seconds.
-    nonisolated public func startSnapshotTimer(logger: Logger) {
-        Task { [weak self] in
-            while true {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard let self else { return }
-                let json = await self.snapshotJSON()
-                if json != "{}" {
-                    logger.log(source: "perception", message: json)
-                }
-            }
-        }
-    }
+    nonisolated public func startSnapshotTimer(logger: Logger) {}
 
     // Encode any Codable value to a JSON-compatible dictionary
     private func encodable<T: Codable>(_ value: T) -> Any {

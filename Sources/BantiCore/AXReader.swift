@@ -79,7 +79,7 @@ public final class AXReader {
             elements.isEmpty ? nil : "elements: \(elements.joined(separator: " | "))"
         ].compactMap { $0 }.joined(separator: ", ")
 
-        logger.log(source: "ax", message: summary)
+        _ = summary
     }
 
     private func walk(element: AXUIElement, depth: Int, maxDepth: Int, maxElements: Int, results: inout [String]) {

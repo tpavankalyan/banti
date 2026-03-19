@@ -116,4 +116,4 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("MEMORY_SIDECAR_PORT", "7700"))
-    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=False)
+    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=False, access_log=False)
