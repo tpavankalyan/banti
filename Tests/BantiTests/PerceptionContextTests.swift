@@ -27,4 +27,38 @@ final class PerceptionContextTests: XCTestCase {
         let json = await ctx.snapshotJSON()
         XCTAssertEqual(json, "{}")
     }
+
+    func testUpdateSetsSpeechField() async {
+        let ctx = PerceptionContext()
+        let state = SpeechState(transcript: "hi there", speakerID: 1, isFinal: true, confidence: 0.95, updatedAt: Date())
+        await ctx.update(.speech(state))
+        let speech = await ctx.speech
+        XCTAssertEqual(speech?.transcript, "hi there")
+        XCTAssertEqual(speech?.speakerID, 1)
+    }
+
+    func testUpdateSetsVoiceEmotionField() async {
+        let ctx = PerceptionContext()
+        let state = VoiceEmotionState(emotions: [("Calm", 0.7)], updatedAt: Date())
+        await ctx.update(.voiceEmotion(state))
+        let ve = await ctx.voiceEmotion
+        XCTAssertEqual(ve?.emotions.first?.label, "Calm")
+    }
+
+    func testUpdateSetsSoundField() async {
+        let ctx = PerceptionContext()
+        let state = SoundState(label: "music", confidence: 0.88, updatedAt: Date())
+        await ctx.update(.sound(state))
+        let sound = await ctx.sound
+        XCTAssertEqual(sound?.label, "music")
+    }
+
+    func testSnapshotIncludesAudioFields() async {
+        let ctx = PerceptionContext()
+        await ctx.update(.speech(SpeechState(transcript: "testing", speakerID: nil, isFinal: true, confidence: 0.9, updatedAt: Date())))
+        await ctx.update(.sound(SoundState(label: "ambient", confidence: 0.95, updatedAt: Date())))
+        let json = await ctx.snapshotJSON()
+        XCTAssertTrue(json.contains("testing"))
+        XCTAssertTrue(json.contains("ambient"))
+    }
 }
