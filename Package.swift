@@ -7,7 +7,10 @@ let package = Package(
     targets: [
         .target(
             name: "BantiCore",
-            path: "Sources/BantiCore"
+            path: "Sources/BantiCore",
+            linkerSettings: [
+                .linkedFramework("SoundAnalysis")
+            ]
         ),
         .executableTarget(
             name: "banti",
