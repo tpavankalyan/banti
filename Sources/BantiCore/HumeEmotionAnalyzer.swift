@@ -76,34 +76,57 @@ public final class HumeEmotionAnalyzer: CloudAnalyzer {
     }
 
     private func callHumeAPI(imageData: Data) async -> PerceptionObservation? {
-        guard let url = URL(string: "https://api.hume.ai/v0/stream/models") else { return nil }
+        // Hume streaming endpoint requires WebSocket (wss://), not HTTP POST
+        guard let url = URL(string: "wss://api.hume.ai/v0/stream/models?api_key=\(apiKey)") else { return nil }
 
         let body: [String: Any] = [
             "models": ["face": [:]],
             "data":   imageData.base64EncodedString()
         ]
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: body) else { return nil }
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: body),
+              let bodyString = String(data: bodyData, encoding: .utf8) else { return nil }
 
-        var request = URLRequest(url: url, timeoutInterval: 10)
-        request.httpMethod = "POST"
-        request.httpBody = bodyData
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "X-Hume-Api-Key")
+        let task = session.webSocketTask(with: url)
+        task.resume()
 
         do {
-            let (data, response) = try await session.data(for: request)
-            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                logger.log(source: "hume", message: "[warn] HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+            try await task.send(.string(bodyString))
+            let message = try await withTimeout(seconds: 10) {
+                try await task.receive()
+            }
+            task.cancel(with: .normalClosure, reason: nil)
+
+            switch message {
+            case .string(let text):
+                guard let data = text.data(using: .utf8) else { return nil }
+                return parseResponse(data: data)
+            case .data(let data):
+                return parseResponse(data: data)
+            @unknown default:
                 return nil
             }
-            return parseResponse(data: data)
         } catch {
+            task.cancel(with: .normalClosure, reason: nil)
             logger.log(source: "hume", message: "[warn] \(error.localizedDescription)")
             return nil
         }
     }
 
+    private func withTimeout<T: Sendable>(seconds: Double, operation: @escaping @Sendable () async throws -> T) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await operation() }
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw URLError(.timedOut)
+            }
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+
     private func parseResponse(data: Data) -> PerceptionObservation? {
+        // WebSocket response: {"face": {"predictions": [{"emotions": [...]}]}}
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let face = json["face"] as? [String: Any],
               let predictions = face["predictions"] as? [[String: Any]],
