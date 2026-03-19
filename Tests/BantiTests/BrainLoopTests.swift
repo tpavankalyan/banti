@@ -22,8 +22,10 @@ final class BrainLoopTests: XCTestCase {
 
     func testShouldTriggerFalseExactlyAt10Seconds() {
         // At exactly 10s it should NOT trigger yet (strictly greater than)
-        let exactly10 = Date().addingTimeInterval(-10)
-        XCTAssertFalse(BrainLoop.shouldTrigger(lastSpoke: exactly10))
+        // Inject same `now` to avoid timing gap between Date() calls
+        let now = Date()
+        let exactly10 = now.addingTimeInterval(-10)
+        XCTAssertFalse(BrainLoop.shouldTrigger(lastSpoke: exactly10, now: now))
     }
 
     // MARK: - Transcript buffer
