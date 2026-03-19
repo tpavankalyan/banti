@@ -43,6 +43,10 @@ public actor AudioRouter: AudioChunkDispatcher {
         }
     }
 
+    public func setTranscriptCallback(_ callback: @escaping @Sendable (String) async -> Void) async {
+        await deepgram?.setTranscriptCallback(callback)
+    }
+
     // MARK: - Dispatch (AudioChunkDispatcher)
 
     public func appendToPCMRingBuffer(_ chunk: Data) {
