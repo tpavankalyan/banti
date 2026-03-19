@@ -39,7 +39,7 @@ public final class MicrophoneCapture {
             startCapture()
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
-                if granted { self?.startCapture() }
+                if granted { DispatchQueue.main.async { self?.startCapture() } }
                 else { self?.permissionDenied() }
             }
         case .denied, .restricted:
@@ -80,6 +80,7 @@ public final class MicrophoneCapture {
             logger.log(source: "audio", message: "microphone capture started (\(inputFormat.sampleRate)Hz → 16kHz)")
         } catch {
             logger.log(source: "audio", message: "[error] AVAudioEngine start failed: \(error.localizedDescription)")
+            inputNode.removeTap(onBus: 0)
         }
     }
 
