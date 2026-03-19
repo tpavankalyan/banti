@@ -14,8 +14,8 @@ public actor CartesiaSpeaker {
     private var engineStarted = false
 
     // Queue: at most one pending text (replaces previous if still pending)
-    var pendingText: String?         // internal — exposed for tests via accessor
-    var isSpeaking: Bool = false     // internal — exposed for tests via accessor
+    private var pendingText: String?
+    private var isSpeaking: Bool = false
 
     public var isAvailable: Bool { apiKey != nil }
 
