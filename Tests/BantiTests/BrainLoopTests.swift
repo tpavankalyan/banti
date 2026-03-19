@@ -144,4 +144,26 @@ final class BrainLoopTests: XCTestCase {
         // name going from named to nil (person left) should not trigger "just resolved"
         XCTAssertFalse(BrainLoop.nameJustResolved(previous: "Alice", current: nil))
     }
+
+    // MARK: - SSEEvent decoding
+
+    func testSSEEventDecodesTypeSentence() throws {
+        let json = #"{"type":"sentence","text":"Hello there!"}"#.data(using: .utf8)!
+        let event = try JSONDecoder().decode(SSEEvent.self, from: json)
+        XCTAssertEqual(event.type, "sentence")
+        XCTAssertEqual(event.text, "Hello there!")
+    }
+
+    func testSSEEventDecodesDone() throws {
+        let json = #"{"type":"done"}"#.data(using: .utf8)!
+        let event = try JSONDecoder().decode(SSEEvent.self, from: json)
+        XCTAssertEqual(event.type, "done")
+        XCTAssertNil(event.text)
+    }
+
+    func testSSEEventDecodesSilent() throws {
+        let json = #"{"type":"silent"}"#.data(using: .utf8)!
+        let event = try JSONDecoder().decode(SSEEvent.self, from: json)
+        XCTAssertEqual(event.type, "silent")
+    }
 }

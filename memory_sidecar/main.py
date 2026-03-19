@@ -97,6 +97,18 @@ def create_app(testing: bool = False) -> FastAPI:
         from memory import brain_decide
         return await brain_decide(req)
 
+    from fastapi.responses import StreamingResponse
+    from models import BrainStreamRequest
+
+    @app.post("/brain/stream")
+    async def brain_stream_endpoint(req: BrainStreamRequest):
+        from memory import brain_stream_generate
+        return StreamingResponse(
+            brain_stream_generate(req),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
     return app
 
 app = create_app()

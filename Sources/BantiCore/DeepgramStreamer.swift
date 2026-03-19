@@ -21,6 +21,8 @@ public actor DeepgramStreamer {
     private var isConnected = false
     private var disconnectedAt: Date?
 
+    public var onFinalTranscript: (@Sendable (String) async -> Void)?
+
     public init(apiKey: String, context: PerceptionContext, logger: Logger, session: URLSession = .shared) {
         self.apiKey = apiKey
         self.context = context
@@ -160,7 +162,7 @@ public actor DeepgramStreamer {
         }
     }
 
-    private func handleMessage(_ message: URLSessionWebSocketTask.Message) async {
+    func handleMessage(_ message: URLSessionWebSocketTask.Message) async {
         let data: Data?
         switch message {
         case .string(let text): data = text.data(using: .utf8)
@@ -173,6 +175,16 @@ public actor DeepgramStreamer {
 
         logger.log(source: "deepgram", message: "[\(state.speakerID.map { "spk:\($0)" } ?? "?")] \(state.transcript)")
         await context.update(.speech(state))
+
+        if state.isFinal, let callback = onFinalTranscript {
+            await callback(state.transcript)
+        }
+    }
+
+    // MARK: - Transcript callback configuration
+
+    func setTranscriptCallback(_ callback: @escaping @Sendable (String) async -> Void) {
+        onFinalTranscript = callback
     }
 
     // MARK: - Response parsing (static + internal for testability)
@@ -198,5 +210,13 @@ public actor DeepgramStreamer {
             resolvedName: nil,
             updatedAt: Date()
         )
+    }
+
+    // MARK: - Test helpers
+    func setTranscriptCallbackForTest(_ callback: @escaping @Sendable (String) async -> Void) {
+        onFinalTranscript = callback
+    }
+    func handleMessageForTest(_ message: URLSessionWebSocketTask.Message) async {
+        await handleMessage(message)
     }
 }

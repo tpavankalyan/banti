@@ -1,4 +1,5 @@
 # memory_sidecar/memory.py
+import asyncio
 import os
 import re
 import uuid
@@ -7,6 +8,177 @@ import anthropic
 from datetime import datetime
 from typing import Optional
 from collections import deque
+
+def extract_sentences(buffer: str, min_words: int = 4) -> tuple[list[str], str]:
+    """Split accumulated LLM token buffer into emittable sentences.
+
+    Returns (emittable_sentences, remaining_buffer).
+    A sentence is emitted when it ends with .!? and has >= min_words words.
+    Short sentences (< min_words) stay in the buffer and merge with subsequent text.
+    """
+    sentences = []
+    last_emitted = 0
+
+    for match in re.finditer(r'[.!?](?=[ \n]|$)', buffer):
+        end = match.end()
+        segment = buffer[last_emitted:end].strip()
+        if segment and len(segment.split()) >= min_words:
+            sentences.append(segment)
+            last_emitted = end
+            # skip leading whitespace before next segment
+            while last_emitted < len(buffer) and buffer[last_emitted] in ' \n':
+                last_emitted += 1
+
+    remaining = buffer[last_emitted:]
+    return sentences, remaining
+
+
+from openai import AsyncOpenAI
+
+REFLEX_SYSTEM_PROMPT = """\
+You are banti, an ambient AI assistant watching over the user's Mac.
+Speak in short, natural sentences — like a thoughtful friend nearby.
+React only to what's genuinely happening right now. 1-2 sentences max.
+Respond with plain prose only. No JSON. No markdown. No preamble.
+If there is truly nothing worth saying, respond with exactly: [silent]"""
+
+
+def _sse(event: dict) -> str:
+    return f"data: {json.dumps(event)}\n\n"
+
+
+async def _reflex_stream(req):
+    """Async generator: yields SSE strings for the reflex track."""
+    cerebras_key = os.environ.get("CEREBRAS_API_KEY")
+    if not cerebras_key:
+        yield _sse({"type": "error"})
+        return
+
+    client = AsyncOpenAI(base_url="https://api.cerebras.ai/v1", api_key=cerebras_key)
+    user_msg = f"Snapshot:\n{req.snapshot_json}\n\nRecent speech:\n" + "\n".join(req.recent_speech)
+
+    buffer = ""
+    try:
+        async with asyncio.timeout(8):
+            stream = await client.chat.completions.create(
+                model="gpt-oss-120b",
+                messages=[
+                    {"role": "system", "content": REFLEX_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_msg},
+                ],
+                stream=True,
+                max_tokens=120,
+            )
+            async for chunk in stream:
+                delta = chunk.choices[0].delta.content or ""
+                buffer += delta
+                sentences, buffer = extract_sentences(buffer)
+                for s in sentences:
+                    yield _sse({"type": "sentence", "text": s})
+    except Exception:
+        yield _sse({"type": "error"})
+        return
+
+    # Flush remaining buffer
+    remaining = buffer.strip()
+    if remaining == "[silent]":
+        yield _sse({"type": "silent"})
+    elif remaining:
+        yield _sse({"type": "sentence", "text": remaining})
+
+
+REASONING_SYSTEM_PROMPT = """\
+You are banti. A quick reflex response was just given. Now add depth, memory,
+or context only if you have something genuinely useful to say. 1-3 sentences.
+Plain prose only — no JSON, no preamble.
+If you have nothing meaningful to add, respond with exactly: [silent]"""
+
+
+async def _reasoning_stream(req):
+    """Async generator: yields SSE strings for the reasoning track (Opus 4.6 + memory)."""
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not anthropic_key:
+        yield _sse({"type": "error"})
+        return
+
+    # Fetch Graphiti + mem0 in parallel
+    context_parts = []
+    if GRAPHITI is not None or MEM0 is not None:
+        async def _fetch_graphiti():
+            if GRAPHITI is None:
+                return
+            try:
+                edges = await GRAPHITI.search("recent events and who is present", num_results=3)
+                facts = [e.fact for e in edges if e.fact]
+                if facts:
+                    context_parts.append("Temporal memory:\n" + "\n".join(f"  - {f}" for f in facts))
+            except Exception as e:
+                print(f"[warn] reasoning_stream: Graphiti failed: {e}")
+
+        async def _fetch_mem0():
+            if MEM0 is None:
+                return
+            try:
+                snap_dict = json.loads(req.snapshot_json) if req.snapshot_json != "{}" else {}
+                person = snap_dict.get("person")
+                if person and person.get("name") and person.get("id"):
+                    user_id = f"person_{person['id']}"
+                    hits = MEM0.search(person["name"], user_id=user_id, limit=3)
+                    facts = [h["memory"] for h in hits if "memory" in h]
+                    if facts:
+                        context_parts.append(
+                            f"What I know about {person['name']}:\n" +
+                            "\n".join(f"  - {f}" for f in facts)
+                        )
+            except Exception as e:
+                print(f"[warn] reasoning_stream: mem0 failed: {e}")
+
+        await asyncio.gather(_fetch_graphiti(), _fetch_mem0())
+
+    snapshot_summary = "\n\n".join(context_parts) if context_parts else "(no memory context)"
+    user_msg = (
+        f"Memory context:\n{snapshot_summary}\n\n"
+        f"Current snapshot:\n{req.snapshot_json}\n\n"
+        f"Recent speech:\n" + "\n".join(req.recent_speech)
+    )
+
+    buffer = ""
+    try:
+        async_client = anthropic.AsyncAnthropic(api_key=anthropic_key)
+        async with asyncio.timeout(20):
+            async with async_client.messages.stream(
+                model="claude-opus-4-6",
+                max_tokens=200,
+                system=REASONING_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_msg}],
+            ) as stream:
+                async for text in stream.text_stream:
+                    buffer += text
+                    sentences, buffer = extract_sentences(buffer)
+                    for s in sentences:
+                        yield _sse({"type": "sentence", "text": s})
+    except Exception as e:
+        print(f"[warn] reasoning_stream: failed: {e}")
+        yield _sse({"type": "error"})
+        return
+
+    remaining = buffer.strip()
+    if remaining == "[silent]":
+        yield _sse({"type": "silent"})
+    elif remaining:
+        yield _sse({"type": "sentence", "text": remaining})
+
+
+async def brain_stream_generate(req):
+    """Top-level SSE generator — routes to reflex or reasoning track."""
+    if req.track == "reflex":
+        async for event in _reflex_stream(req):
+            yield event
+    else:
+        async for event in _reasoning_stream(req):
+            yield event
+    yield _sse({"type": "done"})
+
 
 GRAPHITI = None
 MEM0 = None

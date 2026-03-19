@@ -55,6 +55,12 @@ public actor MemoryEngine {
         await selfModel.start()
         await speakerResolver.start()
         await brainLoop.start()    // non-async on BrainLoop — internally spawns Tasks
+        // Wire Deepgram final-transcript callback directly into BrainLoop
+        let loop = brainLoop
+        await audioRouter.setTranscriptCallback { @Sendable transcript in
+            await loop.onFinalTranscript(transcript)
+        }
+        logger.log(source: "memory", message: "transcript callback wired")
         logger.log(source: "memory", message: "MemoryEngine started")
     }
 }

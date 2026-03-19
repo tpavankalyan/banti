@@ -104,4 +104,22 @@ final class DeepgramStreamerTests: XCTestCase {
         let disconnectedAt = now.addingTimeInterval(-5.001)
         XCTAssertFalse(DeepgramStreamer.shouldBuffer(disconnectedAt: disconnectedAt, now: now))
     }
+
+    // MARK: onFinalTranscript callback
+
+    func testOnFinalTranscriptCallbackFiredOnFinalMessage() async {
+        var received: String? = nil
+        let context = PerceptionContext()
+        let logger = Logger()
+        let streamer = DeepgramStreamer(apiKey: "key", context: context, logger: logger)
+        await streamer.setTranscriptCallbackForTest { transcript in
+            received = transcript
+        }
+        // Craft a valid final-transcript Deepgram JSON
+        let json = """
+        {"is_final":true,"channel":{"alternatives":[{"transcript":"hello world","confidence":0.9,"words":[{"speaker":0}]}]}}
+        """.data(using: .utf8)!
+        await streamer.handleMessageForTest(.data(json))
+        XCTAssertEqual(received, "hello world")
+    }
 }
