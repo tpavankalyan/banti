@@ -195,6 +195,7 @@ public actor DeepgramStreamer {
             speakerID: speakerID,
             isFinal: true,
             confidence: confidence,
+            resolvedName: nil,
             updatedAt: Date()
         )
     }

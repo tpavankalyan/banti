@@ -14,13 +14,16 @@ public struct SpeechState: Codable {
     public let speakerID: Int?
     public let isFinal: Bool
     public let confidence: Float
+    public let resolvedName: String?
     public let updatedAt: Date
 
-    public init(transcript: String, speakerID: Int?, isFinal: Bool, confidence: Float, updatedAt: Date) {
+    public init(transcript: String, speakerID: Int?, isFinal: Bool, confidence: Float,
+                resolvedName: String? = nil, updatedAt: Date) {
         self.transcript = transcript
         self.speakerID = speakerID
         self.isFinal = isFinal
         self.confidence = confidence
+        self.resolvedName = resolvedName
         self.updatedAt = updatedAt
     }
 }
