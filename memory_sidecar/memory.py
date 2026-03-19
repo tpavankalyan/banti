@@ -114,11 +114,26 @@ async def ingest_snapshot(snapshot_json: str, wall_ts: datetime) -> dict:
         except Exception as e:
             print(f"[warn] mem0 ingest failed: {e}")
 
+        person = snapshot.get("person")
+        if person and person.get("id") and person.get("name"):
+            mem0_user_id = f"person_{person['id']}"
+            try:
+                MEM0.add(episode_text, user_id=mem0_user_id)
+            except Exception as e:
+                print(f"[warn] mem0 person ingest failed for {mem0_user_id}: {e}")
+
     return {"skipped": False, "episode": episode_text}
 
 
 async def query_memory(q: str, context_json: Optional[str] = None) -> dict:
     results = []
+
+    if GRAPHITI is not None:
+        try:
+            edges = await GRAPHITI.search(q, num_results=5)
+            results.extend(edge.fact for edge in edges if edge.fact)
+        except Exception as e:
+            print(f"[warn] Graphiti search failed: {e}")
 
     if MEM0 is not None:
         try:
