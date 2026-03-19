@@ -1,5 +1,6 @@
 # memory_sidecar/memory.py
 import os
+import re
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -248,3 +249,118 @@ Recent observations:
                 pass
 
     return {"summary": result.get("summary", "reflection complete")}
+
+
+BRAIN_SYSTEM_PROMPT = """You are banti, an ambient personal AI assistant running on the user's Mac.
+You passively observe via camera, microphone, and screen. You have persistent
+memory of people, events, and patterns.
+
+Your job right now: decide whether to speak or stay silent.
+
+Speak when you have something genuinely useful, curious, or warm to say.
+Think like a thoughtful friend who notices things — not a notification.
+Ask questions when you're curious, like a human would.
+Offer help when you notice the user might need it.
+Comment on something interesting you observed.
+
+Stay silent when:
+- The user is clearly focused and shouldn't be interrupted
+- You spoke recently and nothing significant has changed
+- You have nothing meaningful to add
+
+Return ONLY valid JSON with no markdown fences:
+{"action": "speak"|"silent", "text": "<what to say, 1-2 sentences max, or null if silent>", "reason": "<brief internal note>"}"""
+
+
+async def brain_decide(req) -> "ProactiveDecisionResponse":
+    """Decide whether banti should speak. Returns ProactiveDecisionResponse."""
+    from models import ProactiveDecisionResponse
+
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not anthropic_key:
+        return ProactiveDecisionResponse(action="silent", reason="ANTHROPIC_API_KEY missing")
+
+    # --- assemble context ---
+    import json
+    context_parts = []
+
+    # snapshot signals
+    try:
+        snap = json.loads(req.snapshot_json)
+        if snap:
+            context_parts.append(f"Current perception: {json.dumps(snap, indent=None)}")
+    except Exception:
+        pass
+
+    # recent speech
+    if req.recent_speech:
+        lines = "\n".join(f"  - {s}" for s in req.recent_speech)
+        context_parts.append(f"Recent speech:\n{lines}")
+
+    # temporal memory (Graphiti)
+    if GRAPHITI is not None:
+        try:
+            query_hint = "recent events and who is present"
+            edges = await GRAPHITI.search(query_hint, num_results=3)
+            facts = [e.fact for e in edges if e.fact]
+            if facts:
+                context_parts.append("Temporal memory:\n" + "\n".join(f"  - {f}" for f in facts))
+        except Exception as e:
+            print(f"[warn] brain_decide: Graphiti search failed: {e}")
+
+    # semantic memory (mem0) for named person
+    if MEM0 is not None:
+        try:
+            snap_dict = json.loads(req.snapshot_json) if req.snapshot_json != "{}" else {}
+            person = snap_dict.get("person")
+            if person and person.get("name") and person.get("id"):
+                user_id = f"person_{person['id']}"
+                hits = MEM0.search(person["name"], user_id=user_id, limit=3)
+                facts = [h["memory"] for h in hits if "memory" in h]
+                if facts:
+                    context_parts.append(f"What I know about {person['name']}:\n" +
+                                         "\n".join(f"  - {f}" for f in facts))
+        except Exception as e:
+            print(f"[warn] brain_decide: mem0 search failed: {e}")
+
+    # self model
+    self_json_path = os.path.expanduser("~/Library/Application Support/banti/self.json")
+    if os.path.exists(self_json_path):
+        try:
+            with open(self_json_path) as f:
+                self_data = json.load(f)
+            if self_data.get("recent_patterns"):
+                patterns = self_data["recent_patterns"][:3]
+                context_parts.append("My recent patterns:\n" + "\n".join(f"  - {p}" for p in patterns))
+        except Exception:
+            pass
+
+    # last spoke context
+    if req.last_spoke_seconds_ago < 9999:
+        context_parts.append(
+            f"I last spoke {req.last_spoke_seconds_ago:.0f}s ago"
+            + (f': "{req.last_spoke_text}"' if req.last_spoke_text else "")
+        )
+
+    user_content = "\n\n".join(context_parts) if context_parts else "No context available yet."
+
+    try:
+        import anthropic
+        client = anthropic.AsyncAnthropic(api_key=anthropic_key)
+        response = await client.messages.create(
+            model="claude-opus-4-6",
+            max_tokens=150,
+            system=BRAIN_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_content}],
+        )
+        raw = response.content[0].text
+        raw = re.sub(r'^```[a-z]*\n?|\n?```$', '', raw.strip())
+        data = json.loads(raw)
+        return ProactiveDecisionResponse(
+            action=data.get("action", "silent"),
+            text=data.get("text") or None,
+            reason=data.get("reason", ""),
+        )
+    except Exception as e:
+        print(f"[warn] brain_decide: Opus call failed: {e}")
+        return ProactiveDecisionResponse(action="silent", reason=f"llm error: {e}")

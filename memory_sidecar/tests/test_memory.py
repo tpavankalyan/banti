@@ -1,6 +1,7 @@
 # memory_sidecar/tests/test_memory.py
 import pytest
 import json
+import os
 from unittest.mock import patch, AsyncMock, MagicMock
 from httpx import AsyncClient, ASGITransport
 
@@ -120,3 +121,46 @@ def test_proactive_decision_response_rejects_invalid_action():
     from models import ProactiveDecisionResponse
     with pytest.raises(Exception):
         ProactiveDecisionResponse(action="shout", reason="bad")
+
+@pytest.mark.asyncio
+async def test_brain_decide_returns_silent_when_no_api_key():
+    with patch.dict(os.environ, {}, clear=True):
+        from memory import brain_decide
+        from models import BrainDecideRequest
+        req = BrainDecideRequest(snapshot_json="{}", recent_speech=[])
+        result = await brain_decide(req)
+        assert result.action == "silent"
+        assert result.text is None
+
+@pytest.mark.asyncio
+async def test_brain_decide_returns_speak_when_llm_says_speak():
+    from unittest.mock import AsyncMock, MagicMock, patch
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='{"action": "speak", "text": "You seem busy!", "reason": "test"}')]
+    with patch("memory.GRAPHITI", None), patch("memory.MEM0", None):
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("anthropic.AsyncAnthropic") as mock_cls:
+                mock_client = MagicMock()
+                mock_client.messages.create = AsyncMock(return_value=mock_response)
+                mock_cls.return_value = mock_client
+                from memory import brain_decide
+                from models import BrainDecideRequest
+                req = BrainDecideRequest(snapshot_json="{}", recent_speech=["hello"])
+                result = await brain_decide(req)
+                assert result.action == "speak"
+                assert result.text == "You seem busy!"
+
+@pytest.mark.asyncio
+async def test_brain_decide_returns_silent_on_llm_error():
+    from unittest.mock import AsyncMock, patch
+    with patch("memory.GRAPHITI", None), patch("memory.MEM0", None):
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("anthropic.AsyncAnthropic") as mock_cls:
+                mock_client = MagicMock()
+                mock_client.messages.create = AsyncMock(side_effect=Exception("network error"))
+                mock_cls.return_value = mock_client
+                from memory import brain_decide
+                from models import BrainDecideRequest
+                req = BrainDecideRequest(snapshot_json="{}")
+                result = await brain_decide(req)
+                assert result.action == "silent"
