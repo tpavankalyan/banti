@@ -7,14 +7,14 @@ import AppKit
 public final class ScreenCapture: NSObject, SCStreamOutput {
     private let logger: Logger
     private var deduplicator: Deduplicator  // var: struct state must persist across callbacks
-    private let vision: LocalVision
+    private let frameProcessor: FrameProcessor
     private var stream: SCStream?
     private var lastFrameTime: CMTime = .zero
 
-    public init(logger: Logger, deduplicator: Deduplicator, vision: LocalVision) {
+    public init(logger: Logger, deduplicator: Deduplicator, frameProcessor: FrameProcessor) {
         self.logger = logger
         self.deduplicator = deduplicator
-        self.vision = vision
+        self.frameProcessor = frameProcessor
     }
 
     public func start() async {
@@ -56,7 +56,7 @@ public final class ScreenCapture: NSObject, SCStreamOutput {
 
         // Encode to JPEG synchronously before buffer is released
         guard let jpegData = jpegData(from: pixelBuffer) else { return }
-        vision.analyze(jpegData: jpegData, source: "screen")
+        frameProcessor.process(jpegData: jpegData, source: "screen")
     }
 
     private func primaryDisplay(from content: SCShareableContent) -> SCDisplay? {

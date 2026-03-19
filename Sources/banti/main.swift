@@ -3,27 +3,35 @@ import Foundation
 import AppKit
 import BantiCore
 
-// Shared components
+// Shared infrastructure
 let logger = Logger()
-let deduplicator = Deduplicator()
-let vision = LocalVision(logger: logger)
 
 logger.log(source: "system", message: "banti starting...")
 
-// Check Ollama availability, then start recheck timer
-vision.checkAvailability()
-vision.startRecheckTimer()
+// Perception pipeline
+let context = PerceptionContext()
+let router  = PerceptionRouter(context: context, logger: logger)
 
-// Start AX reader
+// Configure cloud analyzers from environment variables
+Task { await router.configure() }
+
+let localPerception = LocalPerception(dispatcher: router)
+
+// Start snapshot logging (every 2s)
+context.startSnapshotTimer(logger: logger)
+
+// Start AX reader (accessibility side-channel)
 let axReader = AXReader(logger: logger)
 axReader.start()
 
 // Start camera capture
-let cameraCapture = CameraCapture(logger: logger, deduplicator: deduplicator, vision: vision)
+let deduplicator = Deduplicator()
+let cameraCapture = CameraCapture(logger: logger, deduplicator: deduplicator, frameProcessor: localPerception)
 cameraCapture.start()
 
 // Start screen capture (async)
-let screenCapture = ScreenCapture(logger: logger, deduplicator: deduplicator, vision: vision)
+let screenDeduplicator = Deduplicator()
+let screenCapture = ScreenCapture(logger: logger, deduplicator: screenDeduplicator, frameProcessor: localPerception)
 Task {
     await screenCapture.start()
 }

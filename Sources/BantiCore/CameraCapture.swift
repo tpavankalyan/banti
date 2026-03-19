@@ -6,15 +6,15 @@ import Foundation
 public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private let logger: Logger
     private var deduplicator: Deduplicator  // var: struct state must persist across callbacks
-    private let vision: LocalVision
+    private let frameProcessor: FrameProcessor
     private var session: AVCaptureSession?
     private let queue = DispatchQueue(label: "banti.camera", qos: .userInitiated)
     private var lastFrameTime: CMTime = .zero
 
-    public init(logger: Logger, deduplicator: Deduplicator, vision: LocalVision) {
+    public init(logger: Logger, deduplicator: Deduplicator, frameProcessor: FrameProcessor) {
         self.logger = logger
         self.deduplicator = deduplicator
-        self.vision = vision
+        self.frameProcessor = frameProcessor
     }
 
     // Request permission and start capture if granted
@@ -67,7 +67,7 @@ public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBuffer
 
         // Encode to JPEG synchronously before buffer is released
         guard let jpegData = jpegData(from: pixelBuffer) else { return }
-        vision.analyze(jpegData: jpegData, source: "camera")
+        frameProcessor.process(jpegData: jpegData, source: "camera")
     }
 
     private func jpegData(from buffer: CVPixelBuffer) -> Data? {
