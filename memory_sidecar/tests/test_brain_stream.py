@@ -162,5 +162,5 @@ async def test_brain_stream_reasoning_emits_sentences(app):
                 })
 
     types = [e["type"] for e in events]
-    assert "sentence" in types or "done" in types
+    assert "sentence" in types, f"Expected sentence events but got: {types}"
     assert events[-1]["type"] == "done"
