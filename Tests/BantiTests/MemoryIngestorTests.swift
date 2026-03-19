@@ -1,5 +1,6 @@
 // Tests/BantiTests/MemoryIngestorTests.swift
 import XCTest
+import AVFoundation
 @testable import BantiCore
 
 final class MemoryIngestorTests: XCTestCase {
@@ -33,7 +34,7 @@ final class MemoryIngestorTests: XCTestCase {
         let context = PerceptionContext()
         let logger = Logger()
         let audio = AudioRouter(context: context, logger: logger)
-        let engine = MemoryEngine(context: context, audioRouter: audio, logger: logger)
+        let engine = MemoryEngine(context: context, audioRouter: audio, engine: AVAudioEngine(), logger: logger)
         // brainLoop is public; cartesiaSpeaker is internal, accessible via @testable import
         _ = await engine.brainLoop
         _ = await engine.cartesiaSpeaker

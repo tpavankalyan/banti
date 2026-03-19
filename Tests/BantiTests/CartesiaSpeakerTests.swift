@@ -6,19 +6,19 @@ import AVFoundation
 final class CartesiaSpeakerTests: XCTestCase {
 
     func testIsAvailableFalseWhenNoAPIKey() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: nil, voiceID: "test-voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: nil, voiceID: "test-voice")
         let available = await speaker.isAvailable
         XCTAssertFalse(available)
     }
 
     func testIsAvailableTrueWhenAPIKeyPresent() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "test-key", voiceID: "test-voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: "test-key", voiceID: "test-voice")
         let available = await speaker.isAvailable
         XCTAssertTrue(available)
     }
 
     func testSpeakDoesNotCrashWhenUnavailable() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: nil, voiceID: "test-voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: nil, voiceID: "test-voice")
         // Should be a no-op — just verify no crash
         await speaker.speak("hello")
     }
@@ -37,7 +37,7 @@ final class CartesiaSpeakerTests: XCTestCase {
     }
 
     func testPendingTextIsReplacedWhenSpeakCalledWhileBusy() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: "key", voiceID: "voice")
         // Simulate busy state and queue replacement
         await speaker.setIsSpeakingForTest(true)
         await speaker.speak("first message")
@@ -47,13 +47,13 @@ final class CartesiaSpeakerTests: XCTestCase {
     }
 
     func testStreamSpeakIsNoOpWhenUnavailable() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: nil, voiceID: "test")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: nil, voiceID: "test")
         // Must not crash
         await speaker.streamSpeak("hello there friend", track: .reflex)
     }
 
     func testCancelTrackReflexClearsIsSpeaking() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: "key", voiceID: "voice")
         await speaker.setIsSpeakingReflexForTest(true)
         await speaker.cancelTrack(.reflex)
         let isSpeaking = await speaker.isSpeakingReflexForTest
@@ -61,7 +61,7 @@ final class CartesiaSpeakerTests: XCTestCase {
     }
 
     func testCancelTrackReasoningClearsPendingBuffers() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: "key", voiceID: "voice")
         await speaker.addPendingReasoningBufferForTest()
         await speaker.cancelTrack(.reasoning)
         let count = await speaker.pendingReasoningBufferCountForTest
@@ -69,9 +69,17 @@ final class CartesiaSpeakerTests: XCTestCase {
     }
 
     func testFinishCurrentSentenceReturnsImmediatelyWhenNotSpeaking() async {
-        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        let speaker = CartesiaSpeaker(engine: AVAudioEngine(), logger: Logger(), apiKey: "key", voiceID: "voice")
         let start = Date()
         await speaker.finishCurrentSentence()
         XCTAssertLessThan(Date().timeIntervalSince(start), 1.0)
+    }
+
+    func testInitWithSharedEngineDoesNotCrash() async {
+        let engine = AVAudioEngine()
+        // Should not crash — attach+connect happen in init before engine.start()
+        let speaker = CartesiaSpeaker(engine: engine, logger: Logger(), apiKey: nil, voiceID: "test")
+        let available = await speaker.isAvailable
+        XCTAssertFalse(available)  // nil apiKey
     }
 }

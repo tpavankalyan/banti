@@ -9,9 +9,8 @@ public actor CartesiaSpeaker {
     private let session: URLSession
 
     // Playback state
-    private let engine = AVAudioEngine()
+    private let engine: AVAudioEngine
     private let playerNode = AVAudioPlayerNode()
-    private var engineStarted = false
 
     // Queue: at most one pending text (replaces previous if still pending)
     private var pendingText: String?
@@ -28,15 +27,25 @@ public actor CartesiaSpeaker {
     public var isAvailable: Bool { apiKey != nil }
     var isPlaying: Bool { isSpeaking || isSpeakingReflex || playerNode.isPlaying }
 
-    public init(logger: Logger,
+    public init(engine: AVAudioEngine,
+                logger: Logger,
                 apiKey: String? = ProcessInfo.processInfo.environment["CARTESIA_API_KEY"],
                 voiceID: String = ProcessInfo.processInfo.environment["CARTESIA_VOICE_ID"]
                              ?? "a0e99841-438c-4a64-b679-ae501e7d6091",
                 session: URLSession = .shared) {
+        self.engine = engine
         self.logger = logger
         self.apiKey = apiKey
         self.voiceID = voiceID
         self.session = session
+
+        // Attach and connect playerNode eagerly — must happen before engine.start().
+        // AVAudioEngine requires a complete node graph before start(); connecting after
+        // start() would require a stop/restart cycle.
+        let fixedFormat = AVAudioFormat(commonFormat: .pcmFormatInt16,
+                                        sampleRate: 22050, channels: 1, interleaved: true)!
+        engine.attach(playerNode)
+        engine.connect(playerNode, to: engine.mainMixerNode, format: fixedFormat)
     }
 
     public func speak(_ text: String) {
@@ -96,12 +105,6 @@ public actor CartesiaSpeaker {
     }
 
     private func playBuffer(_ buffer: AVAudioPCMBuffer) {
-        if !engineStarted {
-            engine.attach(playerNode)
-            engine.connect(playerNode, to: engine.mainMixerNode, format: buffer.format)
-            try? engine.start()
-            engineStarted = true
-        }
         playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in }
         if !playerNode.isPlaying { playerNode.play() }
     }
@@ -219,7 +222,7 @@ public actor CartesiaSpeaker {
             reflexSocket = nil
             isSpeakingReflex = false
             playerNode.stop()
-            if engineStarted { playerNode.play() }
+            playerNode.play()   // always restart — node stays stopped until explicitly played
         } else {
             reasoningSocket?.cancel(with: .normalClosure, reason: nil)
             reasoningSocket = nil

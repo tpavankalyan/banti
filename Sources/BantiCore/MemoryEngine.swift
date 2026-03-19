@@ -1,5 +1,6 @@
 // Sources/BantiCore/MemoryEngine.swift
 import Foundation
+import AVFoundation
 
 /// Top-level actor that owns all memory subsystems.
 public actor MemoryEngine {
@@ -16,7 +17,7 @@ public actor MemoryEngine {
     let cartesiaSpeaker: CartesiaSpeaker   // internal — accessible via @testable import
     public let memoryQuery: MemoryQuery
 
-    public init(context: PerceptionContext, audioRouter: AudioRouter, logger: Logger) {
+    public init(context: PerceptionContext, audioRouter: AudioRouter, engine: AVAudioEngine, logger: Logger) {
         let sessionID = UUID().uuidString
         let port = Int(ProcessInfo.processInfo.environment["MEMORY_SIDECAR_PORT"] ?? "") ?? 7700
 
@@ -43,7 +44,7 @@ public actor MemoryEngine {
 
         self.memoryIngestor = MemoryIngestor(context: context, sidecar: sidecar, logger: logger)
         self.selfModel = SelfModel(context: context, sidecar: sidecar, logger: logger)
-        self.cartesiaSpeaker = CartesiaSpeaker(logger: logger)
+        self.cartesiaSpeaker = CartesiaSpeaker(engine: engine, logger: logger)
         self.brainLoop = BrainLoop(context: context, sidecar: sidecar,
                                    speaker: cartesiaSpeaker, logger: logger)
         self.memoryQuery = MemoryQuery(sidecar: sidecar, logger: logger)
