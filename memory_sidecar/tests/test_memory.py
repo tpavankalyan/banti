@@ -93,3 +93,7 @@ async def test_reflect_returns_summary(app_with_mock_memory):
             response = await client.post("/memory/reflect", json={"snapshots": snapshots})
     assert response.status_code == 200
     assert "summary" in response.json()
+
+def test_anthropic_importable():
+    import anthropic
+    assert hasattr(anthropic, "AsyncAnthropic")
