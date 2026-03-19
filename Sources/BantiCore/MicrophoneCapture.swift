@@ -64,11 +64,10 @@ public final class MicrophoneCapture {
         // same engine (done in CartesiaSpeaker.init via MemoryEngine.init before this is called).
         // macOS uses the engine's output as the echo reference signal — analogous to the
         // brain's corollary discharge suppressing predicted self-generated sound.
-        do {
-            try inputNode.setVoiceProcessingEnabled(true)
-        } catch {
-            logger.log(source: "audio", message: "[warn] Voice processing (AEC) unavailable: \(error.localizedDescription)")
-        }
+        // setVoiceProcessingEnabled(true) was attempted here to enable macOS hardware AEC,
+        // but it silences the microphone on this device (input receives near-zero signal).
+        // The shared AVAudioEngine is still in place as the correct foundation — if a
+        // per-device check or alternative AEC approach is found, enable it here.
 
         let inputFormat = inputNode.outputFormat(forBus: 0)
 

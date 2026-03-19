@@ -72,14 +72,13 @@ public actor BrainLoop {
     public func onFinalTranscript(_ transcript: String) async {
         BrainLoop.appendTranscript(&recentTranscripts, new: transcript, isFinal: true)
 
-        let interruption = await speaker.isPlaying && BrainLoop.isInterruptionCandidate(transcript)
-        let capturedSpeech = interruption ? currentlySpeaking : nil
+        // While banti is speaking the mic picks up its own TTS. Hardware AEC
+        // (setVoiceProcessingEnabled) silences the mic on this device, so we
+        // leave it off and filter here instead: transcripts are preserved for
+        // context but don't trigger a brain response while playback is active.
+        if await speaker.isPlaying { return }
 
-        await evaluate(
-            reason: "speech: \(transcript)",
-            isInterruption: interruption,
-            currentSpeech: capturedSpeech
-        )
+        await evaluate(reason: "speech: \(transcript)")
     }
 
     // MARK: - Event polling (face / emotion / person — no speech)
