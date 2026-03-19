@@ -30,16 +30,14 @@ public actor BrainLoop {
     // start() is non-async — spawns internal Tasks
     public func start() {
         // Heartbeat loop
-        Task { [weak self] in
-            guard let self else { return }
+        Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: BrainLoop.heartbeatNanoseconds)
                 await self.evaluate(reason: "heartbeat")
             }
         }
         // Event polling loop (2s)
-        Task { [weak self] in
-            guard let self else { return }
+        Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: BrainLoop.pollNanoseconds)
                 await self.pollEvents()
@@ -117,7 +115,7 @@ public actor BrainLoop {
         guard let url = URL(string: "/brain/decide", relativeTo: sidecar.baseURL),
               let bodyData = try? JSONEncoder().encode(body) else { return }
 
-        var request = URLRequest(url: url, timeoutInterval: 10)
+        var request = URLRequest(url: url, timeoutInterval: 10.0)
         request.httpMethod = "POST"
         request.httpBody = bodyData
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -150,9 +148,9 @@ public actor BrainLoop {
         transcripts.append(new)
     }
 
-    public static func secondsSince(_ date: Date?) -> Double {
+    public static func secondsSince(_ date: Date?, now: Date = Date()) -> Double {
         guard let date else { return 9999.0 }
-        return Date().timeIntervalSince(date)
+        return now.timeIntervalSince(date)
     }
 
     /// Returns true when Hume voice emotion top score exceeds 0.7 (strong signal).

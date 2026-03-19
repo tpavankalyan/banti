@@ -124,4 +124,22 @@ final class BrainLoopTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(secs, 29)
         XCTAssertLessThan(secs, 32)
     }
+
+    // MARK: - Additional boundary tests
+
+    func testIsEmotionSpikeAtExactThreshold() {
+        // threshold is >= 0.7, so exactly 0.7 should trigger
+        XCTAssertTrue(BrainLoop.isEmotionSpike(topScore: 0.7))
+    }
+
+    func testUnknownPersonDoesNotExceedThresholdAtExactly30Seconds() {
+        // threshold is > 30s, so exactly 30s should NOT trigger
+        let firstSeen = Date().addingTimeInterval(-30)
+        XCTAssertFalse(BrainLoop.unknownPersonExceedsThreshold(firstSeen: firstSeen))
+    }
+
+    func testNameJustResolvedFalseWhenNameDisappears() {
+        // name going from named to nil (person left) should not trigger "just resolved"
+        XCTAssertFalse(BrainLoop.nameJustResolved(previous: "Alice", current: nil))
+    }
 }
