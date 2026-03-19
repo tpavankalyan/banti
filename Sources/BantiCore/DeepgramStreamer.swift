@@ -19,6 +19,7 @@ public actor DeepgramStreamer {
 
     private var lastChunkAt: Date?
     private var isConnected = false
+    private var disconnectedAt: Date?
 
     public init(apiKey: String, context: PerceptionContext, logger: Logger, session: URLSession = .shared) {
         self.apiKey = apiKey
@@ -37,7 +38,12 @@ public actor DeepgramStreamer {
         }
 
         guard let task = webSocketTask, isConnected else {
-            if reconnectBuffer.count + chunk.count <= DeepgramStreamer.maxReconnectBufferBytes {
+            // Not connected — buffer recent chunks for post-reconnect window
+            if let disconnectedAt, Date().timeIntervalSince(disconnectedAt) > 5.0 {
+                // Been disconnected > 5s — drop chunk
+                return
+            }
+            if reconnectBuffer.count < DeepgramStreamer.maxReconnectBufferBytes {
                 reconnectBuffer.append(chunk)
             }
             return
@@ -57,6 +63,15 @@ public actor DeepgramStreamer {
         now.timeIntervalSince(lastChunkAt) >= silenceThreshold
     }
 
+    // MARK: - Disconnect buffer cutoff (static for testability)
+
+    /// Returns true if a chunk should be buffered during a disconnect, false if it should be dropped.
+    /// Chunks are dropped once disconnectedAt is more than 5 seconds in the past.
+    static func shouldBuffer(disconnectedAt: Date?, now: Date = Date()) -> Bool {
+        guard let disconnectedAt else { return true }
+        return now.timeIntervalSince(disconnectedAt) <= 5.0
+    }
+
     // MARK: - Connection management
 
     private func connect() {
@@ -72,6 +87,7 @@ public actor DeepgramStreamer {
         webSocketTask = task
         task.resume()
         isConnected = true
+        disconnectedAt = nil
         reconnectDelay = 1.0
         logger.log(source: "deepgram", message: "connected")
 
@@ -124,6 +140,7 @@ public actor DeepgramStreamer {
     private func handleDisconnect() {
         guard isConnected else { return }   // prevent double-reconnect from concurrent failures
         isConnected = false
+        disconnectedAt = Date()
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
         receiveTask?.cancel()

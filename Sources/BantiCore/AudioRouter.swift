@@ -43,15 +43,17 @@ public actor AudioRouter: AudioChunkDispatcher {
     // MARK: - Dispatch (AudioChunkDispatcher)
 
     public func dispatch(pcmChunk: Data) async {
+        // Stream every chunk to Deepgram (direct await preserves chunk ordering)
         if let streamer = deepgram {
-            Task { await streamer.send(chunk: pcmChunk) }
+            await streamer.send(chunk: pcmChunk)
         }
 
         humeBuffer.append(pcmChunk)
         if humeBuffer.count >= AudioRouter.humeFlushThreshold {
             if let analyzer = hume {
                 let segment = humeBuffer
-                Task {
+                Task { [weak self] in
+                    guard let self else { return }
                     if let state = await analyzer.analyze(pcmData: segment) {
                         await self.context.update(.voiceEmotion(state))
                     }

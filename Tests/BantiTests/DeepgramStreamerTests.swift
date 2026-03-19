@@ -74,4 +74,34 @@ final class DeepgramStreamerTests: XCTestCase {
     func testReconnectBufferMaxIs160000Bytes() {
         XCTAssertEqual(DeepgramStreamer.maxReconnectBufferBytes, 160_000)
     }
+
+    // MARK: Disconnect buffer cutoff
+
+    func testShouldBufferWhenDisconnectedLessThan5Seconds() {
+        let disconnectedAt = Date(timeIntervalSinceNow: -3.0)
+        XCTAssertTrue(DeepgramStreamer.shouldBuffer(disconnectedAt: disconnectedAt, now: Date()))
+    }
+
+    func testShouldDropChunkWhenDisconnectedMoreThan5Seconds() {
+        let disconnectedAt = Date(timeIntervalSinceNow: -6.0)
+        XCTAssertFalse(DeepgramStreamer.shouldBuffer(disconnectedAt: disconnectedAt, now: Date()))
+    }
+
+    func testShouldDropChunkAtExactly5SecondsDisconnect() {
+        let now = Date()
+        let disconnectedAt = now.addingTimeInterval(-5.0)
+        // At exactly 5s elapsed, timeIntervalSince == 5.0 which is NOT > 5.0, so still buffers
+        XCTAssertTrue(DeepgramStreamer.shouldBuffer(disconnectedAt: disconnectedAt, now: now))
+    }
+
+    func testShouldBufferWhenDisconnectedAtIsNil() {
+        // nil disconnectedAt means not yet disconnected — should buffer
+        XCTAssertTrue(DeepgramStreamer.shouldBuffer(disconnectedAt: nil, now: Date()))
+    }
+
+    func testShouldDropAfterJustOver5Seconds() {
+        let now = Date()
+        let disconnectedAt = now.addingTimeInterval(-5.001)
+        XCTAssertFalse(DeepgramStreamer.shouldBuffer(disconnectedAt: disconnectedAt, now: now))
+    }
 }
