@@ -8,6 +8,9 @@ public actor PerceptionContext {
     public var gesture:  GestureState?
     public var screen:   ScreenState?
     public var activity: ActivityState?
+    public var speech:   SpeechState?
+    public var voiceEmotion: VoiceEmotionState?
+    public var sound:    SoundState?
 
     public init() {}
 
@@ -19,6 +22,9 @@ public actor PerceptionContext {
         case .activity(let s): activity = s
         case .gesture(let s):  gesture = s
         case .screen(let s):   screen = s
+        case .speech(let s):   speech = s
+        case .voiceEmotion(let s): voiceEmotion = s
+        case .sound(let s):    sound = s
         }
     }
 
@@ -31,6 +37,9 @@ public actor PerceptionContext {
         if let g = gesture  { dict["gesture"]  = encodable(g) }
         if let s = screen   { dict["screen"]   = encodable(s) }
         if let a = activity { dict["activity"] = encodable(a) }
+        if let sp = speech  { dict["speech"]   = encodable(sp) }
+        if let ve = voiceEmotion { dict["voiceEmotion"] = encodable(ve) }
+        if let so = sound   { dict["sound"]    = encodable(so) }
         guard !dict.isEmpty,
               let data = try? JSONSerialization.data(withJSONObject: dict),
               let str = String(data: data, encoding: .utf8) else { return "{}" }
