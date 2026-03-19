@@ -165,7 +165,7 @@ public actor CartesiaSpeaker {
 
         // Receive PCM frames until done signal (5s timeout per sentence)
         let deadline = Date().addingTimeInterval(5)
-        while Date() < deadline {
+        receiveLoop: while Date() < deadline {
             if Task.isCancelled { break }
             do {
                 let message = try await socket.receive()
@@ -180,7 +180,7 @@ public actor CartesiaSpeaker {
                         }
                     }
                 case .string(let txt):
-                    if txt.contains("\"done\"") || txt.contains("done") { break }
+                    if txt.contains("\"done\"") || txt.contains("done") { break receiveLoop }
                 @unknown default: break
                 }
             } catch {
