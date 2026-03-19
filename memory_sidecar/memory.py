@@ -8,8 +8,6 @@ from datetime import datetime
 from typing import Optional
 from collections import deque
 
-import re as _re
-
 def extract_sentences(buffer: str, min_words: int = 4) -> tuple[list[str], str]:
     """Split accumulated LLM token buffer into emittable sentences.
 
@@ -20,7 +18,7 @@ def extract_sentences(buffer: str, min_words: int = 4) -> tuple[list[str], str]:
     sentences = []
     last_emitted = 0
 
-    for match in _re.finditer(r'[.!?](?=[ \n]|$)', buffer):
+    for match in re.finditer(r'[.!?](?=[ \n]|$)', buffer):
         end = match.end()
         segment = buffer[last_emitted:end].strip()
         if segment and len(segment.split()) >= min_words:
