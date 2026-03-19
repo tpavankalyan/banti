@@ -72,6 +72,10 @@ public final class Logger {
         case "gpt4o":      color = ANSI.yellow
         case "camera":     color = ANSI.cyan
         case "screen":     color = ANSI.cyan
+        case "deepgram":    color = ANSI.cyan
+        case "hume-voice":  color = ANSI.magenta
+        case "sound":       color = ANSI.yellow
+        case "audio":       color = ANSI.white
         default:           color = ANSI.white
         }
 

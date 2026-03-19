@@ -56,4 +56,21 @@ final class LoggerTests: XCTestCase {
 
         XCTAssertEqual(output.count, 20)
     }
+
+    func testDeepgramSourceLogsWithoutCrash() {
+        var output = ""
+        let logger = Logger { output = $0 }
+        logger.log(source: "deepgram", message: "transcript received")
+        Thread.sleep(forTimeInterval: 0.05)
+        XCTAssertTrue(output.contains("deepgram"))
+        XCTAssertTrue(output.contains("transcript received"))
+    }
+
+    func testHumeVoiceSourceLogs() {
+        var output = ""
+        let logger = Logger { output = $0 }
+        logger.log(source: "hume-voice", message: "prosody result")
+        Thread.sleep(forTimeInterval: 0.05)
+        XCTAssertTrue(output.contains("hume-voice"))
+    }
 }
