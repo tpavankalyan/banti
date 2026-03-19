@@ -12,7 +12,8 @@ public actor MemoryEngine {
     public let speakerResolver: SpeakerResolver
     private let memoryIngestor: MemoryIngestor
     private let selfModel: SelfModel
-    private let proactiveIntroducer: ProactiveIntroducer
+    public let brainLoop: BrainLoop
+    let cartesiaSpeaker: CartesiaSpeaker   // internal — accessible via @testable import
     public let memoryQuery: MemoryQuery
 
     public init(context: PerceptionContext, audioRouter: AudioRouter, logger: Logger) {
@@ -42,7 +43,9 @@ public actor MemoryEngine {
 
         self.memoryIngestor = MemoryIngestor(context: context, sidecar: sidecar, logger: logger)
         self.selfModel = SelfModel(context: context, sidecar: sidecar, logger: logger)
-        self.proactiveIntroducer = ProactiveIntroducer(logger: logger)
+        self.cartesiaSpeaker = CartesiaSpeaker(logger: logger)
+        self.brainLoop = BrainLoop(context: context, sidecar: sidecar,
+                                   speaker: cartesiaSpeaker, logger: logger)
         self.memoryQuery = MemoryQuery(sidecar: sidecar, logger: logger)
     }
 
@@ -51,19 +54,7 @@ public actor MemoryEngine {
         await memoryIngestor.start()
         await selfModel.start()
         await speakerResolver.start()
-        startPersonObserver()
+        await brainLoop.start()    // non-async on BrainLoop — internally spawns Tasks
         logger.log(source: "memory", message: "MemoryEngine started")
-    }
-
-    private func startPersonObserver() {
-        Task { [weak self] in
-            guard let self else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                if let person = await self.context.person {
-                    await self.proactiveIntroducer.personSeen(person.id, name: person.name)
-                }
-            }
-        }
     }
 }

@@ -28,4 +28,14 @@ final class MemoryIngestorTests: XCTestCase {
         XCTAssertTrue(MemoryIngestor.isEmpty(""))
         XCTAssertFalse(MemoryIngestor.isEmpty("{\"activity\":{\"description\":\"typing\"}}"))
     }
+
+    func testMemoryEngineHasBrainLoopAndCartesiaSpeaker() async {
+        let context = PerceptionContext()
+        let logger = Logger()
+        let audio = AudioRouter(context: context, logger: logger)
+        let engine = MemoryEngine(context: context, audioRouter: audio, logger: logger)
+        // brainLoop is public; cartesiaSpeaker is internal, accessible via @testable import
+        _ = await engine.brainLoop
+        _ = await engine.cartesiaSpeaker
+    }
 }
