@@ -542,7 +542,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Run full test suite**
 
 ```bash
-cd memory_sidecar && .venv/bin/python -m pytest tests/test_memory.py -v
+cd memory_sidecar && .venv/bin/python -m pytest tests/ -v
 ```
 Expected: all pass (no regressions)
 
@@ -656,7 +656,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Run full suite**
 
 ```bash
-cd memory_sidecar && .venv/bin/python -m pytest tests/test_memory.py -v
+cd memory_sidecar && .venv/bin/python -m pytest tests/ -v
 ```
 Expected: all pass
 
