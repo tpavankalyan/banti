@@ -17,6 +17,14 @@ public actor CartesiaSpeaker {
     private var pendingText: String?
     private var isSpeaking: Bool = false
 
+    // WebSocket connections — one per track (lazily created)
+    private var reflexSocket: URLSessionWebSocketTask?
+    private var reasoningSocket: URLSessionWebSocketTask?
+    // Reflex speaking state (used by finishCurrentSentence)
+    private var isSpeakingReflex: Bool = false
+    // Queued reasoning audio (played after reflex finishes)
+    private var pendingReasoningBuffers: [AVAudioPCMBuffer] = []
+
     public var isAvailable: Bool { apiKey != nil }
 
     public init(logger: Logger,
@@ -115,7 +123,131 @@ public actor CartesiaSpeaker {
         return buffer
     }
 
+    public func streamSpeak(_ text: String, track: TrackPriority) async {
+        guard isAvailable else {
+            logger.log(source: "tts", message: "[info] Cartesia unavailable — would say: \(text)")
+            return
+        }
+        guard let key = apiKey,
+              let url = URL(string: "wss://api.cartesia.ai/tts/websocket") else { return }
+
+        // Connect or reuse the track-specific socket
+        let socket: URLSessionWebSocketTask
+        if track == .reflex {
+            if reflexSocket == nil { reflexSocket = connectSocket(url: url, apiKey: key) }
+            guard let s = reflexSocket else { return }
+            socket = s
+            isSpeakingReflex = true
+        } else {
+            if reasoningSocket == nil { reasoningSocket = connectSocket(url: url, apiKey: key) }
+            guard let s = reasoningSocket else { return }
+            socket = s
+        }
+
+        let body: [String: Any] = [
+            "model_id": "sonic-2",
+            "transcript": text,
+            "voice": ["mode": "id", "id": voiceID],
+            "output_format": ["container": "raw", "encoding": "pcm_s16le", "sample_rate": 22050],
+        ]
+        guard let msgData = try? JSONSerialization.data(withJSONObject: body),
+              let msgStr = String(data: msgData, encoding: .utf8) else { return }
+
+        do {
+            try await socket.send(.string(msgStr))
+        } catch {
+            logger.log(source: "tts",
+                       message: "[warn] CartesiaSpeaker WS send failed: \(error.localizedDescription)")
+            if track == .reflex { reflexSocket = nil; isSpeakingReflex = false }
+            else { reasoningSocket = nil }
+            return
+        }
+
+        // Receive PCM frames until done signal (5s timeout per sentence)
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if Task.isCancelled { break }
+            do {
+                let message = try await socket.receive()
+                switch message {
+                case .data(let pcmData):
+                    if let buffer = CartesiaSpeaker.makeBuffer(pcmData) {
+                        if track == .reflex {
+                            playBuffer(buffer)
+                        } else {
+                            pendingReasoningBuffers.append(buffer)
+                            drainReasoningIfReady()
+                        }
+                    }
+                case .string(let txt):
+                    if txt.contains("\"done\"") || txt.contains("done") { break }
+                @unknown default: break
+                }
+            } catch {
+                logger.log(source: "tts",
+                           message: "[warn] CartesiaSpeaker WS receive failed: \(error.localizedDescription)")
+                break
+            }
+        }
+
+        if track == .reflex {
+            isSpeakingReflex = false
+            drainReasoningIfReady()
+        }
+    }
+
+    // `async` required: actors release at every `await` point, so `streamSpeak`
+    // (suspended on `socket.receive()`) is NOT blocking the actor.
+    // Calling `socket.cancel()` here causes the next `receive()` call in
+    // `streamSpeak` to throw, safely exiting its loop.
+    public func cancelTrack(_ track: TrackPriority) async {
+        if track == .reflex {
+            reflexSocket?.cancel(with: .normalClosure, reason: nil)
+            reflexSocket = nil
+            isSpeakingReflex = false
+            playerNode.stop()
+            if engineStarted { playerNode.play() }
+        } else {
+            reasoningSocket?.cancel(with: .normalClosure, reason: nil)
+            reasoningSocket = nil
+            pendingReasoningBuffers.removeAll()
+        }
+    }
+
+    public func finishCurrentSentence() async {
+        var waited = 0.0
+        while isSpeakingReflex && waited < 2.0 {
+            try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+            waited += 0.05
+        }
+    }
+
+    private func connectSocket(url: URL, apiKey: String) -> URLSessionWebSocketTask {
+        var request = URLRequest(url: url)
+        request.setValue(apiKey, forHTTPHeaderField: "X-API-Key")
+        request.setValue("2024-06-10", forHTTPHeaderField: "Cartesia-Version")
+        let task = session.webSocketTask(with: request)
+        task.resume()
+        return task
+    }
+
+    private func drainReasoningIfReady() {
+        guard !isSpeakingReflex, !pendingReasoningBuffers.isEmpty else { return }
+        for buffer in pendingReasoningBuffers {
+            playBuffer(buffer)
+        }
+        pendingReasoningBuffers.removeAll()
+    }
+
     // MARK: - Test helpers (internal access for tests in same module)
     func setIsSpeakingForTest(_ value: Bool) { isSpeaking = value }
     var pendingTextForTest: String? { pendingText }
+    func setIsSpeakingReflexForTest(_ value: Bool) { isSpeakingReflex = value }
+    var isSpeakingReflexForTest: Bool { isSpeakingReflex }
+    func addPendingReasoningBufferForTest() {
+        if let buf = CartesiaSpeaker.makeBuffer(Data(repeating: 0, count: 200)) {
+            pendingReasoningBuffers.append(buf)
+        }
+    }
+    var pendingReasoningBufferCountForTest: Int { pendingReasoningBuffers.count }
 }

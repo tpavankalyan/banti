@@ -45,4 +45,33 @@ final class CartesiaSpeakerTests: XCTestCase {
         let pending = await speaker.pendingTextForTest
         XCTAssertEqual(pending, "second message")
     }
+
+    func testStreamSpeakIsNoOpWhenUnavailable() async {
+        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: nil, voiceID: "test")
+        // Must not crash
+        await speaker.streamSpeak("hello there friend", track: .reflex)
+    }
+
+    func testCancelTrackReflexClearsIsSpeaking() async {
+        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        await speaker.setIsSpeakingReflexForTest(true)
+        await speaker.cancelTrack(.reflex)
+        let isSpeaking = await speaker.isSpeakingReflexForTest
+        XCTAssertFalse(isSpeaking)
+    }
+
+    func testCancelTrackReasoningClearsPendingBuffers() async {
+        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        await speaker.addPendingReasoningBufferForTest()
+        await speaker.cancelTrack(.reasoning)
+        let count = await speaker.pendingReasoningBufferCountForTest
+        XCTAssertEqual(count, 0)
+    }
+
+    func testFinishCurrentSentenceReturnsImmediatelyWhenNotSpeaking() async {
+        let speaker = CartesiaSpeaker(logger: Logger(), apiKey: "key", voiceID: "voice")
+        let start = Date()
+        await speaker.finishCurrentSentence()
+        XCTAssertLessThan(Date().timeIntervalSince(start), 1.0)
+    }
 }
