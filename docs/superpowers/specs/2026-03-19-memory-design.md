@@ -102,11 +102,11 @@ No JPEG is stored in `PerceptionContext`. `FaceIdentifier` receives the JPEG inl
 
 `PerceptionContext` does not store raw PCM. PCM flows through `AudioRouter.dispatch(pcmChunk:)` and is forwarded to `DeepgramStreamer`. Deepgram responds with a speakerID asynchronously (300ms–2s later), so the speakerID is not known at PCM dispatch time.
 
-**Mechanism:** `AudioRouter` maintains a rolling ring buffer of the last 5 seconds of raw PCM (~160 KB at 16kHz mono Int16). `SpeakerResolver` (Swift actor) runs its own 1-second polling loop watching `PerceptionContext.speech`. When it sees a `speakerID` it has not yet resolved in this session, it calls `audioRouter.drainPCMBuffer()` to obtain the buffered audio, accumulates until ≥ 3 seconds per `speakerID`, then sends to the sidecar.
+**Mechanism:** `AudioRouter` maintains a rolling ring buffer of the last 5 seconds of raw PCM (~160 KB at 16kHz mono Int16). `SpeakerResolver` (Swift actor) runs its own 1-second polling loop watching `PerceptionContext.speech`. When it sees a `speakerID` it has not yet resolved in this session, it calls `audioRouter.readPCMRingBuffer()` to obtain the buffered audio, accumulates until ≥ 3 seconds per `speakerID`, then sends to the sidecar.
 
 This gives `SpeakerResolver` a best-effort slice of recent audio attributed to the active speaker — sufficient for voiceprint extraction since pyannote only needs ~3 seconds of mostly-clean speech. `AudioRouter` exposes two new methods:
 - `func appendToPCMRingBuffer(_ chunk: Data)` — called from `dispatch(pcmChunk:)` alongside existing Deepgram dispatch
-- `func drainPCMBuffer() -> Data` — returns current ring buffer contents without clearing
+- `func readPCMRingBuffer() -> Data` — returns current ring buffer contents without clearing
 
 ---
 
@@ -136,7 +136,7 @@ InsightFace extracts a 512-d ArcFace embedding. FAISS cosine search against enro
 
 ### Voice Identity
 
-`SpeakerResolver` (Swift actor) polls `PerceptionContext.speech` every 1 second. When it sees a new `speakerID`, it calls `audioRouter.drainPCMBuffer()` and accumulates per speakerID until ≥ 3 seconds, then:
+`SpeakerResolver` (Swift actor) polls `PerceptionContext.speech` every 1 second. When it sees a new `speakerID`, it calls `audioRouter.readPCMRingBuffer()` and accumulates per speakerID until ≥ 3 seconds, then:
 
 **Request:**
 ```
@@ -152,7 +152,9 @@ POST /identity/voice
 
 pyannote/embedding extracts a 256-d voiceprint. FAISS cosine search. Threshold: similarity > 0.75 → match.
 
-`SpeakerResolver` maintains a session map `[Int: String]` — once Deepgram speaker_1 resolves to "Sarah," all subsequent speaker_1 transcripts in that session are tagged with `resolvedName = "Sarah"` without re-querying.
+`SpeakerResolver` maintains a session map `[Int: String]` — once Deepgram speaker_1 resolves to "Sarah," all subsequent speaker_1 transcripts in that session are tagged without re-querying.
+
+**Write-back mechanism:** `SpeechState` has immutable `let` fields, so `SpeakerResolver` cannot mutate in place. Instead it constructs a new `SpeechState` from the current `context.speech` value, setting `resolvedName`, and calls `await context.update(.speech(newState))`. It has write access to `PerceptionContext` via the same actor injection as all other components.
 
 ### Identity Store (SQLite in sidecar)
 
@@ -342,13 +344,16 @@ Fans out to Graphiti (temporal) + mem0 (semantic) via sidecar `/memory/query` in
 
 ### Modified files
 
+> **Implementation ordering note:** `MemoryTypes.swift` must be created first — it defines `PersonState` which `PerceptionTypes.swift` and `PerceptionContext.swift` both depend on. Similarly `AudioTypes.swift` must be updated before `SpeakerResolver.swift` is implemented.
+
 | File | Change |
 |---|---|
+| `AudioTypes.swift` | Add `resolvedName: String?` to `SpeechState`; update `init` to accept it (defaulting to `nil`); update `DeepgramStreamer.parseResponse` to pass `resolvedName: nil` |
 | `PerceptionContext.swift` | Add `var person: PersonState?`; add `case .person(let s): person = s` to `update()` switch |
-| `PerceptionTypes.swift` | Add `PersonState` to `PerceptionObservation` enum: `case person(PersonState)` |
+| `PerceptionTypes.swift` | Add `case person(PersonState)` to `PerceptionObservation` enum — depends on `PersonState` defined in `MemoryTypes.swift` (same `BantiCore` module, no import needed) |
 | `PerceptionRouter.swift` | Add throttled `FaceIdentifier.dispatch(jpegData:faceObservation:)` call in `dispatch()` when face detected; inject `FaceIdentifier` via init |
 | `AudioTypes.swift` | Add `resolvedName: String?` to `SpeechState` |
-| `AudioRouter.swift` | Add PCM ring buffer (last 5s); expose `appendToPCMRingBuffer(_:)` and `drainPCMBuffer() -> Data`; inject `SpeakerResolver` via init |
+| `AudioRouter.swift` | Add PCM ring buffer (last 5s); expose `appendToPCMRingBuffer(_:)` and `readPCMRingBuffer() -> Data`; inject `SpeakerResolver` via init |
 | `Sources/banti/main.swift` | Wire `MemoryEngine` after existing pipeline setup |
 
 ---
