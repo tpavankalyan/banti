@@ -13,6 +13,8 @@ struct BrainStreamBody: Encodable {
     let recent_speech: [String]
     let last_spoke_seconds_ago: Double
     let last_spoke_text: String?
+    let is_interruption: Bool
+    let current_speech: String?
 }
 
 public actor BrainLoop {
@@ -141,7 +143,9 @@ public actor BrainLoop {
             snapshot_json: snapshot,
             recent_speech: recentTranscripts,
             last_spoke_seconds_ago: BrainLoop.secondsSince(lastSpoke),
-            last_spoke_text: lastSpokeText
+            last_spoke_text: lastSpokeText,
+            is_interruption: false,       // wired in Task 3
+            current_speech: nil           // wired in Task 3
         )
 
         guard let url = URL(string: "/brain/stream", relativeTo: sidecar.baseURL),
@@ -182,7 +186,8 @@ public actor BrainLoop {
 
     // MARK: - Pure static helpers (testable without actor isolation)
 
-    public static func shouldTrigger(lastSpoke: Date?, now: Date = Date()) -> Bool {
+    public static func shouldTrigger(lastSpoke: Date?, isInterruption: Bool = false, now: Date = Date()) -> Bool {
+        if isInterruption { return true }
         guard let lastSpoke else { return true }
         return now.timeIntervalSince(lastSpoke) > cooldownSeconds
     }

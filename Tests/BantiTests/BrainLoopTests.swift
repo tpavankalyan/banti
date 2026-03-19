@@ -25,7 +25,18 @@ final class BrainLoopTests: XCTestCase {
         // Inject same `now` to avoid timing gap between Date() calls
         let now = Date()
         let exactly10 = now.addingTimeInterval(-10)
-        XCTAssertFalse(BrainLoop.shouldTrigger(lastSpoke: exactly10, now: now))
+        XCTAssertFalse(BrainLoop.shouldTrigger(lastSpoke: exactly10, isInterruption: false, now: now))
+    }
+
+    func testShouldTriggerTrueWhenIsInterruption() {
+        // Interruption bypasses cooldown even if spoke very recently
+        let justSpoke = Date().addingTimeInterval(-1)
+        XCTAssertTrue(BrainLoop.shouldTrigger(lastSpoke: justSpoke, isInterruption: true))
+    }
+
+    func testShouldTriggerFalseWhenNotInterruptionAndWithinCooldown() {
+        let recentlySpoke = Date().addingTimeInterval(-5)
+        XCTAssertFalse(BrainLoop.shouldTrigger(lastSpoke: recentlySpoke, isInterruption: false))
     }
 
     // MARK: - Transcript buffer
@@ -165,5 +176,41 @@ final class BrainLoopTests: XCTestCase {
         let json = #"{"type":"silent"}"#.data(using: .utf8)!
         let event = try JSONDecoder().decode(SSEEvent.self, from: json)
         XCTAssertEqual(event.type, "silent")
+    }
+
+    // MARK: - BrainStreamBody
+
+    func testBrainStreamBodyEncodesInterruptionFields() throws {
+        let body = BrainStreamBody(
+            track: "reflex",
+            snapshot_json: "{}",
+            recent_speech: [],
+            last_spoke_seconds_ago: 5.0,
+            last_spoke_text: "hello",
+            is_interruption: true,
+            current_speech: "I was saying"
+        )
+        let data = try JSONEncoder().encode(body)
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(json["is_interruption"] as? Bool, true)
+        XCTAssertEqual(json["current_speech"] as? String, "I was saying")
+    }
+
+    func testBrainStreamBodyEncodesNonInterruptionFields() throws {
+        let body = BrainStreamBody(
+            track: "reasoning",
+            snapshot_json: "{}",
+            recent_speech: [],
+            last_spoke_seconds_ago: 12.0,
+            last_spoke_text: nil,
+            is_interruption: false,
+            current_speech: nil
+        )
+        let data = try JSONEncoder().encode(body)
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(json["is_interruption"] as? Bool, false)
+        // Swift's JSONEncoder encodes nil as JSON null (key present, value NSNull).
+        // Test that current_speech is not a string — covers both null and absent cases.
+        XCTAssertNil(json["current_speech"] as? String)
     }
 }
