@@ -129,8 +129,7 @@ final class SelfSpeechLogTests: XCTestCase {
         let log = SelfSpeechLog()
         await log.register(text: "this is a test phrase with many words right here")
         let cleaned = await log.suppressSelfEcho(in: "this is a test phrase with many words right here")
-        // Normalized match found and removed — result should be empty or greatly reduced
-        XCTAssertTrue(cleaned.count < 20)
+        XCTAssertTrue(cleaned.isEmpty)
     }
 
     func test_suppressSelfEcho_keepsShortRegistered_belowThreshold() async {

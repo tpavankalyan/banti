@@ -33,6 +33,7 @@ public actor SelfSpeechLog {
     }
 
     public func isSelfEcho(transcript: String, arrivedAt: Date = Date()) -> Bool {
+        purgeStale()
         let inTail = lastPlaybackEndedAt.map {
             arrivedAt.timeIntervalSince($0) <= Self.tailSeconds
         } ?? false
@@ -53,22 +54,24 @@ public actor SelfSpeechLog {
         guard !entries.isEmpty else { return text }
 
         let normalizedInput = Self.normalize(text)
-        var result = normalizedInput
+        var normalizedResult = normalizedInput
+        var didSuppress = false
 
         for entry in entries {
             let phrase = entry.normalizedText
             guard phrase.split(separator: " ").count >= Self.suppressMinWords else { continue }
-            if result.contains(phrase) {
-                result = result.replacingOccurrences(of: phrase, with: " ")
+            if normalizedResult.contains(phrase) {
+                normalizedResult = normalizedResult.replacingOccurrences(of: phrase, with: " ")
+                didSuppress = true
             }
         }
 
-        // Collapse multiple spaces and trim
-        let collapsed = result
+        guard didSuppress else { return text }
+
+        return normalizedResult
             .components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
             .joined(separator: " ")
-        return collapsed
     }
 
     // MARK: - Static helpers (public for testability)
