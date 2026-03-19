@@ -13,6 +13,6 @@
     <key>NSCameraUsageDescription</key>
     <string>Banti needs camera access to see you.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Banti will use the microphone in a future version.</string>
+    <string>Banti uses the microphone to listen, transcribe speech, and understand the room.</string>
 </dict>
 </plist>
