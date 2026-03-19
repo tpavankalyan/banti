@@ -3,7 +3,7 @@ import AVFoundation
 import CoreImage
 import Foundation
 
-final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private let logger: Logger
     private var deduplicator: Deduplicator  // var: struct state must persist across callbacks
     private let vision: LocalVision
@@ -11,14 +11,14 @@ final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
     private let queue = DispatchQueue(label: "banti.camera", qos: .userInitiated)
     private var lastFrameTime: CMTime = .zero
 
-    init(logger: Logger, deduplicator: Deduplicator, vision: LocalVision) {
+    public init(logger: Logger, deduplicator: Deduplicator, vision: LocalVision) {
         self.logger = logger
         self.deduplicator = deduplicator
         self.vision = vision
     }
 
     // Request permission and start capture if granted
-    func start() {
+    public func start() {
         AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
             guard let self else { return }
             if granted {
@@ -54,7 +54,7 @@ final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
     }
 
     // AVCaptureVideoDataOutputSampleBufferDelegate
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         // Throttle to 1fps
         guard CMTimeSubtract(presentationTime, lastFrameTime).seconds >= 1.0 else { return }

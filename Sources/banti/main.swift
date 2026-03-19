@@ -1,6 +1,7 @@
 // Sources/banti/main.swift
 import Foundation
 import AppKit
+import BantiCore
 
 // Shared components
 let logger = Logger()

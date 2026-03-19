@@ -1,23 +1,23 @@
 // Sources/banti/LocalVision.swift
 import Foundation
 
-final class LocalVision {
+public final class LocalVision {
     private let session: URLSession
     private let logger: Logger
     private let semaphore = DispatchSemaphore(value: 2)
     private let inferenceQueue = DispatchQueue(label: "banti.inference", attributes: .concurrent)
     private let baseURL = "http://localhost:11434"
 
-    var isAvailable: Bool = false
-    var isFirstRequest: Bool = true
+    public var isAvailable: Bool = false
+    public var isFirstRequest: Bool = true
 
-    init(session: URLSession = .shared, logger: Logger) {
+    public init(session: URLSession = .shared, logger: Logger) {
         self.session = session
         self.logger = logger
     }
 
     // Check if Ollama is reachable. Calls completion when done.
-    func checkAvailability(completion: (() -> Void)? = nil) {
+    public func checkAvailability(completion: (() -> Void)? = nil) {
         guard let url = URL(string: "\(baseURL)/api/tags") else { completion?(); return }
         let task = session.dataTask(with: url) { [weak self] _, response, error in
             guard let self else { return }
@@ -34,7 +34,7 @@ final class LocalVision {
     }
 
     // Start periodic availability recheck every 30 seconds
-    func startRecheckTimer() {
+    public func startRecheckTimer() {
         DispatchQueue.global().asyncAfter(deadline: .now() + 30) { [weak self] in
             self?.checkAvailability()
             self?.startRecheckTimer()
@@ -42,7 +42,7 @@ final class LocalVision {
     }
 
     // Analyze a JPEG frame from the given source
-    func analyze(jpegData: Data, source: String, completion: (() -> Void)? = nil) {
+    public func analyze(jpegData: Data, source: String, completion: (() -> Void)? = nil) {
         guard isAvailable else { completion?(); return }
         guard semaphore.wait(timeout: .now()) == .success else {
             completion?()
@@ -67,7 +67,7 @@ final class LocalVision {
         let base64Image = jpegData.base64EncodedString()
         let body: [String: Any] = [
             "model": "moondream",
-            "prompt": "Describe what you see concisely. Focus on what the user is doing.",
+            "prompt": "Describe the person and their activity in 1-2 sentences.",
             "images": [base64Image],
             "stream": false
         ]

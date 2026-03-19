@@ -4,20 +4,20 @@ import Foundation
 import CoreImage
 import AppKit
 
-final class ScreenCapture: NSObject, SCStreamOutput {
+public final class ScreenCapture: NSObject, SCStreamOutput {
     private let logger: Logger
     private var deduplicator: Deduplicator  // var: struct state must persist across callbacks
     private let vision: LocalVision
     private var stream: SCStream?
     private var lastFrameTime: CMTime = .zero
 
-    init(logger: Logger, deduplicator: Deduplicator, vision: LocalVision) {
+    public init(logger: Logger, deduplicator: Deduplicator, vision: LocalVision) {
         self.logger = logger
         self.deduplicator = deduplicator
         self.vision = vision
     }
 
-    func start() async {
+    public func start() async {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             guard let display = primaryDisplay(from: content) else {
@@ -43,7 +43,7 @@ final class ScreenCapture: NSObject, SCStreamOutput {
     }
 
     // SCStreamOutput
-    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
+    public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .screen else { return }
 
         let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)

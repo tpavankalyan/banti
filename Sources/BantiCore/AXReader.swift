@@ -2,18 +2,18 @@
 import ApplicationServices
 import Foundation
 
-final class AXReader {
+public final class AXReader {
     private let logger: Logger
     private var observer: AXObserver?
     private var currentApp: AXUIElement?
 
-    init(logger: Logger) {
+    public init(logger: Logger) {
         self.logger = logger
     }
 
     // Returns false if permission is not granted
     @discardableResult
-    func start() -> Bool {
+    public func start() -> Bool {
         guard AXIsProcessTrusted() else {
             logger.log(source: "system", message: "[error] Accessibility permission not granted — AX reader disabled")
             return false

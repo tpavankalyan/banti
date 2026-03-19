@@ -3,12 +3,14 @@ import Foundation
 import CoreVideo
 import Accelerate
 
-struct Deduplicator {
+public struct Deduplicator {
     private var lastHashes: [String: UInt64] = [:]
     private let threshold = 0  // Hamming distance ≤ 0 → duplicate (exact match only)
 
+    public init() {}
+
     // Returns true if the frame should be processed (is meaningfully new)
-    mutating func isNew(pixels: [UInt8], width: Int, height: Int, source: String) -> Bool {
+    public mutating func isNew(pixels: [UInt8], width: Int, height: Int, source: String) -> Bool {
         let hash = Deduplicator.dHash(pixels: pixels, width: width, height: height)
         if let last = lastHashes[source], Deduplicator.hammingDistance(hash, last) <= threshold {
             return false
@@ -18,7 +20,7 @@ struct Deduplicator {
     }
 
     // Convenience entry point for CVPixelBuffer — downscales to 9x8 grayscale first
-    mutating func isNew(pixelBuffer: CVPixelBuffer, source: String) -> Bool {
+    public mutating func isNew(pixelBuffer: CVPixelBuffer, source: String) -> Bool {
         guard let pixels = Deduplicator.toGrayscale9x8(pixelBuffer) else { return true }
         return isNew(pixels: pixels, width: 9, height: 8, source: source)
     }
