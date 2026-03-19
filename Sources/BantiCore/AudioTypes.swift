@@ -7,15 +7,6 @@ public protocol AudioChunkDispatcher: AnyObject, Sendable {
     func dispatch(pcmChunk: Data) async   // 16kHz mono Int16 linear16
 }
 
-// MARK: - Events (internal to AudioRouter)
-
-public enum AudioEvent {
-    case speechTranscribed(text: String, speakerID: Int?, isFinal: Bool, confidence: Float)
-    case voiceEmotionDetected(emotions: [(label: String, score: Float)])
-    case soundClassified(label: String, confidence: Float)
-    case silence
-}
-
 // MARK: - State types (all Codable — required for PerceptionContext.snapshotJSON())
 
 public struct SpeechState: Codable {
