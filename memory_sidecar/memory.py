@@ -2,6 +2,8 @@
 import os
 import re
 import uuid
+import json
+import anthropic
 from datetime import datetime
 from typing import Optional
 from collections import deque
@@ -77,7 +79,6 @@ def snapshot_to_episode(snapshot: dict, wall_ts: datetime) -> Optional[str]:
 
 
 async def ingest_snapshot(snapshot_json: str, wall_ts: datetime) -> dict:
-    import json
     global _last_snapshot_text
 
     if snapshot_json == "{}" or not snapshot_json.strip():
@@ -172,8 +173,6 @@ async def query_memory(q: str, context_json: Optional[str] = None) -> dict:
 
 
 async def reflect_memory(snapshots: list[str]) -> dict:
-    import json
-
     if not snapshots:
         return {"summary": ""}
 
@@ -281,7 +280,6 @@ async def brain_decide(req) -> "ProactiveDecisionResponse":
         return ProactiveDecisionResponse(action="silent", reason="ANTHROPIC_API_KEY missing")
 
     # --- assemble context ---
-    import json
     context_parts = []
 
     # snapshot signals
@@ -345,7 +343,6 @@ async def brain_decide(req) -> "ProactiveDecisionResponse":
     user_content = "\n\n".join(context_parts) if context_parts else "No context available yet."
 
     try:
-        import anthropic
         client = anthropic.AsyncAnthropic(api_key=anthropic_key)
         response = await client.messages.create(
             model="claude-opus-4-6",

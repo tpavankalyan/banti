@@ -124,7 +124,7 @@ def test_proactive_decision_response_rejects_invalid_action():
 
 @pytest.mark.asyncio
 async def test_brain_decide_returns_silent_when_no_api_key():
-    with patch.dict(os.environ, {}, clear=True):
+    with patch.dict(os.environ, {"ANTHROPIC_API_KEY": ""}):
         from memory import brain_decide
         from models import BrainDecideRequest
         req = BrainDecideRequest(snapshot_json="{}", recent_speech=[])
@@ -134,7 +134,6 @@ async def test_brain_decide_returns_silent_when_no_api_key():
 
 @pytest.mark.asyncio
 async def test_brain_decide_returns_speak_when_llm_says_speak():
-    from unittest.mock import AsyncMock, MagicMock, patch
     mock_response = MagicMock()
     mock_response.content = [MagicMock(text='{"action": "speak", "text": "You seem busy!", "reason": "test"}')]
     with patch("memory.GRAPHITI", None), patch("memory.MEM0", None):
@@ -152,7 +151,6 @@ async def test_brain_decide_returns_speak_when_llm_says_speak():
 
 @pytest.mark.asyncio
 async def test_brain_decide_returns_silent_on_llm_error():
-    from unittest.mock import AsyncMock, patch
     with patch("memory.GRAPHITI", None), patch("memory.MEM0", None):
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch("anthropic.AsyncAnthropic") as mock_cls:
