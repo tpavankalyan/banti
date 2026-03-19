@@ -76,11 +76,15 @@ public actor MemorySidecar {
             }
         }
         if let execURL = Bundle.main.executableURL {
-            let projectRoot = execURL
-                .deletingLastPathComponent()
-                .deletingLastPathComponent()
-                .deletingLastPathComponent()
-            return projectRoot.appendingPathComponent("memory_sidecar")
+            // Walk up from executable until we find memory_sidecar/main.py
+            var candidate = execURL.deletingLastPathComponent()
+            for _ in 0..<6 {
+                let sidecar = candidate.appendingPathComponent("memory_sidecar")
+                if FileManager.default.fileExists(atPath: sidecar.appendingPathComponent("main.py").path) {
+                    return sidecar
+                }
+                candidate = candidate.deletingLastPathComponent()
+            }
         }
         return URL(fileURLWithPath: "memory_sidecar")
     }
