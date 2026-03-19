@@ -3,6 +3,7 @@
 **Date:** 2026-03-18
 **Status:** Approved
 **Scope:** Perception layer only — how observations are gathered and structured. Output/assistant layer is out of scope.
+**Minimum OS:** macOS 14 (matches existing Package.swift; covers all required Vision APIs)
 
 ---
 
@@ -14,66 +15,100 @@ Replace the single Moondream model with a multi-modal perception pipeline that u
 
 ## Architecture
 
-Three layers:
+```
+┌──────────────────────────────────────────────┐
+│  Frame Sources                                │
+│  CameraCapture          ScreenCapture        │
+│  (encode→JPEG)          (encode→JPEG)        │
+│  (dedup check)          (dedup check)        │
+└──────────────┬───────────────────────────────┘
+               │ JPEG Data
+               ▼
+┌──────────────────────────────────────────────┐
+│  LocalPerception  (Apple Vision)             │  ← ~20-50ms, local
+│  VNImageRequestHandler(data: jpegData)       │
+│  face · body pose · hand pose                │
+│  OCR · scene class · human detect           │
+└──────────────┬───────────────────────────────┘
+               │ (jpegData, source, [PerceptionEvent])
+               ▼
+┌──────────────────────────────────────────────┐
+│  PerceptionRouter  (actor)                   │  ← throttles + dispatches
+└──────┬──────────┬──────────────┬─────────────┘
+       ▼          ▼              ▼
+   Hume AI    GPT-4o         GPT-4o
+  emotions  activity/gesture  screen
+       │          │              │
+       └──────────┼──────────────┘
+                  ▼
+┌──────────────────────────────────────────────┐
+│  PerceptionContext  (actor)                  │
+│  face · emotion · pose · gesture             │
+│  screen · activity                           │
+└──────────────────────────────────────────────┘
+                  │
+                  ▼
+               Logger
+```
 
-```
-┌──────────────────────────────────────┐
-│  Frame Sources                        │
-│  CameraCapture  ScreenCapture        │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│  LocalPerception  (Apple Vision)      │  ← every frame, local, ~20-50ms
-│  face · body pose · hand pose         │
-│  OCR · scene class · human detect    │
-└──────────────┬───────────────────────┘
-               │ emits PerceptionEvents
-       ┌───────┼───────┐
-       ▼       ▼       ▼
-   Hume AI  GPT-4o  GPT-4o          ← cloud, triggered selectively
-  emotions  scene  gesture/screen
-       │       │       │
-       └───────┼───────┘
-               ▼
-┌──────────────────────────────────────┐
-│  PerceptionContext  (Swift actor)     │  ← coherent current state
-│  face · emotion · pose · gesture      │
-│  screen · activity                    │
-└──────────────────────────────────────┘
-               │
-               ▼
-            Logger
-```
+**AXReader** remains a standalone side-channel — logs directly to Logger on focus-change events, unchanged. It does not feed into PerceptionContext.
+
+---
+
+## Buffer Lifecycle
+
+`AVFoundation` and `SCStream` recycle sample buffers after the delegate callback returns. Both capture classes already solve this by encoding to JPEG **inside the callback** before the buffer is released. This pattern is preserved — `LocalPerception` receives safe, owned `Data` (JPEG), not a raw `CVPixelBuffer`. `VNImageRequestHandler` accepts JPEG data directly.
 
 ---
 
 ## Components
 
+### FrameProcessor Protocol
+
+`CameraCapture` and `ScreenCapture` depend on this protocol, replacing the current `LocalVision` dependency:
+
+```swift
+protocol FrameProcessor {
+    func process(jpegData: Data, source: String)
+}
+```
+
+`LocalPerception` conforms to `FrameProcessor`. Calls are fire-and-forget from the capture layer.
+
+---
+
+### Deduplicator
+
+**Kept in the capture layer** (current position). Deduplication happens before JPEG encoding to avoid wasted encode work. If a frame is a duplicate, neither JPEG encoding nor LocalPerception is invoked — same as today.
+
+---
+
 ### LocalPerception
 
-Runs a `VNImageRequestHandler` on every frame using Apple Vision. Batches multiple requests in a single pass for efficiency. Emits `PerceptionEvent` values to the router.
+Conforms to `FrameProcessor`. Creates a `VNImageRequestHandler(data: jpegData, options: [:])` per frame and performs all applicable requests in one pass.
 
 **Camera frame requests:**
-- `VNDetectFaceRectanglesRequest` + `VNDetectFaceLandmarksRequest` — face presence and geometry
-- `VNDetectHumanBodyPoseRequest` — 17-point body skeleton
-- `VNDetectHumanHandPoseRequest` — 21-point hand skeleton
-- `VNDetectHumanRectanglesRequest` — human presence (cheaper fallback when no face)
-- `VNClassifyImageRequest` — scene/object labels
+- `VNDetectFaceRectanglesRequest` + `VNDetectFaceLandmarksRequest`
+- `VNDetectHumanBodyPoseRequest`
+- `VNDetectHumanHandPoseRequest`
+- `VNDetectHumanRectanglesRequest`
+- `VNClassifyImageRequest`
 
 **Screen frame requests:**
-- `VNRecognizeTextRequest` (accurate mode) — OCR, best-in-class accuracy, fully local
-- `VNClassifyImageRequest` — scene labels
+- `VNRecognizeTextRequest` (accurate mode, confidence ≥ 0.5)
+- `VNClassifyImageRequest`
+
+After the handler completes, LocalPerception calls `router.dispatch(jpegData:source:events:)` on `PerceptionRouter`.
 
 **PerceptionEvent enum:**
 ```swift
 enum PerceptionEvent {
-    case faceDetected(landmarks: VNFaceLandmarksObservation)
+    case faceDetected(observation: VNFaceObservation)
     case bodyPoseDetected(observation: VNHumanBodyPoseObservation)
     case handPoseDetected(observation: VNHumanHandPoseObservation)
-    case textRecognized(lines: [String])
-    case sceneClassified(labels: [(identifier: String, confidence: Float)])
     case humanPresent
+    case textRecognized(lines: [String])            // confidence ≥ 0.5, top-to-bottom
+    case sceneClassified(labels: [(identifier: String, confidence: Float)])
     case nothingDetected
 }
 ```
@@ -82,60 +117,76 @@ enum PerceptionEvent {
 
 ### PerceptionRouter
 
-Receives `(frame: Data, source: String, events: [PerceptionEvent])` from LocalPerception. Decides which cloud analyzers to trigger based on what was detected, subject to per-analyzer throttle intervals.
+Declared as an `actor` — camera and screen frames arrive on separate queues; actor isolation prevents data races on throttle state and context writes.
+
+```swift
+actor PerceptionRouter {
+    private var lastFired: [String: Date] = [:]    // throttle timestamps, keyed by analyzer name
+    private let context: PerceptionContext
+    private let hume: HumeEmotionAnalyzer?         // nil if HUME_API_KEY missing
+    private let activity: GPT4oActivityAnalyzer?
+    private let gesture: GPT4oGestureAnalyzer?
+    private let screen: GPT4oScreenAnalyzer?
+}
+```
+
+**`dispatch(jpegData:source:events:)`** checks each routing rule, fires eligible analyzers as `Task { }` (non-blocking), updates `lastFired`.
 
 **Routing rules:**
-| Event | Cloud Analyzer Triggered | Throttle |
+| Condition | Analyzer | Throttle |
 |---|---|---|
-| `.faceDetected` | HumeEmotionAnalyzer | 2s |
-| `.bodyPoseDetected` or `.handPoseDetected` | GPT4oGestureAnalyzer | 3s |
-| Camera frame (any) | GPT4oActivityAnalyzer | 5s |
-| `.textRecognized` | GPT4oScreenAnalyzer | 4s |
+| `.faceDetected` (camera) | `HumeEmotionAnalyzer` | 2s |
+| `.bodyPoseDetected` or `.handPoseDetected` | `GPT4oGestureAnalyzer` | 3s |
+| `.faceDetected` or `.humanPresent` (camera) | `GPT4oActivityAnalyzer` | 5s |
+| `.textRecognized` (screen) | `GPT4oScreenAnalyzer` | 4s |
 
-All cloud calls are non-blocking — the router fires them and continues immediately.
+`GPT4oActivityAnalyzer` is gated on human presence — does not fire for empty-room camera frames.
 
 ---
 
 ### Cloud Analyzers
 
-Each conforms to a simple protocol:
-
+**Protocol:**
 ```swift
 protocol CloudAnalyzer {
-    func analyze(frame: Data, events: [PerceptionEvent]) async throws -> PerceptionObservation
+    // jpegData is nil for text-only analyzers (GPT4oScreenAnalyzer)
+    // Analyzers that require an image must treat nil as a no-op and return nil
+    func analyze(jpegData: Data?, events: [PerceptionEvent]) async -> PerceptionObservation?
 }
 ```
 
+**Error policy (all analyzers):** On any network error, HTTP error (including 429), or timeout — log a `[warn]` line and return `nil`. No retry. `PerceptionContext` retains its previous state silently. This is acceptable for a perception layer.
+
+---
+
 **HumeEmotionAnalyzer**
-- API: Hume AI Expression Measurement (`/batch/jobs` or streaming endpoint)
-- Input: JPEG face crop (cropped to face bounding box from VNFaceObservation)
-- Output: top N emotions with confidence scores
-- Trigger: `.faceDetected` only — never runs without a confirmed face
+- Requires `jpegData` non-nil (face crop). Returns `nil` if `jpegData` is nil.
+- Crops the face using `VNFaceObservation.boundingBox`. Vision bounding boxes use **bottom-left origin** with normalized coordinates — Y must be flipped (`1 - y - height`) before cropping from the JPEG.
+- API: Hume AI Expression Measurement
+- Output: `EmotionState` — top 5 emotions with scores
 
 **GPT4oActivityAnalyzer**
-- API: OpenAI `/v1/chat/completions` with `gpt-4o`, vision input
-- Input: full camera frame + prompt asking for activity description
-- Output: 1-2 sentence description of what the person is doing
-- Trigger: camera frames, throttled to every 5s
+- Requires `jpegData` non-nil (full camera frame). Returns `nil` if nil.
+- API: OpenAI `/v1/chat/completions`, `gpt-4o`, vision input
+- Output: `ActivityState` — 1-2 sentence description of what the person is doing
 
 **GPT4oGestureAnalyzer**
-- API: OpenAI `/v1/chat/completions` with `gpt-4o`, vision input
-- Input: camera frame + serialized body/hand keypoints as context in prompt
-- Output: interpreted gesture/posture meaning (e.g. "leaning back, arms crossed, thinking")
-- Trigger: `.bodyPoseDetected` or `.handPoseDetected`, throttled to every 3s
+- Requires `jpegData` non-nil. Returns `nil` if nil.
+- Extracts keypoint coordinates from `bodyPoseDetected`/`handPoseDetected` events, serializes as JSON, includes in system prompt alongside the image.
+- API: OpenAI `/v1/chat/completions`, `gpt-4o`, vision input
+- Output: `GestureState` — interpreted posture/gesture (e.g. "leaning back, arms crossed")
 
 **GPT4oScreenAnalyzer**
-- API: OpenAI `/v1/chat/completions` with `gpt-4o`, text input only (no image)
-- Input: OCR text lines from `VNRecognizeTextRequest`
-- Output: what the user is reading/working on, key content
-- Trigger: `.textRecognized`, throttled to every 4s
-- Note: text-only call is cheaper and faster than vision call
+- `jpegData` is always `nil` — text-only call (cheaper, faster).
+- Input: OCR lines from `.textRecognized` joined with newlines as user message.
+- API: OpenAI `/v1/chat/completions`, `gpt-4o`, text only
+- Output: `ScreenState` — what the user is reading or working on
 
 ---
 
 ### PerceptionContext
 
-A Swift `actor` holding the latest observation from each modality. Thread-safe by construction.
+Swift `actor`. Each cloud analyzer calls `context.update(...)` after receiving a result.
 
 ```swift
 actor PerceptionContext {
@@ -145,53 +196,67 @@ actor PerceptionContext {
     var gesture:  GestureState?
     var screen:   ScreenState?
     var activity: ActivityState?
-}
 
-struct EmotionState {
-    let emotions: [(label: String, score: Float)]
-    let updatedAt: Date
+    // Called from main.swift after init
+    func startSnapshotTimer(logger: Logger)
 }
-// (similar structure for each state type)
 ```
 
-Every 5 seconds, the context is serialized to a single structured log line — a snapshot of the full perception state. Individual modality updates are not logged separately.
+**State type definitions:**
+```swift
+struct FaceState     { let boundingBox: CGRect; let landmarksDetected: Bool; let updatedAt: Date }
+struct EmotionState  { let emotions: [(label: String, score: Float)]; let updatedAt: Date }
+struct PoseState     { let bodyPoints: [String: CGPoint]; let handPoints: [String: CGPoint]?; let updatedAt: Date }
+struct GestureState  { let description: String; let updatedAt: Date }
+struct ScreenState   { let ocrLines: [String]; let interpretation: String; let updatedAt: Date }
+struct ActivityState { let description: String; let updatedAt: Date }
+```
+
+**Snapshot timer:** Owned by `PerceptionContext`, started via `startSnapshotTimer(logger:)` called from `main.swift` after wiring. Fires every **2 seconds** — matching the fastest cloud modality (Hume at 2s throttle), so the log is never more than one cycle stale. Serializes all non-nil state fields to a single JSON log line via `[source: perception]`.
 
 ---
 
 ### Environment Variables
 
-API keys are read from environment at startup:
-
+Read at startup:
 ```
 HUME_API_KEY=...
 OPENAI_API_KEY=...
 ```
 
-If a key is missing, the corresponding cloud analyzer is disabled with a warning log. Local (Apple Vision) analyzers always run.
+If `HUME_API_KEY` is absent: `HumeEmotionAnalyzer` is not created; `emotion` field in context remains nil.
+If `OPENAI_API_KEY` is absent: all three GPT-4o analyzers are not created; `activity`, `gesture`, `screen` fields remain nil.
+Each missing key emits one `[warn]` log at startup. LocalPerception (Apple Vision) always runs.
 
 ---
 
 ## Integration with Existing Code
 
-- `LocalVision.swift` (Moondream client) → **replaced** by `LocalPerception.swift` + cloud analyzers
-- `Deduplicator.swift` → **kept** — still deduplicates frames before they enter LocalPerception
-- `CameraCapture.swift`, `ScreenCapture.swift`, `AXReader.swift`, `Logger.swift` → **kept unchanged**
-- `main.swift` → updated to wire new components
+| File | Change |
+|---|---|
+| `LocalVision.swift` | **Replaced** by `LocalPerception.swift` + 4 cloud analyzer files + `PerceptionRouter.swift` |
+| `CameraCapture.swift` | Dependency: `LocalVision` → `FrameProcessor` protocol (drop-in, same call site) |
+| `ScreenCapture.swift` | Dependency: `LocalVision` → `FrameProcessor` protocol (drop-in, same call site) |
+| `Deduplicator.swift` | Kept, unchanged, in capture layer as today |
+| `AXReader.swift` | Unchanged |
+| `Logger.swift` | Unchanged |
+| `main.swift` | Updated: construct `PerceptionContext`, `PerceptionRouter`, `LocalPerception`; call `context.startSnapshotTimer(logger:)`; pass `LocalPerception` as `FrameProcessor` to captures |
 
 ---
 
 ## Performance
 
-- **LocalPerception:** ~20-50ms per frame on Apple Silicon Neural Engine, batched in one handler pass
-- **Cloud calls:** async, non-blocking — frame processing never waits for cloud results
-- **Throttling:** each analyzer has an independent minimum interval, prevents API pile-up
-- **Net result:** faster and cheaper than current blocking Moondream approach (which held a semaphore for up to 5s per frame)
+- **LocalPerception:** ~20-50ms, all VN requests batched in one handler pass
+- **Cloud calls:** non-blocking `Task { }`, frame processing never waits
+- **Throttling:** independent per-analyzer intervals, owned by `PerceptionRouter` actor
+- **Deduplication:** duplicate frames skip JPEG encode and all processing
+- **Net result:** faster and cheaper than current Moondream approach (5s blocking semaphore per frame)
 
 ---
 
 ## Out of Scope
 
-- What the assistant does with `PerceptionContext` observations
+- What the assistant does with PerceptionContext observations
 - Summarization, memory, proactive responses
 - UI / output layer
-- AX deduplication (separate task)
+- AX deduplication
