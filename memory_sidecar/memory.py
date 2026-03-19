@@ -175,8 +175,8 @@ async def reflect_memory(snapshots: list[str]) -> dict:
     if not snapshots:
         return {"summary": ""}
 
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if not openai_key:
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not anthropic_key:
         return {"summary": ""}
 
     episodes = []
@@ -193,7 +193,8 @@ async def reflect_memory(snapshots: list[str]) -> dict:
         return {"summary": "No meaningful episodes"}
 
     context = "\n".join(f"- {ep}" for ep in episodes[-50:])
-    prompt = f"""You are banti's self-model. Analyze recent observations and respond with JSON:
+    prompt = f"""You are banti's self-model. Analyze recent observations and respond with JSON.
+Return ONLY valid JSON with no markdown fences:
 {{
   "observations": ["time-anchored facts"],
   "patterns": ["recurring signals"],
@@ -205,17 +206,17 @@ Recent observations:
 {context}"""
 
     try:
-        from openai import AsyncOpenAI
-        client = AsyncOpenAI(api_key=openai_key)
-        resp = await client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
+        client = anthropic.AsyncAnthropic(api_key=anthropic_key)
+        resp = await client.messages.create(
+            model="claude-opus-4-6",
             max_tokens=500,
-            response_format={"type": "json_object"},
+            messages=[{"role": "user", "content": prompt}],
         )
-        result = json.loads(resp.choices[0].message.content or "{}")
+        raw = resp.content[0].text or "{}"
+        raw = re.sub(r'^```[a-z]*\n?|\n?```$', '', raw.strip())
+        result = json.loads(raw)
     except Exception as e:
-        print(f"[warn] GPT-4o reflection failed: {e}")
+        print(f"[warn] Opus reflection failed: {e}")
         return {"summary": "reflection failed"}
 
     self_json_path = os.path.expanduser(

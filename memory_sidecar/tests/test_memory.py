@@ -212,3 +212,36 @@ async def test_query_memory_silent_when_no_anthropic_key_and_no_openai_key():
                 from memory import query_memory
                 result = await query_memory("test?")
                 assert result["answer"] == "some fact"
+
+@pytest.mark.asyncio
+async def test_reflect_memory_uses_anthropic():
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='{"observations": [], "patterns": ["user codes a lot"], "relationships": [], "summary": "User was coding"}')]
+    with patch("memory.MEM0", None):
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("openai.AsyncOpenAI") as mock_openai:
+                with patch("anthropic.AsyncAnthropic") as mock_anthropic_cls:
+                    mock_client = MagicMock()
+                    mock_client.messages.create = AsyncMock(return_value=mock_response)
+                    mock_anthropic_cls.return_value = mock_client
+                    from memory import reflect_memory
+                    result = await reflect_memory([SAMPLE_SNAPSHOT])
+                    assert result["summary"] == "User was coding"
+                    mock_openai.assert_not_called()
+                    mock_anthropic_cls.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_reflect_memory_handles_fenced_json():
+    """Ensure markdown-fenced JSON from Opus is handled correctly."""
+    fenced = '```json\n{"observations": [], "patterns": [], "relationships": [], "summary": "ok"}\n```'
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=fenced)]
+    with patch("memory.MEM0", None):
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("anthropic.AsyncAnthropic") as mock_cls:
+                mock_client = MagicMock()
+                mock_client.messages.create = AsyncMock(return_value=mock_response)
+                mock_cls.return_value = mock_client
+                from memory import reflect_memory
+                result = await reflect_memory([SAMPLE_SNAPSHOT])
+                assert result["summary"] == "ok"
