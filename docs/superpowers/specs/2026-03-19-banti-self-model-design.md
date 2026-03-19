@@ -42,14 +42,17 @@ No raw Deepgram transcript ever reaches the brain loop without attribution. No s
 
 | Component | Role | Status |
 |---|---|---|
-| `SelfSpeechLog` | Efference copy — registers utterances before audio; answers "is this transcript mine?" | New actor |
+| `SelfSpeechLog` | Efference copy — registers utterances before audio; tracks playback end; answers "is this transcript mine?" | New actor |
 | `BantiVoice` | Single output identity — wraps CartesiaSpeaker; writes to log + buffer simultaneously | New actor |
 | `ConversationBuffer` | Attributed turn history — `[(speaker, text, timestamp)]` | New actor |
 | `SpeakerAttributor` | Attribution gate — checks Deepgram transcripts against SelfSpeechLog | New struct |
-| `PerceptionContext` | `speech:` removed; `snapshotJSON()` becomes ambient-only | Modified |
+| `PerceptionContext` | `speech:` removed from fields and from `PerceptionObservation`; `snapshotJSON()` becomes ambient-only | Modified |
+| `DeepgramStreamer` | Removes `context.update(.speech(state))` call — only fires `onFinalTranscript` callback | Modified |
 | `BrainStreamBody` | `recent_speech: [String]` → `conversation_history: [ConversationTurnDTO]` + `ambient_context` | Modified |
-| `BrainLoop` | Uses `ConversationBuffer`; routes transcripts through `SpeakerAttributor` | Modified |
+| `BrainLoop` | Uses `ConversationBuffer`; routes transcripts through `SpeakerAttributor`; preserves interruption logic | Modified |
+| `SelfModel` | No code change — `snapshotJSON()` is automatically ambient-only once `speech:` is removed from `PerceptionContext` | Passively updated |
 | `AXReader` / Screen analyzers | Filter output through `SelfSpeechLog.suppressSelfEcho()` before updating context | Modified |
+| `MemoryEngine` | Constructs and wires new actors in correct dependency order | Modified |
 
 ---
 
@@ -57,28 +60,30 @@ No raw Deepgram transcript ever reaches the brain loop without attribution. No s
 
 ### `SelfSpeechLog` (actor)
 
-Maintains a ring buffer of banti's registered utterances with timestamps. Answers two questions: "is this incoming transcript my own echo?" and "does this screen text contain what I recently said?"
+Maintains a ring buffer of banti's registered utterances with timestamps. Tracks when the last audio playback ended. Answers two questions: "is this incoming transcript my own echo?" and "does this screen text contain what I recently said?"
 
 ```swift
 // Core interface
-func register(text: String)
+func register(text: String)           // sets isCurrentlyPlaying = true
+func markPlaybackEnded()              // called by BrainLoop.streamTrack after the full SSE response
 func isSelfEcho(transcript: String, arrivedAt: Date) -> Bool
 func suppressSelfEcho(in text: String) -> String
-func hasAnyActiveEntry() -> Bool
+
+// Internal state
+private var entries: [(normalizedText: String, registeredAt: Date)]
+private var lastPlaybackEndedAt: Date?
+private var isCurrentlyPlaying: Bool = false  // true from first register() until markPlaybackEnded()
 ```
 
 **Attribution logic in `isSelfEcho`:**
 1. Normalize both strings (lowercase, strip punctuation)
-2. **Timing gate:** if `arrivedAt` falls within `[registeredAt, registeredAt + estimatedDuration + 3.0s]` → candidate
-3. **Fuzzy match:** word-level Jaccard similarity ≥ 0.6 between normalized transcript and registered text → `.selfEcho`
-4. If timing gate passes but no text registered yet (edge case on first word) → `.selfEcho` (conservative)
-5. Entries purged after 2 minutes
+2. **Playback gate:** `isCurrentlyPlaying || (lastPlaybackEndedAt != nil && arrivedAt ≤ lastPlaybackEndedAt! + 5.0s)` → candidate. `isCurrentlyPlaying` is set to `true` by `register()` (first sentence of a response) and cleared to `false` by `markPlaybackEnded()` (called after the last sentence in the SSE loop). This spans the full multi-sentence response as a single window. The 5s post-playback tail covers: TTS synthesis latency (~0.3–1s) + Deepgram transcription latency + room acoustic decay.
+3. **Fuzzy match:** word-level Jaccard similarity ≥ 0.6 between normalized transcript and any registered entry → `.selfEcho`
+4. If playback gate passes but `entries` is empty (cold-start edge case) → `.selfEcho` (conservative)
+5. Entries purged after 2 minutes; ring buffer capped at 30 entries
 
-**Estimated duration:** `wordCount / 2.5` seconds (average TTS speaking rate).
-
-**`suppressSelfEcho` logic:** strips any phrase ≥ 5 contiguous words from recent registered texts found verbatim (case-insensitive) in the input string. Minimum 5-word threshold avoids false positives on common short phrases.
-
-Ring buffer capped at 30 entries.
+**`suppressSelfEcho` logic for screen/AX text:**
+Normalize both the registered texts and the input (lowercase, strip punctuation). Check if any normalized registered phrase of ≥ 5 words appears as a substring in the normalized input. Strip matching spans. Normalized matching (not verbatim) handles chat UIs that add punctuation, wrapping, or name prefixes. Minimum 5-word threshold avoids false positives on common short phrases.
 
 ---
 
@@ -110,17 +115,29 @@ Capped at 30 turns (drops oldest from front). `addBantiTurn` called only from `B
 The single output identity. All speech exits through here.
 
 ```swift
+// Public interface
+func say(_ text: String, track: TrackPriority) async
+func isPlaying() async -> Bool          // async func — not computed property (actor isolation)
+func cancelTrack(_ track: TrackPriority) async
+
+// Implementation of say() — called once per SSE sentence
 func say(_ text: String, track: TrackPriority) async {
-    selfSpeechLog.register(text: text)              // 1. efference copy — before audio
-    conversationBuffer.addBantiTurn(text)           // 2. conversation record
-    await cartesiaSpeaker.streamSpeak(text, track)  // 3. actual audio
+    await selfSpeechLog.register(text: text)              // 1. efference copy — before audio
+    await conversationBuffer.addBantiTurn(text)           // 2. conversation record
+    await cartesiaSpeaker.streamSpeak(text, track: track) // 3. actual audio
+    // NOTE: markPlaybackEnded() is NOT called here — it is called by
+    // BrainLoop.streamTrack() after the full SSE loop completes, so the
+    // suppression window covers the entire multi-sentence response as one unit.
 }
 
-var isPlaying: Bool { await cartesiaSpeaker.isPlaying }
-func cancelTrack(_ track: TrackPriority) async { ... }
+func markPlaybackEnded() async {
+    await selfSpeechLog.markPlaybackEnded()               // opens 5s tail window
+}
 ```
 
-`BrainLoop.streamTrack()` calls `bantiVoice.say()` instead of `speaker.streamSpeak()` directly. `BantiVoice` owns references to both `SelfSpeechLog` and `ConversationBuffer`.
+`isPlaying()` is an `async func` (not a computed `var`) because accessing `cartesiaSpeaker.isPlaying` crosses actor isolation boundaries. `BrainLoop.streamTrack()` calls `bantiVoice.say()` instead of `speaker.streamSpeak()` directly. `BantiVoice` holds references to `SelfSpeechLog`, `ConversationBuffer`, and `CartesiaSpeaker`.
+
+`BantiVoice` is exposed as an `internal` property on `MemoryEngine` (matching the existing access level pattern for `cartesiaSpeaker`), accessible via `@testable import` in tests.
 
 ---
 
@@ -134,20 +151,17 @@ enum Source { case human, selfEcho }
 func attribute(
     _ transcript: String,
     arrivedAt: Date,
-    selfLog: SelfSpeechLog,
-    isPlaying: Bool
+    selfLog: SelfSpeechLog
 ) async -> Source
 ```
 
 **Logic:**
 ```
-if isPlaying AND selfLog.isSelfEcho(transcript, arrivedAt) → .selfEcho
-if isPlaying AND !selfLog.hasAnyActiveEntry()              → .human   // banti hasn't registered anything recently
-if selfLog.isSelfEcho(transcript, arrivedAt)               → .selfEcho
-else                                                       → .human
+if await selfLog.isSelfEcho(transcript, arrivedAt) → .selfEcho
+else                                               → .human
 ```
 
-`isPlaying` alone is not sufficient to suppress (would block human interruptions). The fuzzy match against `SelfSpeechLog` is required as the discriminator.
+All timing state (`isCurrentlyPlaying`, `lastPlaybackEndedAt`) lives inside `SelfSpeechLog`. `SpeakerAttributor` needs no `wasPlaying` parameter — `isSelfEcho`'s playback gate already captures whether banti is currently speaking or in the post-playback tail. `wasPlaying` is still captured by `BrainLoop.onFinalTranscript` separately for interruption detection only, not attribution.
 
 ---
 
@@ -155,27 +169,36 @@ else                                                       → .human
 
 ### `PerceptionContext`
 
-- **Remove:** `speech: SpeechState?` and its `.speech` case from `PerceptionObservation`
-- **Modify:** `snapshotJSON()` no longer includes speech. Emits only: `face`, `emotion`, `pose`, `gesture`, `screen`, `activity`, `sound`, `person`
+- **Remove:** `speech: SpeechState?` from stored properties
+- **Remove:** `.speech(SpeechState)` case from `PerceptionObservation` enum
+- **Modify:** `snapshotJSON()` emits only: `face`, `emotion`, `pose`, `gesture`, `screen`, `activity`, `sound`, `person`
 
-Speech is now exclusively in `ConversationBuffer`. The two channels — conversational and ambient — are fully separated.
+Speech is now exclusively in `ConversationBuffer`. The two channels — conversational and ambient — are fully separated. `SelfModel` is unaffected by code: since `speech:` is removed from `PerceptionContext`, `snapshotJSON()` automatically produces ambient-only snapshots, making `SelfModel.reflect()` correct without any changes to `SelfModel.swift`.
+
+---
+
+### `DeepgramStreamer`
+
+**Remove:** `await context.update(.speech(state))` call in `handleMessage`. The `.speech` observation no longer exists. `DeepgramStreamer` retains `onFinalTranscript` callback and continues calling it for final transcripts — this is its only output path. Since the `.speech` update was the only usage of `context` in `DeepgramStreamer`, removing it leaves the `context` parameter with no remaining usages; it can be removed from `DeepgramStreamer.init` in the same PR.
+
+---
 
 ### `BrainStreamBody`
 
 ```swift
 // Removed
 let recent_speech: [String]
-let last_spoke_text: String?   // derivable from conversation_history
+let last_spoke_text: String?        // derivable from conversation_history
 
 // Added
 let conversation_history: [ConversationTurnDTO]
-let ambient_context: String          // snapshotJSON() — no speech
-let last_banti_utterance: String?    // convenience field
+let ambient_context: String         // context.snapshotJSON() — no speech
+let last_banti_utterance: String?   // convenience — last banti turn text
 
 // Unchanged
 let track: String
 let is_interruption: Bool
-let current_speech: String?
+let current_speech: String?         // see note below
 let last_spoke_seconds_ago: Double
 ```
 
@@ -187,74 +210,121 @@ struct ConversationTurnDTO: Encodable {
 }
 ```
 
+**`current_speech` tracking:** `BrainLoop.streamTrack()` continues to set `currentlySpeaking = text` immediately before calling `bantiVoice.say(text, track)`, exactly as today it sets it before `speaker.streamSpeak()`. No mechanism change — the assignment simply moves one line earlier in the call site.
+
+---
+
 ### `BrainLoop`
 
 **Remove:** `recentTranscripts: [String]`, `lastSpokeText: String?`
 
-**Add:** `conversationBuffer: ConversationBuffer`, `selfSpeechLog: SelfSpeechLog` (both injected via init or owned by `BantiVoice`)
+**Add to init:** `bantiVoice: BantiVoice`, `selfSpeechLog: SelfSpeechLog`, `conversationBuffer: ConversationBuffer`
 
-**Modified `onFinalTranscript`:**
+New init signature:
+```swift
+public init(context: PerceptionContext, sidecar: MemorySidecar,
+            bantiVoice: BantiVoice, selfSpeechLog: SelfSpeechLog,
+            conversationBuffer: ConversationBuffer, logger: Logger)
+```
+
+**Modified `onFinalTranscript` — preserves interruption logic:**
 ```swift
 func onFinalTranscript(_ transcript: String) async {
+    // Capture isPlaying BEFORE attribution — needed for interruption detection below
+    let wasPlaying = await bantiVoice.isPlaying()
+    // Attribution: SpeakerAttributor uses SelfSpeechLog's internal timing state (no wasPlaying needed)
     let source = await SpeakerAttributor().attribute(
         transcript, arrivedAt: Date(),
-        selfLog: selfSpeechLog,
-        isPlaying: await bantiVoice.isPlaying
+        selfLog: selfSpeechLog
     )
     guard source == .human else { return }
     await conversationBuffer.addHumanTurn(transcript)
-    await evaluate(reason: "speech: \(transcript)")
+    // Preserve existing interruption detection: human spoke while banti was playing
+    let isInterruption = wasPlaying && BrainLoop.isInterruptionCandidate(transcript)
+    await evaluate(reason: "speech: \(transcript)", isInterruption: isInterruption)
 }
 ```
 
-**Modified `streamTrack`:** builds `BrainStreamBody` from `conversationBuffer.recentTurns()` and `context.snapshotJSON()`. Calls `bantiVoice.say()`.
+**Modified `streamTrack`:**
+- Builds `BrainStreamBody` from `conversationBuffer.recentTurns()` and `context.snapshotJSON()` (ambient-only)
+- In the SSE sentence loop: sets `currentlySpeaking = text`, then calls `bantiVoice.say(text, track: track)`
+- After the SSE loop completes (all sentences spoken): calls `await bantiVoice.markPlaybackEnded()` if any sentences were spoken — this opens the 5s acoustic tail window for the full response as a unit
+- `lastSpokeText` replaced by `conversationBuffer.lastBantiUtterance()` for `last_banti_utterance` field
 
 ### `AXReader` and Screen Analyzers
 
-Before updating `PerceptionContext`, pass text through `selfSpeechLog.suppressSelfEcho(in:)`. The cleaned text is what gets stored in context.
+Before updating `PerceptionContext`, pass text through `await selfSpeechLog.suppressSelfEcho(in:)`. The normalized-cleaned text is what gets stored in context.
 
 ### `MemoryEngine`
 
-Constructs `SelfSpeechLog`, `ConversationBuffer`, and `BantiVoice` and injects them into `BrainLoop`. `BantiVoice` wraps the existing `CartesiaSpeaker`.
+**New construction order (all synchronous in `init`):**
+```swift
+// Constructed in dependency order:
+let selfSpeechLog    = SelfSpeechLog()
+let conversationBuffer = ConversationBuffer()
+let cartesiaSpeaker  = CartesiaSpeaker(engine: engine, logger: logger)
+let bantiVoice       = BantiVoice(cartesiaSpeaker: cartesiaSpeaker,
+                                   selfSpeechLog: selfSpeechLog,
+                                   conversationBuffer: conversationBuffer,
+                                   logger: logger)
+let brainLoop        = BrainLoop(context: context, sidecar: sidecar,
+                                  bantiVoice: bantiVoice,
+                                  selfSpeechLog: selfSpeechLog,
+                                  conversationBuffer: conversationBuffer,
+                                  logger: logger)
+```
+
+`bantiVoice` is `internal` on `MemoryEngine` (same access level as the existing `cartesiaSpeaker`). The transcript callback wiring in `MemoryEngine.start()` is unchanged — it still calls `await audioRouter.setTranscriptCallback { await loop.onFinalTranscript($0) }`.
 
 ---
 
 ## Data Flow
 
 ```
-SPEAKING PATH
+SPEAKING PATH (per-sentence loop in streamTrack)
 ─────────────
-BrainLoop.streamTrack() receives sentence from SSE
+for each sentence from SSE:
+  currentlySpeaking = sentence                            [0] in-flight tracking (unchanged)
   → bantiVoice.say(sentence, track)
-      ├─ selfSpeechLog.register(sentence)          [1] efference copy — before audio
-      ├─ conversationBuffer.addBantiTurn(sentence) [2] conversation record
-      └─ cartesiaSpeaker.streamSpeak(sentence)     [3] audio out
+      ├─ selfSpeechLog.register(sentence)                 [1] efference copy — sets isCurrentlyPlaying=true
+      ├─ conversationBuffer.addBantiTurn(sentence)        [2] conversation record
+      └─ cartesiaSpeaker.streamSpeak(sentence, track)     [3] audio out
+
+after SSE loop completes (all sentences spoken):
+  → bantiVoice.markPlaybackEnded()                        [4] clears isCurrentlyPlaying, opens 5s tail
 
 
 LISTENING PATH
 ──────────────
 MicrophoneCapture → AudioRouter → DeepgramStreamer
-  final transcript arrives at BrainLoop.onFinalTranscript()
-    → SpeakerAttributor.attribute(transcript, now, selfLog, isPlaying)
+  DeepgramStreamer.handleMessage():
+    • NO longer calls context.update(.speech(...))
+    • fires onFinalTranscript callback only
+  BrainLoop.onFinalTranscript(transcript):
+    wasPlaying = await bantiVoice.isPlaying()   ← for interruption detection only
+    → SpeakerAttributor.attribute(transcript, now, selfLog)
         ├─ .selfEcho → discard silently
         └─ .human   → conversationBuffer.addHumanTurn(transcript)
-                     → BrainLoop.evaluate(reason: "speech: ...")
+                     → evaluate(reason: "speech: ...",
+                                isInterruption: wasPlaying && isInterruptionCandidate(transcript))
 
 
 SCREEN / AX PATH
 ────────────────
 ScreenCapture / AXReader
   raw text captured
-    → selfSpeechLog.suppressSelfEcho(in: rawText) → cleaned
+    → await selfSpeechLog.suppressSelfEcho(in: rawText) → cleaned (normalized match)
     → context.update(.screen(cleaned))
 
 
 BRAIN CALL PATH
 ───────────────
 BrainLoop.streamTrack() builds BrainStreamBody:
-  conversation_history: conversationBuffer.recentTurns(10)  ← attributed
-  ambient_context:      context.snapshotJSON()              ← no speech
+  conversation_history: conversationBuffer.recentTurns(10)    ← attributed, clean
+  ambient_context:      context.snapshotJSON()                ← no speech field
   last_banti_utterance: conversationBuffer.lastBantiUtterance()
+  current_speech:       currentlySpeaking                     ← unchanged
+  last_spoke_seconds_ago, is_interruption                     ← unchanged
 ```
 
 ---
@@ -263,48 +333,52 @@ BrainLoop.streamTrack() builds BrainStreamBody:
 
 ### Human interrupts while banti is speaking
 
-`isPlaying = true` but the incoming transcript doesn't match anything in `SelfSpeechLog` (it's a new human utterance). `SpeakerAttributor` classifies it `.human`. The brain triggers an interruption via the existing `isInterruptionCandidate` (≥2 words) path. No change needed to interruption logic.
+`wasPlaying = true` at the time the transcript arrives. `SpeakerAttributor` checks `isSelfEcho` — the human's transcript doesn't match anything in `SelfSpeechLog` (Jaccard < 0.6) → `.human`. `onFinalTranscript` calls `evaluate(isInterruption: true)` because `wasPlaying && isInterruptionCandidate(transcript)`. The `shouldTrigger` cooldown is bypassed for interruptions as today.
 
 ### Deepgram paraphrases TTS output
 
-Deepgram normalizes what it hears. "Let me check on that for you" vs. "let me check that for you" → Jaccard = 7/8 = 0.875. Well above 0.6 threshold.
+"Let me check on that for you" vs. "let me check that for you" → Jaccard = 7/8 = 0.875. Well above 0.6 threshold.
 
-### TTS finishes but room echo/reverb lingers
+### TTS synthesis latency + Deepgram transcription latency stack
 
-The 3s post-playback tail in the timing window covers acoustic decay in most environments.
+Banti's audio for sentence N: registered at T, TTS synthesis ~300ms, playback duration D, `markPlaybackEnded` at T+D+300ms (approximate). Deepgram transcription of banti's audio arrives at ~T+D+300ms+200ms. `lastPlaybackEndedAt + 5.0s` window covers both latencies with ~4.5s of headroom. For multi-sentence responses, each sentence's audio plays sequentially; `markPlaybackEnded` is called after the last sentence, so the window stays open correctly.
 
 ### Screen shows a chat UI with the full conversation
 
-`suppressSelfEcho` uses a minimum 5-word contiguous phrase match. Short common phrases don't trigger suppression. Full sentences banti said are stripped. Name prefixes in the UI (`"Banti: ..."`) don't affect matching since the registered text doesn't include them.
+`suppressSelfEcho` uses normalized (lowercase, no punctuation) substring matching. Chat UI name prefixes (`"Banti: ..."`) are stripped along with the sentence because the normalized registered text appears as a substring of the normalized screen line. Minimum 5-word threshold prevents false positives on short common phrases.
 
-### `SelfSpeechLog` empty on cold start or when TTS is unavailable
+### `SelfSpeechLog` empty on cold start or TTS unavailable
 
-`isSelfEcho` returns false for all transcripts → everything treated as human. Safe default: banti may respond to itself once on startup if TTS replays a prior session, but `ConversationBuffer` is also empty so there's no stale history to react to.
+`isSelfEcho` returns false for all transcripts → everything treated as human. Safe default.
+
+### `DeepgramStreamer` context dependency after removing `.speech` update
+
+Once `context.update(.speech(state))` is removed, `DeepgramStreamer` no longer needs the `context` parameter. The dependency can be removed from `DeepgramStreamer.init` in the same PR to reduce coupling, but this is an optional cleanup — omitting it is not a correctness issue.
 
 ---
 
 ## Python Sidecar Changes
 
-The `/brain/stream` endpoint receives an updated `BrainStreamBody`. Required changes:
+The `/brain/stream` endpoint receives an updated `BrainStreamBody`. The HTTP transport layer (URL, method, auth headers, SSE response format) is unchanged. Only the JSON request body structure changes:
 
-1. **Rename `snapshot_json` → `ambient_context`** in request parsing
-2. **Replace `recent_speech: [str]`** with `conversation_history: list[dict]` where each dict has `speaker`, `text`, `timestamp`
+1. **Rename `snapshot_json` → `ambient_context`** in request parsing (same content, different key)
+2. **Replace `recent_speech: [str]`** with `conversation_history: list[dict]`, each dict: `{"speaker": "banti"|"human", "text": "...", "timestamp": 1234567890.0}`
 3. **Update prompt assembly:** render conversation history as dialogue (`Human: ...\nBanti: ...`) rather than a flat list
-4. **`last_spoke_text`** → derive from `last_banti_utterance` field or last banti turn in history
+4. **`last_spoke_text`** → `last_banti_utterance` (renamed field, same semantics)
 
-The `track` field, SSE response format, and all other sidecar logic are unchanged.
+The `track` field, SSE sentence/done event format, and all other sidecar logic are unchanged.
 
 ---
 
 ## What Does Not Change
 
 - `CartesiaSpeaker` internals — `BantiVoice` wraps it, no internal changes needed
-- `DeepgramStreamer` — attribution happens in `BrainLoop`, not inside Deepgram
 - `AudioRouter` / `MicrophoneCapture` — PCM pipeline unchanged
-- `MemorySidecar` Swift HTTP client — same interface, different request body fields
+- `MemorySidecar` Swift HTTP transport — same URL, method, and headers; JSON body field names change (see above)
 - Heartbeat and poll event loops in `BrainLoop`
 - `FaceIdentifier`, `SpeakerResolver`, `MemoryIngestor`, `SoundClassifier`
 - `TrackPriority` reflex/reasoning parallel track logic
+- `SelfModel` — no code change; passively benefits from `speech:` removal in `PerceptionContext`
 
 ---
 
@@ -312,4 +386,5 @@ The `track` field, SSE response format, and all other sidecar logic are unchange
 
 1. Should `SpeakerAttributor` log suppressed transcripts at debug level for observability?
 2. Should `ConversationBuffer` persist across restarts (e.g. written to sidecar) or always start fresh?
-3. Should the Jaccard threshold (0.6) and tail window (3.0s) be configurable via environment variables?
+3. Should the Jaccard threshold (0.6), tail window (5.0s), and suppression minimum phrase length (5 words) be configurable via environment variables?
+4. Can `DeepgramStreamer`'s `context` dependency be removed in this PR, or deferred to a follow-up cleanup?
