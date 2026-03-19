@@ -118,6 +118,5 @@ def test_proactive_decision_response_silent_text_is_none():
 
 def test_proactive_decision_response_rejects_invalid_action():
     from models import ProactiveDecisionResponse
-    import pytest
     with pytest.raises(Exception):
         ProactiveDecisionResponse(action="shout", reason="bad")
