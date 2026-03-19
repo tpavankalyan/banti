@@ -1,0 +1,109 @@
+// Sources/BantiCore/PerceptionRouter.swift
+import Foundation
+import Vision
+
+public actor PerceptionRouter: PerceptionDispatcher {
+    private var lastFired: [String: Date] = [:]
+    private let context: PerceptionContext
+    private let logger: Logger
+    private var hume:     HumeEmotionAnalyzer?
+    private var activity: GPT4oActivityAnalyzer?
+    private var gesture:  GPT4oGestureAnalyzer?
+    private var screen:   GPT4oScreenAnalyzer?
+
+    public init(context: PerceptionContext, logger: Logger) {
+        self.context = context
+        self.logger = logger
+    }
+
+    /// Configure cloud analyzers from environment variables. Call from main.swift.
+    public func configure() {
+        let env = ProcessInfo.processInfo.environment
+        if let key = env["HUME_API_KEY"] {
+            hume = HumeEmotionAnalyzer(apiKey: key, logger: logger)
+        } else {
+            logger.log(source: "system", message: "[warn] HUME_API_KEY missing — emotion analysis disabled")
+        }
+        if let key = env["OPENAI_API_KEY"] {
+            activity = GPT4oActivityAnalyzer(apiKey: key, logger: logger)
+            gesture  = GPT4oGestureAnalyzer(apiKey: key, logger: logger)
+            screen   = GPT4oScreenAnalyzer(apiKey: key, logger: logger)
+        } else {
+            logger.log(source: "system", message: "[warn] OPENAI_API_KEY missing — activity, gesture, screen analysis disabled")
+        }
+    }
+
+    /// Called by LocalPerception after each frame is analyzed.
+    public func dispatch(jpegData: Data, source: String, events: [PerceptionEvent]) async {
+        // Update face and pose state directly from local detections (no cloud needed)
+        for event in events {
+            if case .faceDetected(let obs) = event {
+                let state = FaceState(boundingBox: obs.boundingBox,
+                                      landmarksDetected: obs.landmarks != nil,
+                                      updatedAt: Date())
+                await context.update(.face(state))
+            }
+            if case .bodyPoseDetected(let obs) = event {
+                let bodyPoints = extractBodyPoints(obs)
+                let state = PoseState(bodyPoints: bodyPoints, handPoints: nil, updatedAt: Date())
+                await context.update(.pose(state))
+            }
+        }
+
+        // Dispatch cloud analyzers (throttled, non-blocking)
+        let hasFace   = events.contains { if case .faceDetected   = $0 { return true }; return false }
+        let hasHuman  = events.contains { if case .humanPresent   = $0 { return true }; return false }
+        let hasBody   = events.contains { if case .bodyPoseDetected = $0 { return true }; return false }
+        let hasHand   = events.contains { if case .handPoseDetected = $0 { return true }; return false }
+        let hasText   = events.contains { if case .textRecognized = $0 { return true }; return false }
+
+        // Note: shouldFire/markFired are synchronous actor-isolated methods — no await needed within dispatch
+        if hasFace, let analyzer = hume, shouldFire(analyzerName: "hume", throttleSeconds: 2) {
+            markFired(analyzerName: "hume")
+            Task { if let obs = await analyzer.analyze(jpegData: jpegData, events: events) { await self.context.update(obs) } }
+        }
+
+        if (hasFace || hasHuman) && source == "camera", let analyzer = activity,
+           shouldFire(analyzerName: "activity", throttleSeconds: 5) {
+            markFired(analyzerName: "activity")
+            Task { if let obs = await analyzer.analyze(jpegData: jpegData, events: events) { await self.context.update(obs) } }
+        }
+
+        if (hasBody || hasHand), let analyzer = gesture, shouldFire(analyzerName: "gesture", throttleSeconds: 3) {
+            markFired(analyzerName: "gesture")
+            Task { if let obs = await analyzer.analyze(jpegData: jpegData, events: events) { await self.context.update(obs) } }
+        }
+
+        if hasText && source == "screen", let analyzer = screen, shouldFire(analyzerName: "screen", throttleSeconds: 4) {
+            markFired(analyzerName: "screen")
+            Task { if let obs = await analyzer.analyze(jpegData: nil, events: events) { await self.context.update(obs) } }
+        }
+    }
+
+    // MARK: - Throttle helpers (internal for testability)
+
+    public func shouldFire(analyzerName: String, throttleSeconds: Double) -> Bool {
+        guard let last = lastFired[analyzerName] else { return true }
+        return Date().timeIntervalSince(last) >= throttleSeconds
+    }
+
+    public func markFired(analyzerName: String) {
+        lastFired[analyzerName] = Date()
+    }
+
+    public func setLastFired(analyzerName: String, date: Date) {
+        lastFired[analyzerName] = date
+    }
+
+    // MARK: - Keypoint extraction helpers
+
+    private func extractBodyPoints(_ obs: VNHumanBodyPoseObservation) -> [String: CGPoint] {
+        var points: [String: CGPoint] = [:]
+        for joint in VNHumanBodyPoseObservation.JointName.allJoints {
+            if let p = try? obs.recognizedPoint(joint), p.confidence > 0.3 {
+                points[joint.rawValue.rawValue] = CGPoint(x: p.x, y: p.y)
+            }
+        }
+        return points
+    }
+}
