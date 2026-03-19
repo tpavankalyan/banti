@@ -1,4 +1,5 @@
 # memory_sidecar/memory.py
+import asyncio
 import os
 import re
 import uuid
@@ -58,7 +59,6 @@ async def _reflex_stream(req):
 
     buffer = ""
     try:
-        import asyncio
         async with asyncio.timeout(8):
             stream = await client.chat.completions.create(
                 model="gpt-oss-120b",
