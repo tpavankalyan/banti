@@ -1,5 +1,4 @@
-fastapi~=0.109
-uvicorn[standard]~=0.27
+msgpack>=1.0
 insightface~=0.7
 onnxruntime~=1.17
 faiss-cpu~=1.7
