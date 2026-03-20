@@ -12,12 +12,17 @@ public actor MemoryConsolidator: CorticalNode {
     private let storeSidecar: SidecarStore
     private var _bus: EventBus?
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     Given this episode, decide whether it is worth storing in long-term memory.
     Output JSON only: {"store":true,"reason":"<brief>"} or {"store":false,"reason":"<brief>"}
     Store if: involves a named person, has emotional significance, or contains factual information worth remembering.
     Skip if: generic background noise, empty environment, trivial chatter.
     """
+    private var systemPrompt: String = MemoryConsolidator.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion, storeSidecar: @escaping SidecarStore) {
         self.cerebras = cerebras
@@ -37,7 +42,7 @@ public actor MemoryConsolidator: CorticalNode {
         let userContent = "Episode: \(episode.text)\nParticipants: \(episode.participants.joined(separator: ", "))\nTone: \(episode.emotionalTone)"
 
         do {
-            let response = try await cerebras("llama3.1-8b", Self.systemPrompt, userContent, 60)
+            let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 60)
             guard let data = response.data(using: .utf8),
                   let json = try? JSONDecoder().decode(StoreDecision.self, from: data),
                   json.store else { return }

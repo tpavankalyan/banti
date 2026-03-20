@@ -15,12 +15,17 @@ public actor ResponseArbitrator: CorticalNode {
     private var collectedResponses: [BrainResponsePayload] = []
     private var windowTask: Task<Void, Never>?
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     You are banti's response arbitrator. Given candidate responses from different brain tracks,
     produce an ordered list of sentences to speak. Suppress redundant content. Merge where natural.
     Prefer empathy before information. Output JSON only: {"sentences":["<s1>","<s2>",...]}
     If nothing is worth saying, return: {"sentences":[]}
     """
+    private var systemPrompt: String = ResponseArbitrator.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion, collectionWindowMs: Int = 5000) {
         self.cerebras = cerebras
@@ -82,7 +87,7 @@ public actor ResponseArbitrator: CorticalNode {
             .joined(separator: "\n")
 
         do {
-            let response = try await cerebras("llama3.1-8b", Self.systemPrompt, candidateText, 150)
+            let response = try await cerebras("llama3.1-8b", systemPrompt, candidateText, 150)
             guard let data = response.data(using: .utf8),
                   let json = try? JSONDecoder().decode(PlanJSON.self, from: data) else { return }
             await bus.publish(

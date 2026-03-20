@@ -179,4 +179,33 @@ public actor MemoryEngine {
 
         logger.log(source: "memory", message: "MemoryEngine started — cortical graph active")
     }
+
+    /// Reload system prompts from a NodeConfig (called on SIGHUP).
+    public func reloadPrompts(config: NodeConfig) async {
+        if let prompt = config.promptContent(for: "brainstem") {
+            await brainstemNode?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "limbic") {
+            await limbicNode?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "prefrontal") {
+            await prefrontalNode?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "surprise_detector") {
+            await surpriseDetector?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "temporal_binder") {
+            await temporalBinder?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "track_router") {
+            await trackRouter?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "response_arbitrator") {
+            await responseArbitrator?.setSystemPrompt(prompt)
+        }
+        if let prompt = config.promptContent(for: "memory_consolidator") {
+            await memoryConsolidator?.setSystemPrompt(prompt)
+        }
+        logger.log(source: "memory", message: "NodeConfig reloaded — prompts updated")
+    }
 }

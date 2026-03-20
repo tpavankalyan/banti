@@ -7,11 +7,16 @@ public actor LimbicNode: CorticalNode {
     private let cerebras: CerebrasCompletion
     private var _bus: EventBus?
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     You are banti's limbic system. Read the emotional content and respond with empathy. 1-2 sentences.
     [silent] if no emotional content worth acknowledging.
     Plain prose only. No JSON.
     """
+    private var systemPrompt: String = LimbicNode.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion) { self.cerebras = cerebras }
 
@@ -28,7 +33,7 @@ public actor LimbicNode: CorticalNode {
               let bus = _bus else { return }
         do {
             let userContent = "Episode: \(route.episode.text)\nTone: \(route.episode.emotionalTone)"
-            let text = try await cerebras("llama3.1-8b", Self.systemPrompt, userContent, 80)
+            let text = try await cerebras("llama3.1-8b", systemPrompt, userContent, 80)
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed != "[silent]" && !trimmed.isEmpty else { return }
             let response = BrainResponsePayload(track: "limbic", text: trimmed,

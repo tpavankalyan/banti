@@ -50,4 +50,16 @@ let micCapture = MicrophoneCapture(engine: sharedEngine, dispatcher: audioRouter
 micCapture.start()
 
 logger.log(source: "system", message: "banti running. Press Ctrl+C to stop.")
+
+// SIGHUP hot-reload
+signal(SIGHUP, SIG_IGN)
+let sigHupSrc = DispatchSource.makeSignalSource(signal: SIGHUP, queue: .main)
+sigHupSrc.setEventHandler {
+    guard let config = NodeConfig.loadFromFile() else { return }
+    Task {
+        await memoryEngine.reloadPrompts(config: config)
+    }
+}
+sigHupSrc.resume()
+
 RunLoop.main.run()

@@ -12,13 +12,18 @@ public actor TrackRouter: CorticalNode {
     private var unknownPersonFirstSeen: Date?
     private var lastUnknownPersonRouted: Date?
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     Given this episode, decide which brain tracks to activate.
     Available tracks: brainstem (instant reflex), limbic (emotional), prefrontal (deep reasoning).
     Output JSON only: {"tracks":["<track>",...],"reason":"<brief>"}
     Activate brainstem for most situations. Add limbic when emotion is significant.
     Add prefrontal when memory, reasoning, or long-term context is needed.
     """
+    private var systemPrompt: String = TrackRouter.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion) {
         self.cerebras = cerebras
@@ -49,7 +54,7 @@ public actor TrackRouter: CorticalNode {
         guard let bus = _bus else { return }
         let userContent = "Episode: \(episode.text)\nTone: \(episode.emotionalTone)\nParticipants: \(episode.participants.joined(separator: ", "))"
         do {
-            let response = try await cerebras("llama3.1-8b", Self.systemPrompt, userContent, 60)
+            let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 60)
             guard let data = response.data(using: .utf8),
                   let json = try? JSONDecoder().decode(RouteJSON.self, from: data) else { return }
             let route = BrainRoutePayload(tracks: json.tracks, reason: json.reason, episode: episode)

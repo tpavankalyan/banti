@@ -8,11 +8,16 @@ public actor SurpriseDetector: CorticalNode {
     private let cerebras: CerebrasCompletion
     private var lastDescriptions: [String: String] = [:]  // topic → last text
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     You are a surprise filter. Given the previous and current description of a sensor event,
     output JSON: {"surprise": <float 0-1>} where 0 means nothing changed and 1 means very surprising.
     Respond with JSON only.
     """
+    private var systemPrompt: String = SurpriseDetector.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion) {
         self.cerebras = cerebras
@@ -36,7 +41,7 @@ public actor SurpriseDetector: CorticalNode {
         let userContent = "Previous: \(previous)\nCurrent: \(description)"
         let score: Float
         do {
-            let response = try await cerebras("llama3.1-8b", Self.systemPrompt, userContent, 20)
+            let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 20)
             guard let data = response.data(using: .utf8),
                   let json = try? JSONDecoder().decode([String: Float].self, from: data),
                   let s = json["surprise"] else { return }

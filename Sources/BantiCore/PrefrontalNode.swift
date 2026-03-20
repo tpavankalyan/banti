@@ -10,11 +10,16 @@ public actor PrefrontalNode: CorticalNode {
     // Cache: personID → (payload, receivedAt)
     private var memoryCache: [String: (MemoryRetrievedPayload, Date)] = [:]
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     You are banti's prefrontal cortex — deep reasoning and memory. Given the episode and any known facts about the participants, produce a thoughtful response. 2-4 sentences.
     If nothing meaningful can be added beyond what brainstem already covers, respond with exactly: [silent]
     Plain prose only. No JSON.
     """
+    private var systemPrompt: String = PrefrontalNode.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion) { self.cerebras = cerebras }
 
@@ -54,7 +59,7 @@ public actor PrefrontalNode: CorticalNode {
         }
 
         do {
-            let text = try await cerebras("llama-3.3-70b", Self.systemPrompt, userContent, 150)
+            let text = try await cerebras("llama-3.3-70b", systemPrompt, userContent, 150)
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed != "[silent]" && !trimmed.isEmpty else { return }
             let response = BrainResponsePayload(track: "prefrontal", text: trimmed,

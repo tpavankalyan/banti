@@ -12,10 +12,15 @@ public actor TemporalBinder: CorticalNode {
     private var windowTask: Task<Void, Never>?
     private var _bus: EventBus?
 
-    private static let systemPrompt = """
+    private static let defaultSystemPrompt = """
     Fuse these sensor events into a single natural-language episode description.
     Output JSON only: {"text":"<episode>","participants":["<name>"],"emotionalTone":"<tone>"}
     """
+    private var systemPrompt: String = TemporalBinder.defaultSystemPrompt
+
+    public func setSystemPrompt(_ prompt: String) async {
+        systemPrompt = prompt
+    }
 
     public init(cerebras: @escaping CerebrasCompletion, windowMs: Int = 500) {
         self.cerebras = cerebras
@@ -50,7 +55,7 @@ public actor TemporalBinder: CorticalNode {
         let userContent = "Events to fuse:\n\(descriptions)"
 
         do {
-            let response = try await cerebras("llama3.1-8b", Self.systemPrompt, userContent, 100)
+            let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 100)
             guard let data = response.data(using: .utf8),
                   let json = try? JSONDecoder().decode(EpisodeJSON.self, from: data) else { return }
             let episode = EpisodePayload(text: json.text, participants: json.participants,
