@@ -44,7 +44,7 @@ final class ContextAggregatorTests: XCTestCase {
         XCTAssertTrue(snap.contains("let's get to work"), "expected transcript in snapshot")
     }
 
-    func testSnapshotJSONIsValidJSON() async {
+    func testSnapshotJSONIsValidJSON() async throws {
         let bus = EventBus()
         let agg = ContextAggregator()
         await agg.start(bus: bus)
@@ -61,7 +61,7 @@ final class ContextAggregatorTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 50_000_000)
 
         let snap = await agg.snapshotJSON()
-        let data = snap.data(using: .utf8)!
+        let data = try XCTUnwrap(snap.data(using: .utf8))
         XCTAssertNoThrow(try JSONSerialization.jsonObject(with: data))
     }
 }
