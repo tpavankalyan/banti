@@ -9,4 +9,7 @@ actor ActorBox<T> {
     func append(_ item: Any) where T == [BantiEvent] {
         value.append(item as! BantiEvent)
     }
+    func appendString(_ item: String) where T == [String] {
+        value.append(item)
+    }
 }
