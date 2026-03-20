@@ -30,13 +30,26 @@ public struct NodeConfig {
         return NodeConfig(nodes: wrapper.nodes)
     }
 
+    private static var bantiRoot: String {
+        if let root = ProcessInfo.processInfo.environment["BANTI_ROOT"] {
+            return root
+        }
+        // For CLI: use executable's directory
+        if let execPath = Bundle.main.executableURL?.deletingLastPathComponent().path {
+            return execPath
+        }
+        return FileManager.default.currentDirectoryPath
+    }
+
     public static func loadFromFile(_ path: String = "NodeConfig.yaml") -> NodeConfig? {
-        guard let yaml = try? String(contentsOfFile: path) else { return nil }
+        let resolvedPath = path.hasPrefix("/") ? path : (bantiRoot as NSString).appendingPathComponent(path)
+        guard let yaml = try? String(contentsOfFile: resolvedPath) else { return nil }
         return try? parse(yaml: yaml)
     }
 
     public func promptContent(for nodeName: String) -> String? {
         guard let entry = nodes[nodeName], let promptFile = entry.promptFile else { return nil }
-        return try? String(contentsOfFile: promptFile)
+        let resolvedPath = promptFile.hasPrefix("/") ? promptFile : (NodeConfig.bantiRoot as NSString).appendingPathComponent(promptFile)
+        return try? String(contentsOfFile: resolvedPath)
     }
 }
