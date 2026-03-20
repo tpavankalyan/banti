@@ -30,33 +30,38 @@ final class EventBusTests: XCTestCase {
 
     func testNonMatchingTopicDoesNotDeliver() async {
         let bus = EventBus()
-        var count = 0
-        _ = await bus.subscribe(topic: "sensor.visual") { _ in count += 1 }
+        let notCalled = expectation(description: "should not be called")
+        notCalled.isInverted = true
+        _ = await bus.subscribe(topic: "sensor.visual") { _ in notCalled.fulfill() }
         await bus.publish(makeSpeechEvent(topic: "sensor.audio"), topic: "sensor.audio")
-        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-        XCTAssertEqual(count, 0)
+        await fulfillment(of: [notCalled], timeout: 0.05)
     }
 
     func testUnsubscribeStopsDelivery() async {
         let bus = EventBus()
-        var count = 0
-        let id = await bus.subscribe(topic: "sensor.*") { _ in count += 1 }
+        let firstDelivery = expectation(description: "first delivery")
+        let secondDelivery = expectation(description: "should not be delivered after unsubscribe")
+        secondDelivery.isInverted = true
+
+        let id = await bus.subscribe(topic: "sensor.*") { _ in
+            firstDelivery.fulfill()
+        }
         await bus.publish(makeSpeechEvent(topic: "sensor.audio"), topic: "sensor.audio")
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        await fulfillment(of: [firstDelivery], timeout: 1.0)
+
         await bus.unsubscribe(id)
         await bus.publish(makeSpeechEvent(topic: "sensor.visual"), topic: "sensor.visual")
-        try? await Task.sleep(nanoseconds: 20_000_000)
-        XCTAssertEqual(count, 1) // only the first delivery
+        await fulfillment(of: [secondDelivery], timeout: 0.05)
     }
 
     func testWildcardDoesNotMatchParentTopic() async {
         // "sensor.*" should NOT match "sensor" (the prefix without a dot suffix)
         let bus = EventBus()
-        var count = 0
-        _ = await bus.subscribe(topic: "sensor.*") { _ in count += 1 }
+        let notCalled = expectation(description: "sensor.* should not match bare sensor")
+        notCalled.isInverted = true
+        _ = await bus.subscribe(topic: "sensor.*") { _ in notCalled.fulfill() }
         await bus.publish(makeSpeechEvent(topic: "sensor"), topic: "sensor")
-        try? await Task.sleep(nanoseconds: 30_000_000)
-        XCTAssertEqual(count, 0)
+        await fulfillment(of: [notCalled], timeout: 0.05)
     }
 
     func testMultipleSubscribersAllReceive() async {
