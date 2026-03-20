@@ -1,6 +1,7 @@
 # memory_sidecar/socket_server.py
 import socket, os, struct, threading, inspect
 import msgpack
+from datetime import timezone
 
 DISPATCH = {}
 
@@ -37,10 +38,19 @@ class SocketServer:
         if os.path.exists(self.sock_path):
             os.unlink(self.sock_path)
 
+    def _recv_exact(self, conn, n):
+        data = b""
+        while len(data) < n:
+            chunk = conn.recv(n - len(data))
+            if not chunk:
+                return None
+            data += chunk
+        return data
+
     def _handle_conn(self, conn):
         try:
-            raw_len = conn.recv(4)
-            if len(raw_len) < 4:
+            raw_len = self._recv_exact(conn, 4)
+            if raw_len is None:
                 return
             length = struct.unpack(">I", raw_len)[0]
             data = b""
@@ -64,6 +74,11 @@ class SocketServer:
             conn.sendall(struct.pack(">I", len(response)) + response)
         except Exception as e:
             print(f"[socket] error: {e}")
+            try:
+                error_resp = msgpack.packb({"error": str(e)})
+                conn.sendall(struct.pack(">I", len(error_resp)) + error_resp)
+            except Exception:
+                pass  # best-effort
         finally:
             conn.close()
 
@@ -115,7 +130,7 @@ async def store_episode(req):
     if wall_ts_str:
         wall_ts = datetime.fromisoformat(wall_ts_str.replace("Z", "+00:00"))
     else:
-        wall_ts = datetime.utcnow()
+        wall_ts = datetime.now(timezone.utc)
     # Returns a dict
     result = await ingest_snapshot(req.get("snapshot_json", "{}"), wall_ts)
     return result
