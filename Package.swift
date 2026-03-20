@@ -15,7 +15,8 @@ let package = Package(
             ],
             path: "Sources/BantiCore",
             linkerSettings: [
-                .linkedFramework("SoundAnalysis")
+                .linkedFramework("SoundAnalysis"),
+                .linkedFramework("SwiftUI"),
             ]
         ),
         .executableTarget(

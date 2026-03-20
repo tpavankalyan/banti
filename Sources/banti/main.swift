@@ -1,6 +1,7 @@
 // Sources/banti/main.swift
 import Foundation
 import AppKit
+import SwiftUI
 import AVFoundation
 import BantiCore
 
@@ -42,6 +43,23 @@ Task {
     await visualCortex.start(bus: bus)
     await screenCortex.start(bus: bus)
     await memoryEngine.start()
+
+    if CommandLine.arguments.contains("--monitor") {
+        let vm = await MainActor.run { BrainMonitorViewModel() }
+        let monitorNode = BrainMonitorNode(vm: vm)
+        await monitorNode.start(bus: bus)
+        await MainActor.run {
+            let win = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 700, height: 500),
+                styleMask: [.titled, .closable, .resizable],
+                backing: .buffered,
+                defer: false
+            )
+            win.title = "BrainMonitor"
+            win.contentView = NSHostingView(rootView: BrainMonitorView(vm: vm))
+            win.makeKeyAndOrderFront(nil)
+        }
+    }
 }
 
 // Start mic after MemoryEngine.init so playerNode is in the graph before engine.start().
