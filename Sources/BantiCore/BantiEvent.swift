@@ -7,15 +7,25 @@ public struct BantiEvent: Codable, Sendable {
     public let id: UUID
     public let source: String
     public let topic: String
+    /// Monotonic nanoseconds since system boot (via `BantiClock.nowNs()`).
+    /// Used for intra-session event ordering only.
+    /// Do NOT use for cross-session or persistent storage timestamps.
     public let timestampNs: UInt64
     public let surprise: Float
     public let payload: EventPayload
 
-    public init(source: String, topic: String, surprise: Float, payload: EventPayload) {
-        self.id = UUID()
+    public init(
+        id: UUID = UUID(),
+        source: String,
+        topic: String,
+        timestampNs: UInt64 = BantiClock.nowNs(),
+        surprise: Float,
+        payload: EventPayload
+    ) {
+        self.id = id
         self.source = source
         self.topic = topic
-        self.timestampNs = BantiClock.nowNs()
+        self.timestampNs = timestampNs
         self.surprise = surprise
         self.payload = payload
     }
@@ -103,9 +113,18 @@ public struct EpisodePayload: Codable, Sendable {
     public let participants: [String]
     public let emotionalTone: String
     public let timestampNs: UInt64
-    public init(text: String, participants: [String], emotionalTone: String) {
-        self.episodeID = UUID(); self.text = text; self.participants = participants
-        self.emotionalTone = emotionalTone; self.timestampNs = BantiClock.nowNs()
+    public init(
+        episodeID: UUID = UUID(),
+        text: String,
+        participants: [String],
+        emotionalTone: String,
+        timestampNs: UInt64 = BantiClock.nowNs()
+    ) {
+        self.episodeID = episodeID
+        self.text = text
+        self.participants = participants
+        self.emotionalTone = emotionalTone
+        self.timestampNs = timestampNs
     }
 }
 
@@ -137,9 +156,16 @@ public struct MemoryRetrievedPayload: Codable, Sendable {
     public let personName: String?
     public let facts: [String]
     public let retrievedAtNs: UInt64
-    public init(personID: String, personName: String?, facts: [String]) {
-        self.personID = personID; self.personName = personName
-        self.facts = facts; self.retrievedAtNs = BantiClock.nowNs()
+    public init(
+        personID: String,
+        personName: String?,
+        facts: [String],
+        retrievedAtNs: UInt64 = BantiClock.nowNs()
+    ) {
+        self.personID = personID
+        self.personName = personName
+        self.facts = facts
+        self.retrievedAtNs = retrievedAtNs
     }
 }
 
