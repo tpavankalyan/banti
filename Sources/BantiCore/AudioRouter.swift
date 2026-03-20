@@ -31,7 +31,7 @@ public actor AudioRouter: AudioChunkDispatcher {
 
     public func configureWith(deepgramKey: String?, humeKey: String?) {
         if let key = deepgramKey {
-            deepgram = DeepgramStreamer(apiKey: key, context: context, logger: logger)
+            deepgram = DeepgramStreamer(apiKey: key, logger: logger)
         } else {
             logger.log(source: "audio", message: "[warn] DEEPGRAM_API_KEY missing — speech transcription disabled")
         }

@@ -35,16 +35,6 @@ final class PerceptionTypesTests: XCTestCase {
         }
     }
 
-    func testSpeechObservationCase() {
-        let state = SpeechState(transcript: "hello", speakerID: nil, isFinal: true, confidence: 0.99, updatedAt: Date())
-        let obs = PerceptionObservation.speech(state)
-        if case .speech(let s) = obs {
-            XCTAssertEqual(s.transcript, "hello")
-        } else {
-            XCTFail("Expected .speech case")
-        }
-    }
-
     func testVoiceEmotionObservationCase() {
         let state = VoiceEmotionState(emotions: [("Joy", 0.9)], updatedAt: Date())
         let obs = PerceptionObservation.voiceEmotion(state)

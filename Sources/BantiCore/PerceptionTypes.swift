@@ -99,7 +99,6 @@ public enum PerceptionObservation {
     case activity(ActivityState)
     case gesture(GestureState)
     case screen(ScreenState)
-    case speech(SpeechState)
     case voiceEmotion(VoiceEmotionState)
     case sound(SoundState)
     case person(PersonState)

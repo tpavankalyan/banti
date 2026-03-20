@@ -8,7 +8,6 @@ public actor PerceptionContext {
     public var gesture:  GestureState?
     public var screen:   ScreenState?
     public var activity: ActivityState?
-    public var speech:   SpeechState?
     public var voiceEmotion: VoiceEmotionState?
     public var sound:    SoundState?
     public var person:   PersonState?
@@ -23,7 +22,6 @@ public actor PerceptionContext {
         case .activity(let s): activity = s
         case .gesture(let s):  gesture = s
         case .screen(let s):   screen = s
-        case .speech(let s):   speech = s
         case .voiceEmotion(let s): voiceEmotion = s
         case .sound(let s):    sound = s
         case .person(let s):   person = s
@@ -39,7 +37,6 @@ public actor PerceptionContext {
         if let g = gesture  { dict["gesture"]  = encodable(g) }
         if let s = screen   { dict["screen"]   = encodable(s) }
         if let a = activity { dict["activity"] = encodable(a) }
-        if let sp = speech  { dict["speech"]   = encodable(sp) }
         if let ve = voiceEmotion { dict["voiceEmotion"] = encodable(ve) }
         if let so = sound   { dict["sound"]    = encodable(so) }
         if let pe = person  { dict["person"]   = encodable(pe) }

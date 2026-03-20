@@ -3,7 +3,6 @@ import Foundation
 
 public actor DeepgramStreamer {
     private let apiKey: String
-    private let context: PerceptionContext
     private let logger: Logger
     private let session: URLSession
 
@@ -23,9 +22,8 @@ public actor DeepgramStreamer {
 
     public var onFinalTranscript: (@Sendable (String) async -> Void)?
 
-    public init(apiKey: String, context: PerceptionContext, logger: Logger, session: URLSession = .shared) {
+    public init(apiKey: String, logger: Logger, session: URLSession = .shared) {
         self.apiKey = apiKey
-        self.context = context
         self.logger = logger
         self.session = session
     }
@@ -174,7 +172,6 @@ public actor DeepgramStreamer {
               let state = DeepgramStreamer.parseResponse(data) else { return }
 
         logger.log(source: "deepgram", message: "[\(state.speakerID.map { "spk:\($0)" } ?? "?")] \(state.transcript)")
-        await context.update(.speech(state))
 
         if state.isFinal, let callback = onFinalTranscript {
             await callback(state.transcript)

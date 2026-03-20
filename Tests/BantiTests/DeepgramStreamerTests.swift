@@ -109,9 +109,8 @@ final class DeepgramStreamerTests: XCTestCase {
 
     func testOnFinalTranscriptCallbackFiredOnFinalMessage() async {
         var received: String? = nil
-        let context = PerceptionContext()
         let logger = Logger()
-        let streamer = DeepgramStreamer(apiKey: "key", context: context, logger: logger)
+        let streamer = DeepgramStreamer(apiKey: "key", logger: logger)
         await streamer.setTranscriptCallbackForTest { transcript in
             received = transcript
         }
