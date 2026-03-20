@@ -18,8 +18,15 @@ public struct ConversationTurn: Codable {
 }
 
 public actor ConversationBuffer {
-    private var turns: [ConversationTurn] = []
-    private static let maxTurns = 30
+    private let capacity: Int
+    private var buffer: [ConversationTurn?]
+    private var head: Int = 0    // next write index
+    private var count: Int = 0   // number of valid entries
+
+    public init(capacity: Int = 60) {
+        self.capacity = capacity
+        self.buffer = Array(repeating: nil, count: capacity)
+    }
 
     public func addBantiTurn(_ text: String) {
         append(ConversationTurn(speaker: .banti, text: text))
@@ -30,15 +37,32 @@ public actor ConversationBuffer {
     }
 
     public func recentTurns(limit: Int = 10) -> [ConversationTurn] {
-        Array(turns.suffix(limit))
+        let n = min(limit, count)
+        var result: [ConversationTurn] = []
+        let startOffset = count - n
+        for i in 0..<n {
+            let idx = ((head - count) + startOffset + i) % capacity
+            if let turn = buffer[(idx + capacity) % capacity] {
+                result.append(turn)
+            }
+        }
+        return result
     }
 
     public func lastBantiUtterance() -> String? {
-        turns.last(where: { $0.speaker == .banti })?.text
+        // Scan from most recent to oldest
+        for i in 0..<count {
+            let idx = ((head - 1 - i) % capacity + capacity) % capacity
+            if let turn = buffer[idx], turn.speaker == .banti {
+                return turn.text
+            }
+        }
+        return nil
     }
 
     private func append(_ turn: ConversationTurn) {
-        if turns.count >= Self.maxTurns { turns.removeFirst() }
-        turns.append(turn)
+        buffer[head % capacity] = turn
+        head += 1
+        count = min(count + 1, capacity)
     }
 }

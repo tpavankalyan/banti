@@ -41,13 +41,13 @@ final class ConversationBufferTests: XCTestCase {
         XCTAssertEqual(turns.last?.text, "turn 15")
     }
 
-    func test_capsAt30Turns_dropsOldest() async {
-        let buf = ConversationBuffer()
-        for i in 1...32 {
+    func test_capsAt60Turns_dropsOldest() async {
+        let buf = ConversationBuffer(capacity: 60)
+        for i in 1...62 {
             await buf.addHumanTurn("turn \(i)")
         }
-        let turns = await buf.recentTurns(limit: 50)
-        XCTAssertEqual(turns.count, 30)
+        let turns = await buf.recentTurns(limit: 100)
+        XCTAssertEqual(turns.count, 60)
         XCTAssertEqual(turns.first?.text, "turn 3")
     }
 
@@ -71,5 +71,26 @@ final class ConversationBufferTests: XCTestCase {
         await buf.addHumanTurn("only human spoke")
         let last = await buf.lastBantiUtterance()
         XCTAssertNil(last)
+    }
+
+    func testRingBufferWrapsAround() async {
+        let buffer = ConversationBuffer(capacity: 3) // tiny capacity for test
+        await buffer.addHumanTurn("turn1")
+        await buffer.addHumanTurn("turn2")
+        await buffer.addHumanTurn("turn3")
+        await buffer.addHumanTurn("turn4") // should evict turn1
+
+        let recent = await buffer.recentTurns(limit: 10)
+        XCTAssertEqual(recent.count, 3)
+        XCTAssertEqual(recent.first?.text, "turn2")
+        XCTAssertEqual(recent.last?.text, "turn4")
+    }
+
+    func testRecentTurnsRespectLimit() async {
+        let buffer = ConversationBuffer(capacity: 60)
+        for i in 1...10 { await buffer.addHumanTurn("turn\(i)") }
+        let recent = await buffer.recentTurns(limit: 3)
+        XCTAssertEqual(recent.count, 3)
+        XCTAssertEqual(recent.last?.text, "turn10")
     }
 }
