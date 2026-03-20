@@ -28,6 +28,7 @@ public actor SelfSpeechLog {
     }
 
     public func markPlaybackEnded() {
+        guard isCurrentlyPlaying else { return }
         isCurrentlyPlaying = false
         lastPlaybackEndedAt = Date()
     }
