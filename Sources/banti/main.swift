@@ -53,6 +53,7 @@ let memoryEngine = MemoryEngine(context: context, audioRouter: audioRouter, engi
 Task {
     let fi = await memoryEngine.faceIdentifier
     await router.setFaceIdentifier(fi)
+    await router.setBantiVoice(memoryEngine.bantiVoice)
     await memoryEngine.start()
 }
 

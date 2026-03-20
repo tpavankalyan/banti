@@ -11,6 +11,7 @@ public actor PerceptionRouter: PerceptionDispatcher {
     private var gesture:  GPT4oGestureAnalyzer?
     private var screen:   GPT4oScreenAnalyzer?
     private var faceIdentifier: FaceIdentifier?
+    private var bantiVoice: BantiVoice?
 
     public init(context: PerceptionContext, logger: Logger) {
         self.context = context
@@ -77,7 +78,22 @@ public actor PerceptionRouter: PerceptionDispatcher {
 
         if hasText && source == "screen", let analyzer = screen, shouldFire(analyzerName: "screen", throttleSeconds: 4) {
             markFired(analyzerName: "screen")
-            Task { if let obs = await analyzer.analyze(jpegData: nil, events: events) { await self.context.update(obs) } }
+            let voice = bantiVoice
+            Task {
+                guard let obs = await analyzer.analyze(jpegData: nil, events: events) else { return }
+                if case .screen(let state) = obs, let v = voice {
+                    let rawText = state.ocrLines.joined(separator: "\n")
+                    let cleaned = await v.suppressSelfEcho(in: rawText)
+                    let cleanedLines = cleaned.components(separatedBy: "\n").filter { !$0.isEmpty }
+                    let cleanedInterp = await v.suppressSelfEcho(in: state.interpretation)
+                    let filteredState = ScreenState(ocrLines: cleanedLines,
+                                                    interpretation: cleanedInterp,
+                                                    updatedAt: state.updatedAt)
+                    await self.context.update(.screen(filteredState))
+                } else {
+                    await self.context.update(obs)
+                }
+            }
         }
 
         // Dispatch FaceIdentifier (throttled 5s)
@@ -103,6 +119,12 @@ public actor PerceptionRouter: PerceptionDispatcher {
     }
 
     var hasFaceIdentifier: Bool { faceIdentifier != nil }
+
+    // MARK: - BantiVoice (screen self-echo filter)
+
+    public func setBantiVoice(_ voice: BantiVoice) {
+        bantiVoice = voice
+    }
 
     // MARK: - Throttle helpers (internal for testability)
 
