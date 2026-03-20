@@ -18,6 +18,8 @@ public actor MemoryEngine {
     public let bantiVoice: BantiVoice
     public let conversationBuffer: ConversationBuffer
     public let memoryQuery: MemoryQuery
+    public let eventBus: EventBus
+    private var contextAggregator: ContextAggregator?
 
     public init(context: PerceptionContext, audioRouter: AudioRouter, engine: AVAudioEngine, logger: Logger) {
         let sessionID = UUID().uuidString
@@ -26,6 +28,7 @@ public actor MemoryEngine {
         self.context = context
         self.audioRouter = audioRouter
         self.logger = logger
+        self.eventBus = EventBus()
 
         self.sidecar = MemorySidecar(logger: logger, port: port)
 
@@ -70,6 +73,16 @@ public actor MemoryEngine {
         await selfModel.start()
         await speakerResolver.start()
         await brainLoop.start()    // non-async on BrainLoop — internally spawns Tasks
+
+        // Wire EventBus to sensor components
+        await audioRouter.setBus(eventBus)
+        await bantiVoice.setBus(eventBus)
+
+        // Start ContextAggregator
+        let aggregator = ContextAggregator()
+        await aggregator.start(bus: eventBus)
+        contextAggregator = aggregator
+
         // Wire Deepgram final-transcript callback directly into BrainLoop
         let loop = brainLoop
         await audioRouter.setTranscriptCallback { @Sendable transcript in

@@ -54,6 +54,7 @@ Task {
     let fi = await memoryEngine.faceIdentifier
     await router.setFaceIdentifier(fi)
     await router.setBantiVoice(memoryEngine.bantiVoice)
+    await router.setBus(memoryEngine.eventBus)
     await memoryEngine.start()
 }
 
