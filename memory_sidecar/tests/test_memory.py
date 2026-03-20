@@ -44,26 +44,11 @@ async def test_ingest_skips_empty_snapshot(app_with_mock_memory):
     assert response.json()["skipped"] == True
     mock_graphiti.add_episode.assert_not_called()
 
-def test_snapshot_to_episode_extracts_speech():
-    from memory import snapshot_to_episode
-    from datetime import datetime
-    snap = {"speech": {"transcript": "Hello Alice", "resolvedName": "Bob"}}
-    episode = snapshot_to_episode(snap, datetime.now())
-    assert "Bob" in episode
-    assert "Hello Alice" in episode
-
 def test_snapshot_to_episode_returns_none_for_empty():
     from memory import snapshot_to_episode
     from datetime import datetime
     episode = snapshot_to_episode({}, datetime.now())
     assert episode is None
-
-def test_snapshot_to_episode_handles_missing_resolved_name():
-    from memory import snapshot_to_episode
-    from datetime import datetime
-    snap = {"speech": {"transcript": "Something was said"}}
-    episode = snapshot_to_episode(snap, datetime.now())
-    assert "unknown speaker" in episode
 
 async def test_query_returns_answer(app_with_mock_memory):
     app, _, mock_mem0 = app_with_mock_memory

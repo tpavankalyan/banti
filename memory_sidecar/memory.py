@@ -234,12 +234,6 @@ def snapshot_to_episode(snapshot: dict, wall_ts: datetime) -> Optional[str]:
     """Transform raw snapshotJSON dict into human-readable episode text."""
     parts = []
 
-    if sp := snapshot.get("speech"):
-        name = sp.get("resolvedName") or "unknown speaker"
-        transcript = sp.get("transcript", "")
-        if transcript.strip():
-            parts.append(f'{name} said: "{transcript}"')
-
     if p := snapshot.get("person"):
         name = p.get("name") or "an unknown person"
         parts.append(f"{name} was visible on camera")

@@ -23,13 +23,7 @@ public actor SpeakerResolver {
     }
 
     public func start() {
-        Task { [weak self] in
-            guard let self else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                await self.poll()
-            }
-        }
+        // Disabled: poll() was rerouted to onFinalTranscript callback path (see BrainLoop)
     }
 
     public func cacheResolvedName(_ name: String, forSpeakerID id: Int) {
