@@ -120,7 +120,7 @@ public protocol PerceptionDispatcher: AnyObject {
 
 // MARK: - Codable helpers for CGRect / CGPoint
 
-public struct CodableCGRect: Codable {
+public struct CodableCGRect: Codable, Sendable {
     public let x, y, width, height: Double
     public init(_ r: CGRect) { x = r.origin.x; y = r.origin.y; width = r.width; height = r.height }
     public var cgRect: CGRect { CGRect(x: x, y: y, width: width, height: height) }
