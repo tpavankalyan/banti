@@ -1,0 +1,30 @@
+name: Banti
+options:
+  bundleIdPrefix: com.banti
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+settings:
+  SWIFT_VERSION: "5.9"
+  SWIFT_STRICT_CONCURRENCY: complete
+targets:
+  Banti:
+    type: application
+    platform: macOS
+    sources:
+      - Banti
+    entitlements:
+      path: Banti/Banti.entitlements
+    info:
+      path: Banti/Info.plist
+  BantiTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - BantiTests
+    dependencies:
+      - target: Banti
+    settings:
+      GENERATE_INFOPLIST_FILE: "YES"
+      TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Banti.app/Contents/MacOS/Banti"
+      BUNDLE_LOADER: "$(TEST_HOST)"

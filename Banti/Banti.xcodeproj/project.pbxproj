@@ -1,0 +1,535 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */; };
+		05921957817FAB229F388097 /* DeepgramParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */; };
+		0CC6D3D986052CE2EB88181C /* AudioRingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03835485E37E03DA196D1659 /* AudioRingBuffer.swift */; };
+		13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */; };
+		16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */; };
+		21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */; };
+		26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */; };
+		49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168FA5F5D4BBBBC4654987A1 /* Environment.swift */; };
+		5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */; };
+		587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */; };
+		5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */; };
+		5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256C24808236AB6EB630838D /* ModuleStatusEvent.swift */; };
+		63D2638DC97C505F744CDFC6 /* AudioFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */; };
+		698A3649D7D2D57E60D5A363 /* DeepgramStreamingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9C90A602281913E0BDE4A2 /* DeepgramStreamingActor.swift */; };
+		6D90DA0720B802B6155333CE /* MicrophoneCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12C379F49EF15927BB6C011 /* MicrophoneCaptureActor.swift */; };
+		87192CC8452BC41457542D70 /* EventHubActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */; };
+		8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3875E1430258F8FE36EA5C52 /* ConfigActor.swift */; };
+		A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */; };
+		A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */; };
+		AE28B98F5096058826A2D589 /* PerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 038F61AE8957BA3AA464403D /* PerceptionModule.swift */; };
+		B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */; };
+		BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */; };
+		C55985138258E88026B90693 /* BantiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A5232F659BAB269BF7D63C /* BantiApp.swift */; };
+		C6F1BF6241A121BFB738E894 /* TranscriptProjectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4114755B34DBB3FA826CFF35 /* TranscriptProjectionActor.swift */; };
+		DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D044E710A8D36E87933C2530 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CA81A4E019AC4DDEC0518D3B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 60D4E5FB2642148C202908B6;
+			remoteInfo = Banti;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		03835485E37E03DA196D1659 /* AudioRingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRingBuffer.swift; sourceTree = "<group>"; };
+		038F61AE8957BA3AA464403D /* PerceptionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionModule.swift; sourceTree = "<group>"; };
+		07A5232F659BAB269BF7D63C /* BantiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiApp.swift; sourceTree = "<group>"; };
+		168FA5F5D4BBBBC4654987A1 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
+		256C24808236AB6EB630838D /* ModuleStatusEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleStatusEvent.swift; sourceTree = "<group>"; };
+		27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionEvent.swift; sourceTree = "<group>"; };
+		36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateRegistryActor.swift; sourceTree = "<group>"; };
+		3875E1430258F8FE36EA5C52 /* ConfigActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActor.swift; sourceTree = "<group>"; };
+		4114755B34DBB3FA826CFF35 /* TranscriptProjectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActor.swift; sourceTree = "<group>"; };
+		421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramParsingTests.swift; sourceTree = "<group>"; };
+		4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptView.swift; sourceTree = "<group>"; };
+		53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptViewModel.swift; sourceTree = "<group>"; };
+		637D4C47575CEAE1410E4D31 /* BantiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BantiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawTranscriptEvent.swift; sourceTree = "<group>"; };
+		9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActorTests.swift; sourceTree = "<group>"; };
+		9C9C90A602281913E0BDE4A2 /* DeepgramStreamingActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramStreamingActor.swift; sourceTree = "<group>"; };
+		A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPerceptionModule.swift; sourceTree = "<group>"; };
+		ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHubActor.swift; sourceTree = "<group>"; };
+		AF1C8B04BDD355530465BB17 /* Banti.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Banti.entitlements; sourceTree = "<group>"; };
+		AF385C45F59FF8A8BD7E1C51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActorTests.swift; sourceTree = "<group>"; };
+		D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHubActorTests.swift; sourceTree = "<group>"; };
+		DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateRegistryActorTests.swift; sourceTree = "<group>"; };
+		DC916A1BAE4C1951451BEF82 /* Banti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Banti.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActor.swift; sourceTree = "<group>"; };
+		DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFrameEvent.swift; sourceTree = "<group>"; };
+		E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActorTests.swift; sourceTree = "<group>"; };
+		F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegmentEvent.swift; sourceTree = "<group>"; };
+		F12C379F49EF15927BB6C011 /* MicrophoneCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneCaptureActor.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		284685CA3232A1AF24AC0825 /* Microphone */ = {
+			isa = PBXGroup;
+			children = (
+				9C9C90A602281913E0BDE4A2 /* DeepgramStreamingActor.swift */,
+				F12C379F49EF15927BB6C011 /* MicrophoneCaptureActor.swift */,
+				4114755B34DBB3FA826CFF35 /* TranscriptProjectionActor.swift */,
+			);
+			path = Microphone;
+			sourceTree = "<group>";
+		};
+		525E3BAD6B165F1C8C791859 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DC916A1BAE4C1951451BEF82 /* Banti.app */,
+				637D4C47575CEAE1410E4D31 /* BantiTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6E8CA040CDEBFC86359E259C = {
+			isa = PBXGroup;
+			children = (
+				8FCAF660501782B48648B98F /* Banti */,
+				89811AB7C011280EDA787521 /* BantiTests */,
+				525E3BAD6B165F1C8C791859 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		71C80B79F8548D794F3499FE /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */,
+				256C24808236AB6EB630838D /* ModuleStatusEvent.swift */,
+				8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */,
+				F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
+		89811AB7C011280EDA787521 /* BantiTests */ = {
+			isa = PBXGroup;
+			children = (
+				9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */,
+				421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */,
+				D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */,
+				C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */,
+				DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */,
+				E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */,
+				A1C4138736FD814449A0DDF7 /* Helpers */,
+			);
+			path = BantiTests;
+			sourceTree = "<group>";
+		};
+		8FCAF660501782B48648B98F /* Banti */ = {
+			isa = PBXGroup;
+			children = (
+				AF1C8B04BDD355530465BB17 /* Banti.entitlements */,
+				07A5232F659BAB269BF7D63C /* BantiApp.swift */,
+				AF385C45F59FF8A8BD7E1C51 /* Info.plist */,
+				ED9DC092F7575CB5BCDA91CA /* Config */,
+				CF111AEB773FC75010AEEEB2 /* Core */,
+				D33BC650CEE24862C26B1F4B /* Modules */,
+				ED09E317743B18AEFA4FEA53 /* UI */,
+			);
+			path = Banti;
+			sourceTree = "<group>";
+		};
+		A1C4138736FD814449A0DDF7 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		CF111AEB773FC75010AEEEB2 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				03835485E37E03DA196D1659 /* AudioRingBuffer.swift */,
+				ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */,
+				DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */,
+				27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */,
+				038F61AE8957BA3AA464403D /* PerceptionModule.swift */,
+				36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */,
+				71C80B79F8548D794F3499FE /* Events */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		D33BC650CEE24862C26B1F4B /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				284685CA3232A1AF24AC0825 /* Microphone */,
+			);
+			path = Modules;
+			sourceTree = "<group>";
+		};
+		ED09E317743B18AEFA4FEA53 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */,
+				53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		ED9DC092F7575CB5BCDA91CA /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				3875E1430258F8FE36EA5C52 /* ConfigActor.swift */,
+				168FA5F5D4BBBBC4654987A1 /* Environment.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		60D4E5FB2642148C202908B6 /* Banti */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 365FD8636FEB2101D74D5EE0 /* Build configuration list for PBXNativeTarget "Banti" */;
+			buildPhases = (
+				6038CF273C38FF57C1939234 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Banti;
+			packageProductDependencies = (
+			);
+			productName = Banti;
+			productReference = DC916A1BAE4C1951451BEF82 /* Banti.app */;
+			productType = "com.apple.product-type.application";
+		};
+		ACF53F685CE28AA1B2F04C99 /* BantiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 44CB5E43DCEA1DB90963AC95 /* Build configuration list for PBXNativeTarget "BantiTests" */;
+			buildPhases = (
+				8A7A82CD128DAE9063B795AD /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				230BC844B3A273C2690995B5 /* PBXTargetDependency */,
+			);
+			name = BantiTests;
+			packageProductDependencies = (
+			);
+			productName = BantiTests;
+			productReference = 637D4C47575CEAE1410E4D31 /* BantiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CA81A4E019AC4DDEC0518D3B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 23690186F2374AB6B901F250 /* Build configuration list for PBXProject "Banti" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6E8CA040CDEBFC86359E259C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 525E3BAD6B165F1C8C791859 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				60D4E5FB2642148C202908B6 /* Banti */,
+				ACF53F685CE28AA1B2F04C99 /* BantiTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6038CF273C38FF57C1939234 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63D2638DC97C505F744CDFC6 /* AudioFrameEvent.swift in Sources */,
+				0CC6D3D986052CE2EB88181C /* AudioRingBuffer.swift in Sources */,
+				C55985138258E88026B90693 /* BantiApp.swift in Sources */,
+				8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */,
+				698A3649D7D2D57E60D5A363 /* DeepgramStreamingActor.swift in Sources */,
+				49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */,
+				DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
+				6D90DA0720B802B6155333CE /* MicrophoneCaptureActor.swift in Sources */,
+				5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */,
+				0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */,
+				B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */,
+				AE28B98F5096058826A2D589 /* PerceptionModule.swift in Sources */,
+				16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */,
+				5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */,
+				C6F1BF6241A121BFB738E894 /* TranscriptProjectionActor.swift in Sources */,
+				BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */,
+				587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */,
+				21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A7A82CD128DAE9063B795AD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */,
+				05921957817FAB229F388097 /* DeepgramParsingTests.swift in Sources */,
+				87192CC8452BC41457542D70 /* EventHubActorTests.swift in Sources */,
+				13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */,
+				26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */,
+				5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */,
+				A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		230BC844B3A273C2690995B5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 60D4E5FB2642148C202908B6 /* Banti */;
+			targetProxy = D044E710A8D36E87933C2530 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		5D34E36292F7A9EA856C9901 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Banti/Banti.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Banti/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.banti.Banti;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		77E631B5A9D9DFB589D69630 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.banti.BantiTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Banti.app/Contents/MacOS/Banti";
+			};
+			name = Release;
+		};
+		8F3DB4973BA10E1997D0333B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		C3A7B25B7755C89221C29803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		C9DE931CD431523D6AF2BA47 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Banti/Banti.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Banti/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.banti.Banti;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D2A25F3314EB04BD2C4B6D4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.banti.BantiTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Banti.app/Contents/MacOS/Banti";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		23690186F2374AB6B901F250 /* Build configuration list for PBXProject "Banti" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C3A7B25B7755C89221C29803 /* Debug */,
+				8F3DB4973BA10E1997D0333B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		365FD8636FEB2101D74D5EE0 /* Build configuration list for PBXNativeTarget "Banti" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5D34E36292F7A9EA856C9901 /* Debug */,
+				C9DE931CD431523D6AF2BA47 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		44CB5E43DCEA1DB90963AC95 /* Build configuration list for PBXNativeTarget "BantiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2A25F3314EB04BD2C4B6D4A /* Debug */,
+				77E631B5A9D9DFB589D69630 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CA81A4E019AC4DDEC0518D3B /* Project object */;
+}
