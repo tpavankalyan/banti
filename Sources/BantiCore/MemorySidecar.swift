@@ -8,7 +8,7 @@ import os
 //   nil, Bool, Int (0–127, neg int8, uint16), String (≤255 bytes),
 //   [String], [String: Any] (string keys, values of above types)
 
-private enum MsgPack {
+enum MsgPack {
 
     // MARK: Encode
 
@@ -151,6 +151,22 @@ private enum MsgPack {
         case 0xC0: return Optional<Any>.none as Any
         case 0xC2: return false
         case 0xC3: return true
+        case 0xCA: // float32 — 4 bytes IEEE 754 big-endian
+            guard offset + 4 <= data.count else { return nil }
+            var bits: UInt32 = 0
+            withUnsafeMutableBytes(of: &bits) { ptr in
+                data.copyBytes(to: ptr, from: offset..<(offset + 4))
+            }
+            offset += 4
+            return Double(Float(bitPattern: bits.bigEndian))
+        case 0xCB: // float64 — 8 bytes IEEE 754 big-endian
+            guard offset + 8 <= data.count else { return nil }
+            var bits: UInt64 = 0
+            withUnsafeMutableBytes(of: &bits) { ptr in
+                data.copyBytes(to: ptr, from: offset..<(offset + 8))
+            }
+            offset += 8
+            return Double(bitPattern: bits.bigEndian)
         case 0xD0: // int8
             guard offset < data.count else { return nil }
             let v = Int(Int8(bitPattern: data[offset])); offset += 1; return v
