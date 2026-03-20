@@ -6,6 +6,18 @@ struct TranscriptView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerBar
+            if let error = viewModel.errorMessage {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.yellow)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .background(Color.red.opacity(0.1))
+            }
             Divider()
             transcriptList
         }

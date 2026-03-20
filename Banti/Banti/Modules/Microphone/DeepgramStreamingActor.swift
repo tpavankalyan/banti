@@ -14,6 +14,8 @@ actor DeepgramStreamingActor: PerceptionModule {
     private var receiveTask: Task<Void, Never>?
     private var _health: ModuleHealth = .healthy
     private var lastSentSequence: UInt64 = 0
+    private var sentFrameCount = 0
+    private var receivedTranscriptCount = 0
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 5
     private let reconnectDelays: [TimeInterval] = [1, 2, 4, 8, 16]
@@ -79,7 +81,7 @@ actor DeepgramStreamingActor: PerceptionModule {
         self.webSocketTask = task
         _health = .healthy
         reconnectAttempts = 0
-        logger.info("Connected to Deepgram (model=\(model), lang=\(language))")
+        logger.notice("Connected to Deepgram (model=\(model), lang=\(language))")
 
         startReceiving()
     }
@@ -87,6 +89,7 @@ actor DeepgramStreamingActor: PerceptionModule {
     private func sendAudio(_ event: AudioFrameEvent) {
         guard let ws = webSocketTask else { return }
         lastSentSequence = event.sequenceNumber
+        sentFrameCount += 1
         let message = URLSessionWebSocketTask.Message.data(event.audioData)
         ws.send(message) { [weak self] error in
             if let error {
@@ -95,6 +98,9 @@ actor DeepgramStreamingActor: PerceptionModule {
                     await self.handleSendError(error)
                 }
             }
+        }
+        if sentFrameCount == 1 || sentFrameCount.isMultiple(of: 50) {
+            logger.notice("Sent \(self.sentFrameCount) audio frames to Deepgram")
         }
     }
 
@@ -130,31 +136,31 @@ actor DeepgramStreamingActor: PerceptionModule {
         do {
             let response = try JSONDecoder().decode(DeepgramResponse.self, from: data)
             guard let channel = response.channel?.alternatives?.first else { return }
+            let isFinal = response.isFinal ?? false
+            let transcript = channel.transcript ?? ""
+            let words = channel.words ?? []
 
-            for word in channel.words ?? [] {
-                let event = RawTranscriptEvent(
-                    text: word.punctuatedWord ?? word.word,
-                    speakerIndex: word.speaker,
-                    confidence: word.confidence,
-                    isFinal: response.isFinal ?? false,
-                    audioStartTime: word.start,
-                    audioEndTime: word.end
-                )
-                await eventHub.publish(event)
+            receivedTranscriptCount += 1
+            if receivedTranscriptCount == 1 || receivedTranscriptCount.isMultiple(of: 10) {
+                logger.notice("Deepgram #\(self.receivedTranscriptCount) final=\(isFinal) words=\(words.count) transcript=\(transcript.prefix(80), privacy: .public)")
             }
 
-            if channel.words == nil || channel.words?.isEmpty == true,
-               let transcript = channel.transcript, !transcript.isEmpty {
-                let event = RawTranscriptEvent(
-                    text: transcript,
-                    speakerIndex: nil,
-                    confidence: channel.confidence ?? 0,
-                    isFinal: response.isFinal ?? false,
-                    audioStartTime: response.start ?? 0,
-                    audioEndTime: (response.start ?? 0) + (response.duration ?? 0)
-                )
-                await eventHub.publish(event)
-            }
+            guard !transcript.isEmpty else { return }
+
+            let speakerIndex = words.first?.speaker
+            let startTime = words.first?.start ?? response.start ?? 0
+            let endTime = words.last?.end ?? ((response.start ?? 0) + (response.duration ?? 0))
+            let confidence = channel.confidence ?? words.first?.confidence ?? 0
+
+            let event = RawTranscriptEvent(
+                text: transcript,
+                speakerIndex: speakerIndex,
+                confidence: confidence,
+                isFinal: isFinal,
+                audioStartTime: startTime,
+                audioEndTime: endTime
+            )
+            await eventHub.publish(event)
         } catch {
             logger.warning("Failed to decode Deepgram response: \(error.localizedDescription)")
             recordParseError()

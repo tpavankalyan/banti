@@ -13,6 +13,7 @@ actor TranscriptProjectionActor: PerceptionModule {
     private var speakerMap: [Int: String] = [:]
     private var nextSpeakerNumber = 1
     private var finalizedEndTime: TimeInterval = 0
+    private var emittedSegmentCount = 0
 
     init(eventHub: EventHubActor) {
         self.eventHub = eventHub
@@ -51,6 +52,10 @@ actor TranscriptProjectionActor: PerceptionModule {
             )
             finalizedEndTime = max(finalizedEndTime, event.audioEndTime)
             await eventHub.publish(segment)
+            emittedSegmentCount += 1
+            if emittedSegmentCount == 1 || emittedSegmentCount.isMultiple(of: 10) {
+                logger.notice("Published finalized transcript segments count=\(self.emittedSegmentCount)")
+            }
         } else {
             let label = speakerLabel(for: event.speakerIndex)
             let segment = TranscriptSegmentEvent(
@@ -61,6 +66,7 @@ actor TranscriptProjectionActor: PerceptionModule {
                 isFinal: false
             )
             await eventHub.publish(segment)
+            logger.notice("Published interim transcript for \(label)")
         }
     }
 

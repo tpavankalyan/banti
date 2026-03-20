@@ -18,6 +18,7 @@ actor MicrophoneCaptureActor: PerceptionModule, AudioFrameReplayProvider {
     private var audioEngine: AVAudioEngine?
     private var drainTask: Task<Void, Never>?
     private var sequenceNumber: UInt64 = 0
+    private var publishedFrameCount = 0
     private let bridgeBuffer = AudioRingBuffer()
     private var _health: ModuleHealth = .healthy
 
@@ -78,7 +79,7 @@ actor MicrophoneCaptureActor: PerceptionModule, AudioFrameReplayProvider {
         try engine.start()
         self.audioEngine = engine
         _health = .healthy
-        logger.info("Audio engine started at \(self.sampleRate)Hz")
+        logger.notice("Audio engine started at \(self.sampleRate)Hz")
 
         startDrainTask()
     }
@@ -112,6 +113,7 @@ actor MicrophoneCaptureActor: PerceptionModule, AudioFrameReplayProvider {
         let frames = bridgeBuffer.drain()
         for frame in frames {
             sequenceNumber += 1
+            publishedFrameCount += 1
             let event = AudioFrameEvent(
                 audioData: frame,
                 sequenceNumber: sequenceNumber,
@@ -122,6 +124,9 @@ actor MicrophoneCaptureActor: PerceptionModule, AudioFrameReplayProvider {
                 replayBuffer.removeFirst()
             }
             await eventHub.publish(event)
+            if publishedFrameCount == 1 || publishedFrameCount.isMultiple(of: 50) {
+                logger.notice("Published \(self.publishedFrameCount) microphone audio frames")
+            }
         }
     }
 }

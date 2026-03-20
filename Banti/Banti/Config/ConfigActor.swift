@@ -40,13 +40,12 @@ actor ConfigActor {
     }
 
     func value(for key: String) -> String? {
-        values[key]
+        values[key] ?? ProcessInfo.processInfo.environment[key]
     }
 
     func require(_ key: String) throws -> String {
-        guard let val = values[key] else {
-            throw ConfigError(message: "Missing required config key: \(key)")
-        }
-        return val
+        if let val = values[key] { return val }
+        if let env = ProcessInfo.processInfo.environment[key] { return env }
+        throw ConfigError(message: "Missing required config key: \(key)")
     }
 }

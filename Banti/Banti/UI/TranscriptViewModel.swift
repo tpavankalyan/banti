@@ -5,6 +5,7 @@ import SwiftUI
 final class TranscriptViewModel: ObservableObject {
     @Published var segments: [TranscriptSegmentEvent] = []
     @Published var isListening = false
+    @Published var errorMessage: String?
     private let eventHub: EventHubActor
     private var subscriptionID: SubscriptionID?
 
@@ -39,5 +40,9 @@ final class TranscriptViewModel: ObservableObject {
             subscriptionID = nil
         }
         isListening = false
+    }
+
+    func setError(_ message: String) {
+        errorMessage = message
     }
 }
