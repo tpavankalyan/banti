@@ -9,33 +9,16 @@ let logger = Logger()
 
 logger.log(source: "system", message: "banti starting...")
 
-// Perception pipeline
+// Perception context (still used by AudioRouter, SpeakerResolver, etc.)
 let context = PerceptionContext()
-let router  = PerceptionRouter(context: context, logger: logger)
-
-// Configure cloud analyzers from environment variables
-Task { await router.configure() }
-
-let localPerception = LocalPerception(dispatcher: router)
-
-// Start snapshot logging (every 2s)
-context.startSnapshotTimer(logger: logger)
 
 // Start AX reader (accessibility side-channel)
 let axReader = AXReader(logger: logger)
 axReader.start()
 
-// Start camera capture
-let deduplicator = Deduplicator()
-let cameraCapture = CameraCapture(logger: logger, deduplicator: deduplicator, frameProcessor: localPerception)
-cameraCapture.start()
-
-// Start screen capture (async)
-let screenDeduplicator = Deduplicator()
-let screenCapture = ScreenCapture(logger: logger, deduplicator: screenDeduplicator, frameProcessor: localPerception)
-Task {
-    await screenCapture.start()
-}
+// Phase 2 sensor cortices — each owns its own capture pipeline and LocalPerception
+let visualCortex = VisualCortex.makeDefault(logger: logger)
+let screenCortex = ScreenCortex.makeDefault(logger: logger)
 
 // Audio pipeline
 let audioRouter = AudioRouter(context: context, logger: logger)
@@ -51,10 +34,13 @@ let sharedEngine = AVAudioEngine()
 // Must complete before micCapture.start() calls engine.start().
 let memoryEngine = MemoryEngine(context: context, audioRouter: audioRouter, engine: sharedEngine, logger: logger)
 Task {
-    let fi = await memoryEngine.faceIdentifier
-    await router.setFaceIdentifier(fi)
-    await router.setBantiVoice(memoryEngine.bantiVoice)
-    await router.setBus(memoryEngine.eventBus)
+    // Wire ScreenCortex self-echo filter before starting the graph
+    await screenCortex.setBantiVoice(memoryEngine.bantiVoice)
+
+    // Start cortical graph nodes via MemoryEngine
+    let bus = await memoryEngine.eventBus
+    await visualCortex.start(bus: bus)
+    await screenCortex.start(bus: bus)
     await memoryEngine.start()
 }
 
