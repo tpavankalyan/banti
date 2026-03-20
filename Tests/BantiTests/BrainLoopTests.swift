@@ -39,42 +39,6 @@ final class BrainLoopTests: XCTestCase {
         XCTAssertFalse(BrainLoop.shouldTrigger(lastSpoke: recentlySpoke, isInterruption: false))
     }
 
-    // MARK: - Transcript buffer
-
-    func testAppendTranscriptIgnoresNonFinal() {
-        var transcripts: [String] = []
-        BrainLoop.appendTranscript(&transcripts, new: "hello", isFinal: false)
-        XCTAssertTrue(transcripts.isEmpty)
-    }
-
-    func testAppendTranscriptAddsFinalTranscript() {
-        var transcripts: [String] = []
-        BrainLoop.appendTranscript(&transcripts, new: "hello", isFinal: true)
-        XCTAssertEqual(transcripts, ["hello"])
-    }
-
-    func testAppendTranscriptIgnoresDuplicate() {
-        var transcripts = ["hello"]
-        BrainLoop.appendTranscript(&transcripts, new: "hello", isFinal: true)
-        XCTAssertEqual(transcripts.count, 1)
-    }
-
-    func testAppendTranscriptIgnoresNil() {
-        var transcripts: [String] = []
-        BrainLoop.appendTranscript(&transcripts, new: nil, isFinal: true)
-        XCTAssertTrue(transcripts.isEmpty)
-    }
-
-    func testTranscriptBufferCapsAt5() {
-        var transcripts: [String] = []
-        for i in 1...7 {
-            BrainLoop.appendTranscript(&transcripts, new: "line \(i)", isFinal: true)
-        }
-        XCTAssertEqual(transcripts.count, 5)
-        XCTAssertEqual(transcripts.first, "line 3")
-        XCTAssertEqual(transcripts.last, "line 7")
-    }
-
     // MARK: - ProactiveDecision parsing
 
     func testDecodesSpeakDecision() throws {
@@ -200,37 +164,41 @@ final class BrainLoopTests: XCTestCase {
 
     // MARK: - BrainStreamBody
 
-    func testBrainStreamBodyEncodesInterruptionFields() throws {
+    func testBrainStreamBodyEncodesConversationHistory() throws {
+        let turn = ConversationTurnDTO(speaker: "human", text: "hello", timestamp: 1000.0)
         let body = BrainStreamBody(
             track: "reflex",
-            snapshot_json: "{}",
-            recent_speech: [],
+            ambient_context: "{}",
+            conversation_history: [turn],
+            last_banti_utterance: "hi there",
             last_spoke_seconds_ago: 5.0,
-            last_spoke_text: "hello",
-            is_interruption: true,
-            current_speech: "I was saying"
-        )
-        let data = try JSONEncoder().encode(body)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
-        XCTAssertEqual(json["is_interruption"] as? Bool, true)
-        XCTAssertEqual(json["current_speech"] as? String, "I was saying")
-    }
-
-    func testBrainStreamBodyEncodesNonInterruptionFields() throws {
-        let body = BrainStreamBody(
-            track: "reasoning",
-            snapshot_json: "{}",
-            recent_speech: [],
-            last_spoke_seconds_ago: 12.0,
-            last_spoke_text: nil,
             is_interruption: false,
             current_speech: nil
         )
         let data = try JSONEncoder().encode(body)
         let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(json["ambient_context"] as? String, "{}")
+        let history = json["conversation_history"] as? [[String: Any]]
+        XCTAssertEqual(history?.count, 1)
+        XCTAssertEqual(history?.first?["speaker"] as? String, "human")
+        XCTAssertEqual(history?.first?["text"] as? String, "hello")
+        XCTAssertEqual(json["last_banti_utterance"] as? String, "hi there")
         XCTAssertEqual(json["is_interruption"] as? Bool, false)
-        // Swift's JSONEncoder encodes nil as JSON null (key present, value NSNull).
-        // Test that current_speech is not a string — covers both null and absent cases.
-        XCTAssertNil(json["current_speech"] as? String)
+    }
+
+    func testBrainStreamBodyEncodesInterruptionTrue() throws {
+        let body = BrainStreamBody(
+            track: "reasoning",
+            ambient_context: "{}",
+            conversation_history: [],
+            last_banti_utterance: nil,
+            last_spoke_seconds_ago: 2.0,
+            is_interruption: true,
+            current_speech: "I was saying this"
+        )
+        let data = try JSONEncoder().encode(body)
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(json["is_interruption"] as? Bool, true)
+        XCTAssertEqual(json["current_speech"] as? String, "I was saying this")
     }
 }

@@ -15,6 +15,8 @@ public actor MemoryEngine {
     private let selfModel: SelfModel
     public let brainLoop: BrainLoop
     let cartesiaSpeaker: CartesiaSpeaker   // internal — accessible via @testable import
+    public let bantiVoice: BantiVoice
+    public let conversationBuffer: ConversationBuffer
     public let memoryQuery: MemoryQuery
 
     public init(context: PerceptionContext, audioRouter: AudioRouter, engine: AVAudioEngine, logger: Logger) {
@@ -45,8 +47,20 @@ public actor MemoryEngine {
         self.memoryIngestor = MemoryIngestor(context: context, sidecar: sidecar, logger: logger)
         self.selfModel = SelfModel(context: context, sidecar: sidecar, logger: logger)
         self.cartesiaSpeaker = CartesiaSpeaker(engine: engine, logger: logger)
+
+        let selfSpeechLog = SelfSpeechLog()
+        let conversationBuffer = ConversationBuffer()
+        self.conversationBuffer = conversationBuffer
+        self.bantiVoice = BantiVoice(
+            cartesiaSpeaker: cartesiaSpeaker,
+            selfSpeechLog: selfSpeechLog,
+            conversationBuffer: conversationBuffer,
+            logger: logger
+        )
         self.brainLoop = BrainLoop(context: context, sidecar: sidecar,
-                                   speaker: cartesiaSpeaker, logger: logger)
+                                   bantiVoice: bantiVoice,
+                                   conversationBuffer: conversationBuffer,
+                                   logger: logger)
         self.memoryQuery = MemoryQuery(sidecar: sidecar, logger: logger)
     }
 

@@ -7,12 +7,19 @@ struct SSEEvent: Decodable {
     let text: String?
 }
 
+// New types replacing the old BrainStreamBody
+struct ConversationTurnDTO: Encodable {
+    let speaker: String      // "banti" or "human"
+    let text: String
+    let timestamp: Double    // unix timestamp
+}
+
 struct BrainStreamBody: Encodable {
     let track: String
-    let snapshot_json: String
-    let recent_speech: [String]
+    let ambient_context: String          // was: snapshot_json
+    let conversation_history: [ConversationTurnDTO]  // was: recent_speech: [String]
+    let last_banti_utterance: String?    // was: last_spoke_text
     let last_spoke_seconds_ago: Double
-    let last_spoke_text: String?
     let is_interruption: Bool
     let current_speech: String?
 }
@@ -20,18 +27,16 @@ struct BrainStreamBody: Encodable {
 public actor BrainLoop {
     private let context: PerceptionContext
     private let sidecar: MemorySidecar
-    private let speaker: CartesiaSpeaker
+    private let bantiVoice: BantiVoice
+    private let conversationBuffer: ConversationBuffer
     private let logger: Logger
 
     private static let heartbeatNanoseconds: UInt64 = 15_000_000_000  // 15s
     private static let pollNanoseconds: UInt64 = 5_000_000_000        // 5s (speech now event-driven)
     private static let cooldownSeconds: Double = 10.0
-    private static let maxTranscripts = 5
 
     private var currentlySpeaking: String?
     private var lastSpoke: Date?
-    private var lastSpokeText: String?
-    private var recentTranscripts: [String] = []
     private var lastPersonID: String?
     private var lastPersonName: String?
     private var unknownPersonFirstSeen: Date?
@@ -41,10 +46,13 @@ public actor BrainLoop {
     private var activeReasoningTask: Task<Void, Never>?
 
     public init(context: PerceptionContext, sidecar: MemorySidecar,
-                speaker: CartesiaSpeaker, logger: Logger) {
+                bantiVoice: BantiVoice,
+                conversationBuffer: ConversationBuffer,
+                logger: Logger) {
         self.context = context
         self.sidecar = sidecar
-        self.speaker = speaker
+        self.bantiVoice = bantiVoice
+        self.conversationBuffer = conversationBuffer
         self.logger = logger
     }
 
@@ -70,15 +78,13 @@ public actor BrainLoop {
     // MARK: - Direct speech callback (event-driven, replaces transcript accumulation in pollEvents)
 
     public func onFinalTranscript(_ transcript: String) async {
-        BrainLoop.appendTranscript(&recentTranscripts, new: transcript, isFinal: true)
-
-        // While banti is speaking the mic picks up its own TTS. Hardware AEC
-        // (setVoiceProcessingEnabled) silences the mic on this device, so we
-        // leave it off and filter here instead: transcripts are preserved for
-        // context but don't trigger a brain response while playback is active.
-        if await speaker.isPlaying { return }
-
-        await evaluate(reason: "speech: \(transcript)")
+        // Capture isPlaying before attribution — used for interruption detection only
+        let wasPlaying = await bantiVoice.isPlaying()
+        let source = await bantiVoice.attributeTranscript(transcript, arrivedAt: Date())
+        guard source == .human else { return }
+        await conversationBuffer.addHumanTurn(transcript)
+        let isInterruption = wasPlaying && BrainLoop.isInterruptionCandidate(transcript)
+        await evaluate(reason: "speech: \(transcript)", isInterruption: isInterruption)
     }
 
     // MARK: - Event polling (face / emotion / person — no speech)
@@ -128,8 +134,8 @@ public actor BrainLoop {
         currentlySpeaking = nil
 
         // Cancel in-flight tasks from prior trigger
-        await speaker.cancelTrack(.reflex)
-        await speaker.cancelTrack(.reasoning)
+        await bantiVoice.cancelTrack(.reflex)
+        await bantiVoice.cancelTrack(.reasoning)
         activeReflexTask?.cancel()
         activeReasoningTask?.cancel()
 
@@ -146,21 +152,32 @@ public actor BrainLoop {
     // MARK: - Stream a single track
 
     private func streamTrack(_ track: TrackPriority, isInterruption: Bool = false, currentSpeech: String? = nil) async {
-        guard await sidecar.isRunning else { return }
+        guard await sidecar.isRunning else {
+            await bantiVoice.markPlaybackEnded()
+            return
+        }
 
         let snapshot = await context.snapshotJSON()
+        let turns = await conversationBuffer.recentTurns(limit: 10)
+        let dtoTurns = turns.map {
+            ConversationTurnDTO(speaker: $0.speaker.rawValue, text: $0.text,
+                                timestamp: $0.timestamp.timeIntervalSince1970)
+        }
         let body = BrainStreamBody(
             track: track.rawValue,
-            snapshot_json: snapshot,
-            recent_speech: recentTranscripts,
+            ambient_context: snapshot,
+            conversation_history: dtoTurns,
+            last_banti_utterance: await conversationBuffer.lastBantiUtterance(),
             last_spoke_seconds_ago: BrainLoop.secondsSince(lastSpoke),
-            last_spoke_text: lastSpokeText,
             is_interruption: isInterruption,
             current_speech: currentSpeech
         )
 
         guard let url = URL(string: "/brain/stream", relativeTo: sidecar.baseURL),
-              let bodyData = try? JSONEncoder().encode(body) else { return }
+              let bodyData = try? JSONEncoder().encode(body) else {
+            await bantiVoice.markPlaybackEnded()
+            return
+        }
 
         var request = URLRequest(url: url, timeoutInterval: 25.0)
         request.httpMethod = "POST"
@@ -168,21 +185,18 @@ public actor BrainLoop {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
 
-        var spokeSentences: [String] = []
-
         do {
             let (bytes, _) = try await URLSession.shared.bytes(for: request)
             for try await line in bytes.lines {
-                if Task.isCancelled { return }
+                if Task.isCancelled { break }     // break (not return) so markPlaybackEnded runs
                 guard line.hasPrefix("data: ") else { continue }
                 let jsonStr = String(line.dropFirst(6))
                 guard let data = jsonStr.data(using: .utf8),
                       let event = try? JSONDecoder().decode(SSEEvent.self, from: data) else { continue }
                 if event.type == "done" { break }
                 if event.type == "sentence", let text = event.text, !text.isEmpty {
-                    spokeSentences.append(text)
-                    currentlySpeaking = text                              // track for interruption context
-                    await speaker.streamSpeak(text, track: track)
+                    currentlySpeaking = text
+                    await bantiVoice.say(text, track: track)
                 }
             }
         } catch {
@@ -190,10 +204,8 @@ public actor BrainLoop {
                        message: "[warn] \(track.rawValue) track failed: \(error.localizedDescription)")
         }
 
-        // Track 2 overwrites Track 1's lastSpokeText if it spoke
-        if !spokeSentences.isEmpty {
-            lastSpokeText = spokeSentences.joined(separator: " ")
-        }
+        // Unconditional: close playback window whether we spoke, were cancelled, or errored.
+        await bantiVoice.markPlaybackEnded()
     }
 
     // MARK: - Pure static helpers (testable without actor isolation)
@@ -202,13 +214,6 @@ public actor BrainLoop {
         if isInterruption { return true }
         guard let lastSpoke else { return true }
         return now.timeIntervalSince(lastSpoke) > cooldownSeconds
-    }
-
-    public static func appendTranscript(_ transcripts: inout [String],
-                                        new: String?, isFinal: Bool) {
-        guard let new, isFinal, new != transcripts.last else { return }
-        if transcripts.count >= maxTranscripts { transcripts.removeFirst() }
-        transcripts.append(new)
     }
 
     public static func secondsSince(_ date: Date?, now: Date = Date()) -> Double {
