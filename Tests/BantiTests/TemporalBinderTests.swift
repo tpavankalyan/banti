@@ -57,6 +57,41 @@ final class TemporalBinderTests: XCTestCase {
         XCTAssertEqual(events.count, 1, "debounce should produce exactly one episode")
     }
 
+    func testMarkdownWrappedJSONStillPublishesEpisode() async {
+        let bus = EventBus()
+        let received = ActorBox<[BantiEvent]>([])
+        _ = await bus.subscribe(topic: "episode.bound") { event in
+            await received.append(event)
+        }
+
+        let binder = TemporalBinder(cerebras: { _, _, _, _ in
+            """
+            ### JSON Output
+            ```json
+            {
+              "text": "Wrapped response",
+              "participants": ["Alex"],
+              "emotionalTone": "calm"
+            }
+            ```
+            """
+        }, windowMs: 100)
+        await binder.start(bus: bus)
+
+        await bus.publish(makeSurpriseEvent("sensor.audio"), topic: "gate.surprise")
+        try? await Task.sleep(nanoseconds: 250_000_000)
+
+        let events = await received.value
+        XCTAssertEqual(events.count, 1, "markdown-wrapped JSON should still decode")
+        if case .episodeBound(let episode) = events.first?.payload {
+            XCTAssertEqual(episode.text, "Wrapped response")
+            XCTAssertEqual(episode.participants, ["Alex"])
+            XCTAssertEqual(episode.emotionalTone, "calm")
+        } else {
+            XCTFail("expected episodeBound payload")
+        }
+    }
+
     private func makeSurpriseEvent(_ topic: String) -> BantiEvent {
         BantiEvent(source: "test", topic: topic, surprise: 0.9,
                    payload: .speechDetected(SpeechPayload(transcript: "hi", speakerID: nil)))

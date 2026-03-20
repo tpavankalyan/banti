@@ -23,7 +23,6 @@ let screenCortex = ScreenCortex.makeDefault(logger: logger)
 
 // Audio pipeline
 let audioRouter = AudioRouter(context: context, logger: logger)
-Task { await audioRouter.configure() }
 
 // Shared audio engine — must be created before either CartesiaSpeaker or MicrophoneCapture.
 // CartesiaSpeaker.init (called inside MemoryEngine.init) attaches its playerNode to this engine.
@@ -34,7 +33,16 @@ let sharedEngine = AVAudioEngine()
 // Memory layer — init is synchronous; CartesiaSpeaker attaches playerNode to sharedEngine here.
 // Must complete before micCapture.start() calls engine.start().
 let memoryEngine = MemoryEngine(context: context, audioRouter: audioRouter, engine: sharedEngine, logger: logger)
+
+// Start mic after audioRouter is configured and MemoryEngine has wired transcript callbacks.
+let soundClassifier = SoundClassifier(context: context, logger: logger)
+let micCapture = MicrophoneCapture(engine: sharedEngine, dispatcher: audioRouter, soundClassifier: soundClassifier, logger: logger)
+
 Task {
+    await audioRouter.configure()
+    await memoryEngine.prepareAudioIngress()
+    micCapture.start()
+
     // Wire ScreenCortex self-echo filter before starting the graph
     await screenCortex.setBantiVoice(memoryEngine.bantiVoice)
 
@@ -61,11 +69,6 @@ Task {
         }
     }
 }
-
-// Start mic after MemoryEngine.init so playerNode is in the graph before engine.start().
-let soundClassifier = SoundClassifier(context: context, logger: logger)
-let micCapture = MicrophoneCapture(engine: sharedEngine, dispatcher: audioRouter, soundClassifier: soundClassifier, logger: logger)
-micCapture.start()
 
 logger.log(source: "system", message: "banti running. Press Ctrl+C to stop.")
 

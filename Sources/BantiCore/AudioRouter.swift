@@ -8,9 +8,15 @@ public actor AudioRouter: AudioChunkDispatcher {
     private var deepgram: DeepgramStreamer?
     private var hume: HumeVoiceAnalyzer?
     private var bus: EventBus?
+    private var audioCortex: AudioCortex?
+    private var didLogDeepgramStreaming = false
 
     public func setBus(_ bus: EventBus) {
         self.bus = bus
+    }
+
+    public func setAudioCortex(_ cortex: AudioCortex) {
+        self.audioCortex = cortex
     }
     private var humeBuffer: Data = Data()
     private var pcmRingBuffer: Data = Data()
@@ -49,7 +55,15 @@ public actor AudioRouter: AudioChunkDispatcher {
 
     public func setTranscriptCallback(_ callback: @escaping @Sendable (String) async -> Void) async {
         let capturedBus = bus
-        await deepgram?.setTranscriptCallback { @Sendable transcript in
+        await deepgram?.setTranscriptCallback { [self] transcript in
+            // Efference copy gate: suppress if banti is currently speaking
+            if let cortex = await self.audioCortex, await cortex.isSuppressed() {
+                self.logger.log(
+                    source: "deepgram",
+                    message: "[debug] final transcript suppressed while voice gate is active: \(transcript)"
+                )
+                return
+            }
             await callback(transcript)
             if let b = capturedBus {
                 let event = BantiEvent(
@@ -80,6 +94,10 @@ public actor AudioRouter: AudioChunkDispatcher {
     public func dispatch(pcmChunk: Data) async {
         // Stream every chunk to Deepgram (direct await preserves chunk ordering)
         if let streamer = deepgram {
+            if !didLogDeepgramStreaming {
+                didLogDeepgramStreaming = true
+                logger.log(source: "audio", message: "[debug] forwarding microphone audio to Deepgram")
+            }
             await streamer.send(chunk: pcmChunk)
         }
         appendToPCMRingBuffer(pcmChunk)

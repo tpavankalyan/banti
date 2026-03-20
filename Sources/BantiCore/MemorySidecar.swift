@@ -154,7 +154,7 @@ enum MsgPack {
         case 0xCA: // float32 — 4 bytes IEEE 754 big-endian
             guard offset + 4 <= data.count else { return nil }
             var bits: UInt32 = 0
-            withUnsafeMutableBytes(of: &bits) { ptr in
+            _ = withUnsafeMutableBytes(of: &bits) { ptr in
                 data.copyBytes(to: ptr, from: offset..<(offset + 4))
             }
             offset += 4
@@ -162,7 +162,7 @@ enum MsgPack {
         case 0xCB: // float64 — 8 bytes IEEE 754 big-endian
             guard offset + 8 <= data.count else { return nil }
             var bits: UInt64 = 0
-            withUnsafeMutableBytes(of: &bits) { ptr in
+            _ = withUnsafeMutableBytes(of: &bits) { ptr in
                 data.copyBytes(to: ptr, from: offset..<(offset + 8))
             }
             offset += 8
@@ -333,10 +333,10 @@ public actor MemorySidecar {
         _isRunning = false
     }
 
-    // MARK: - Core transport
+    // MARK: - Core transport (POSIX BSD sockets — NWConnection rejects Unix sockets with ENETDOWN)
 
     /// Send a msgpack request dict and receive a msgpack response dict.
-    /// Creates a new NWConnection per call (simple, avoids state management).
+    /// Uses a POSIX Unix-domain socket directly; creates a new fd per call.
     func send(method: String, payload: [String: Any] = [:]) async -> [String: Any] {
         var msg = payload
         msg["method"] = method
@@ -351,66 +351,99 @@ public actor MemorySidecar {
         withUnsafeBytes(of: len) { frame.append(contentsOf: $0) }
         frame.append(body)
 
+        let path = socketPath  // nonisolated — safe to capture
         return await withCheckedContinuation { continuation in
-            let endpoint = NWEndpoint.unix(path: socketPath)
-            let connection = NWConnection(to: endpoint, using: NWParameters())
-            var resumed = false
+            DispatchQueue.global(qos: .utility).async {
+                let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+                guard fd >= 0 else {
+                    continuation.resume(returning: ["error": "socket() failed: \(errno)"])
+                    return
+                }
+                defer { close(fd) }
 
-            func finish(_ result: [String: Any]) {
-                guard !resumed else { return }
-                resumed = true
-                connection.cancel()
+                // 5-second send/recv timeout so we never hang indefinitely
+                var tv = timeval()
+                tv.tv_sec = 5
+                tv.tv_usec = 0
+                setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+                setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+
+                // Build sockaddr_un
+                var addr = sockaddr_un()
+                addr.sun_family = sa_family_t(AF_UNIX)
+                let maxPath = MemoryLayout.size(ofValue: addr.sun_path) - 1
+                withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
+                    path.withCString { cStr in
+                        _ = strncpy(
+                            UnsafeMutableRawPointer(ptr).assumingMemoryBound(to: CChar.self),
+                            cStr, maxPath)
+                    }
+                }
+
+                let addrSize = socklen_t(MemoryLayout<sockaddr_un>.size)
+                let connectResult = withUnsafePointer(to: addr) { addrPtr in
+                    addrPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                        connect(fd, $0, addrSize)
+                    }
+                }
+                guard connectResult == 0 else {
+                    continuation.resume(returning: ["error": "connect() failed: errno \(errno)"])
+                    return
+                }
+
+                // Write framed request
+                guard MemorySidecar.sendAll(fd, data: frame) else {
+                    continuation.resume(returning: ["error": "write failed"])
+                    return
+                }
+
+                // Read 4-byte big-endian length prefix
+                var lenBuf = [UInt8](repeating: 0, count: 4)
+                guard MemorySidecar.recvExact(fd, buf: &lenBuf, count: 4) else {
+                    continuation.resume(returning: ["error": "length recv failed"])
+                    return
+                }
+                let bodyLen = lenBuf.reduce(0) { ($0 << 8) | Int($1) }
+                guard bodyLen > 0, bodyLen < 10_000_000 else {
+                    continuation.resume(returning: ["error": "bad body length: \(bodyLen)"])
+                    return
+                }
+
+                // Read body
+                var bodyBuf = [UInt8](repeating: 0, count: bodyLen)
+                guard MemorySidecar.recvExact(fd, buf: &bodyBuf, count: bodyLen) else {
+                    continuation.resume(returning: ["error": "body recv failed"])
+                    return
+                }
+
+                let result = MsgPack.decode(Data(bodyBuf)) ?? ["error": "decode failed"]
                 continuation.resume(returning: result)
             }
+        }
+    }
 
-            connection.stateUpdateHandler = { [frame] state in
-                switch state {
-                case .ready:
-                    connection.send(content: frame, completion: .contentProcessed { error in
-                        if let error = error {
-                            finish(["error": error.localizedDescription])
-                            return
-                        }
-                        // Receive 4-byte length prefix
-                        connection.receive(minimumIncompleteLength: 4, maximumLength: 4) { data, _, _, error in
-                            if let error = error {
-                                finish(["error": error.localizedDescription])
-                                return
-                            }
-                            guard let lenData = data, lenData.count == 4 else {
-                                finish(["error": "bad length frame"])
-                                return
-                            }
-                            let bodyLen = Int(UInt32(bigEndian: lenData.withUnsafeBytes { $0.load(as: UInt32.self) }))
-                            guard bodyLen > 0 else {
-                                finish(["error": "zero-length response"])
-                                return
-                            }
-                            // Receive body
-                            connection.receive(minimumIncompleteLength: bodyLen, maximumLength: bodyLen) { body, _, _, error in
-                                if let error = error {
-                                    finish(["error": error.localizedDescription])
-                                    return
-                                }
-                                guard let body = body, body.count == bodyLen else {
-                                    finish(["error": "incomplete body"])
-                                    return
-                                }
-                                let result = MsgPack.decode(body) ?? ["error": "decode failed"]
-                                finish(result)
-                            }
-                        }
-                    })
-                case .failed(let error):
-                    finish(["error": error.localizedDescription])
-                case .waiting(let error):
-                    finish(["error": "connection waiting: \(error.localizedDescription)"])
-                default:
-                    break
-                }
+    private static func recvExact(_ fd: Int32, buf: inout [UInt8], count: Int) -> Bool {
+        var total = 0
+        while total < count {
+            let n = buf.withUnsafeMutableBytes { ptr in
+                Darwin.read(fd, ptr.baseAddress!.advanced(by: total), count - total)
             }
+            if n <= 0 { return false }
+            total += n
+        }
+        return true
+    }
 
-            connection.start(queue: .global(qos: .utility))
+    private static func sendAll(_ fd: Int32, data: Data) -> Bool {
+        var total = 0
+        return data.withUnsafeBytes { ptr in
+            guard let base = ptr.baseAddress else { return data.isEmpty }
+            while total < data.count {
+                let n = Darwin.write(fd, base.advanced(by: total), data.count - total)
+                if n <= 0 { return false }
+                total += n
+            }
+            return true
         }
     }
 
@@ -466,7 +499,10 @@ public actor MemorySidecar {
     // still use post(path:body:). We route the old HTTP paths to the new socket methods.
 
     public func post<T: Encodable>(path: String, body: T) async -> Data? {
-        guard _isRunning else { return nil }
+        if !_isRunning {
+            let ready = await health()
+            guard ready else { return nil }
+        }
 
         // Encode body to a JSON-derived dict we can pass to send()
         guard let jsonData = try? JSONEncoder().encode(body),
@@ -513,11 +549,16 @@ public actor MemorySidecar {
     }
 
     private func waitForHealth(attempts: Int = 20) async {
-        for _ in 0..<attempts {
+        for i in 0..<attempts {
             try? await Task.sleep(nanoseconds: 500_000_000)
-            if await health() {
+            let resp = await send(method: "health")
+            if (resp["status"] as? String) == "ok" {
+                _isRunning = true
                 logger.log(source: "memory", message: "sidecar ready at \(socketPath)")
                 return
+            }
+            if i == 0, let err = resp["error"] as? String {
+                logger.log(source: "memory", message: "[debug] health check error: \(err)")
             }
         }
         logger.log(source: "memory", message: "[warn] sidecar did not respond in 10s — memory disabled")

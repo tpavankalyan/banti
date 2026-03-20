@@ -1,9 +1,12 @@
 # memory_sidecar/socket_server.py
-import socket, os, struct, threading, inspect
+import asyncio, socket, os, struct, threading, inspect
+from concurrent.futures import TimeoutError as FutureTimeoutError
 import msgpack
 from datetime import timezone
 
 DISPATCH = {}
+_STARTUP_STATE = {"ready": True, "error": None}
+MAX_FRAME_SIZE = 10_000_000
 
 def handler(method):
     def decorator(fn):
@@ -12,17 +15,33 @@ def handler(method):
     return decorator
 
 
+def set_startup_state(*, ready=None, error=None):
+    if ready is not None:
+        _STARTUP_STATE["ready"] = ready
+    _STARTUP_STATE["error"] = error
+
+
 class SocketServer:
     def __init__(self, sock_path="/tmp/banti_memory.sock", testing=False):
         self.sock_path = sock_path
         self._stop = threading.Event()
         self.testing = testing
+        self._async_loop = asyncio.new_event_loop()
+        self._async_thread = threading.Thread(target=self._run_async_loop, daemon=True)
+        self._async_thread.start()
         if os.path.exists(sock_path):
             os.unlink(sock_path)
         self._sock = socket.socket(socket.AF_UNIX)
         self._sock.bind(sock_path)
         self._sock.listen(5)
         self._sock.settimeout(0.5)
+
+    def _run_async_loop(self):
+        asyncio.set_event_loop(self._async_loop)
+        self._async_loop.run_forever()
+
+    def run_coro(self, coro):
+        return asyncio.run_coroutine_threadsafe(coro, self._async_loop)
 
     def serve_forever(self):
         while not self._stop.is_set():
@@ -35,6 +54,7 @@ class SocketServer:
     def stop(self):
         self._stop.set()
         self._sock.close()
+        self._async_loop.call_soon_threadsafe(self._async_loop.stop)
         if os.path.exists(self.sock_path):
             os.unlink(self.sock_path)
 
@@ -49,10 +69,15 @@ class SocketServer:
 
     def _handle_conn(self, conn):
         try:
+            conn.settimeout(5.0)
             raw_len = self._recv_exact(conn, 4)
             if raw_len is None:
                 return
             length = struct.unpack(">I", raw_len)[0]
+            if length <= 0 or length > MAX_FRAME_SIZE:
+                error_resp = msgpack.packb({"error": f"bad frame length: {length}"})
+                conn.sendall(struct.pack(">I", len(error_resp)) + error_resp)
+                return
             data = b""
             while len(data) < length:
                 chunk = conn.recv(length - len(data))
@@ -63,15 +88,17 @@ class SocketServer:
             method = request.get("method", "")
             fn = DISPATCH.get(method)
             if fn:
-                import asyncio
                 if inspect.iscoroutinefunction(fn):
-                    result = asyncio.run(fn(request))
+                    result = self.run_coro(fn(request)).result(timeout=5)
                 else:
                     result = fn(request)
             else:
                 result = {"error": f"unknown method: {method}"}
             response = msgpack.packb(result)
             conn.sendall(struct.pack(">I", len(response)) + response)
+        except FutureTimeoutError:
+            error_resp = msgpack.packb({"error": "handler timed out"})
+            conn.sendall(struct.pack(">I", len(error_resp)) + error_resp)
         except Exception as e:
             print(f"[socket] error: {e}")
             try:
@@ -85,6 +112,10 @@ class SocketServer:
 
 @handler("health")
 def health(_req):
+    if _STARTUP_STATE["error"]:
+        return {"status": "error", "error": _STARTUP_STATE["error"]}
+    if not _STARTUP_STATE["ready"]:
+        return {"status": "starting"}
     return {"status": "ok"}
 
 
@@ -116,7 +147,9 @@ async def identify_voice(req):
 
 @handler("query_memory")
 async def query_memory(req):
-    from memory import query_memory as _query
+    from memory import query_memory as _query, query_person_memory as _query_person
+    if req.get("person_id"):
+        return await _query_person(req["person_id"])
     # Returns {"answer": str, "sources": list}
     result = await _query(req.get("q", ""), req.get("context_json"))
     return result

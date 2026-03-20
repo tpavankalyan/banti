@@ -43,4 +43,42 @@ final class TrackRouterTests: XCTestCase {
         let topics = await router.subscribedTopics
         XCTAssertTrue(topics.contains("sensor.visual"))
     }
+
+    func testMarkdownWrappedJSONStillRoutesEpisode() async {
+        let bus = EventBus()
+        let received = ActorBox<[BantiEvent]>([])
+        _ = await bus.subscribe(topic: "brain.route") { event in
+            await received.append(event)
+        }
+
+        let router = TrackRouter(cerebras: { _, _, _, _ in
+            """
+            ### JSON Output
+            ```json
+            {
+              "tracks": ["brainstem", "limbic"],
+              "reason": "wrapped"
+            }
+            ```
+            """
+        })
+        await router.start(bus: bus)
+
+        let episode = EpisodePayload(text: "test", participants: ["Alex"], emotionalTone: "warm")
+        await bus.publish(
+            BantiEvent(source: "temporal_binder", topic: "episode.bound", surprise: 1.0,
+                       payload: .episodeBound(episode)),
+            topic: "episode.bound"
+        )
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        let events = await received.value
+        XCTAssertEqual(events.count, 1, "markdown-wrapped JSON should still decode")
+        if case .brainRoute(let route) = events.first?.payload {
+            XCTAssertEqual(Set(route.tracks), Set(["brainstem", "limbic"]))
+            XCTAssertEqual(route.reason, "wrapped")
+        } else {
+            XCTFail("expected brainRoute payload")
+        }
+    }
 }

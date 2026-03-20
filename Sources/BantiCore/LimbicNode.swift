@@ -37,12 +37,15 @@ public actor LimbicNode: CorticalNode {
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed != "[silent]" && !trimmed.isEmpty else { return }
             let response = BrainResponsePayload(track: "limbic", text: trimmed,
-                                                activatedTracks: route.tracks)
+                                                activatedTracks: route.tracks,
+                                                episodeID: route.episode.episodeID)
             await bus.publish(
                 BantiEvent(source: id, topic: "brain.limbic.response", surprise: 0,
                            payload: .brainResponse(response)),
                 topic: "brain.limbic.response"
             )
-        } catch { /* drop */ }
+        } catch {
+            print("[banti:limbic] cerebras error: \(error)")
+        }
     }
 }

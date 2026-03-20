@@ -43,7 +43,8 @@ public actor TemporalBinder: CorticalNode {
         windowTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: ns)
             guard !Task.isCancelled else { return }
-            await self?.flush(capturedEvents)
+            // Detach flush so a subsequent cancel() doesn't abort the in-flight Cerebras call
+            Task { [weak self] in await self?.flush(capturedEvents) }
         }
     }
 
@@ -56,8 +57,10 @@ public actor TemporalBinder: CorticalNode {
 
         do {
             let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 100)
-            guard let data = response.data(using: .utf8),
-                  let json = try? JSONDecoder().decode(EpisodeJSON.self, from: data) else { return }
+            guard let json = LLMJSON.decode(EpisodeJSON.self, from: response) else {
+                print("[banti:temporal_binder] bad JSON from cerebras: \(response)")
+                return
+            }
             let episode = EpisodePayload(text: json.text, participants: json.participants,
                                          emotionalTone: json.emotionalTone)
             await bus.publish(
@@ -65,7 +68,9 @@ public actor TemporalBinder: CorticalNode {
                            payload: .episodeBound(episode)),
                 topic: "episode.bound"
             )
-        } catch { /* silently drop */ }
+        } catch {
+            print("[banti:temporal_binder] cerebras error: \(error)")
+        }
     }
 
     private func describeEvent(_ event: BantiEvent) -> String {

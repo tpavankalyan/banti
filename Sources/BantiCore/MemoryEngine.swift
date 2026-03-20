@@ -28,6 +28,7 @@ public actor MemoryEngine {
     private var audioCortex: AudioCortex?
     private var memoryLoader: MemoryLoader?
     private var memoryConsolidator: MemoryConsolidator?
+    private var didPrepareAudioIngress = false
 
     public init(context: PerceptionContext, audioRouter: AudioRouter, engine: AVAudioEngine, logger: Logger) {
         let sessionID = UUID().uuidString
@@ -70,15 +71,26 @@ public actor MemoryEngine {
         self.memoryQuery = MemoryQuery(sidecar: sidecar, logger: logger)
     }
 
+    public func prepareAudioIngress() async {
+        guard !didPrepareAudioIngress else { return }
+        didPrepareAudioIngress = true
+
+        let bus = eventBus
+        await audioRouter.setBus(bus)
+        // Wire transcript callback before long-running startup work so early speech is not lost.
+        let capturedBuffer = conversationBuffer
+        await audioRouter.setTranscriptCallback { @Sendable transcript in
+            await capturedBuffer.addHumanTurn(transcript)
+        }
+        await bantiVoice.setBus(bus)
+    }
+
     public func start() async {
+        await prepareAudioIngress()
         await sidecar.start()
         await speakerResolver.start()
 
         let bus = eventBus
-
-        // Wire EventBus to sensor components
-        await audioRouter.setBus(bus)
-        await bantiVoice.setBus(bus)
         await selfModel.start(bus: bus)
 
         // --- Phase 2: cortical graph nodes ---
@@ -122,11 +134,14 @@ public actor MemoryEngine {
         let audio = AudioCortex(deepgram: nil, hume: nil, bus: bus)
         await audio.start(bus: bus)
         audioCortex = audio
+        await audioRouter.setAudioCortex(audio)
 
         // Memory loader — queries sidecar for person facts
         let capturedSidecar = sidecar
         let querySidecar: SidecarQuery = { personID in
-            guard await capturedSidecar.isRunning else {
+            let running = await capturedSidecar.isRunning
+            let ready = running ? true : await capturedSidecar.health()
+            guard ready else {
                 return MemoryRetrievedPayload(personID: personID, personName: nil, facts: [])
             }
             struct QueryBody: Encodable { let person_id: String }
@@ -148,6 +163,9 @@ public actor MemoryEngine {
 
         // Memory consolidator — stores episodes to sidecar
         let storeSidecar: SidecarStore = { episodeText in
+            let running = await capturedSidecar.isRunning
+            let ready = running ? true : await capturedSidecar.health()
+            guard ready else { return }
             struct IngestBody: Encodable {
                 let snapshot_json: String
                 let wall_ts: String

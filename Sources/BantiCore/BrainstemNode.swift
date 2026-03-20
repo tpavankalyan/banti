@@ -38,12 +38,15 @@ public actor BrainstemNode: CorticalNode {
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed != "[silent]" && !trimmed.isEmpty else { return }
             let response = BrainResponsePayload(track: "brainstem", text: trimmed,
-                                                activatedTracks: route.tracks)
+                                                activatedTracks: route.tracks,
+                                                episodeID: route.episode.episodeID)
             await bus.publish(
                 BantiEvent(source: id, topic: "brain.brainstem.response", surprise: 0,
                            payload: .brainResponse(response)),
                 topic: "brain.brainstem.response"
             )
-        } catch { /* drop */ }
+        } catch {
+            print("[banti:brainstem] cerebras error: \(error)")
+        }
     }
 }

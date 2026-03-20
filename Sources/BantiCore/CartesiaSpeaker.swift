@@ -23,6 +23,7 @@ public actor CartesiaSpeaker {
     private var isSpeakingReflex: Bool = false
     // Queued reasoning audio (played after reflex finishes)
     private var pendingReasoningBuffers: [AVAudioPCMBuffer] = []
+    private var hangStreamSpeakForTest: Bool = false
 
     public var isAvailable: Bool { apiKey != nil }
     var isPlaying: Bool { isSpeaking || isSpeakingReflex || playerNode.isPlaying }
@@ -130,6 +131,12 @@ public actor CartesiaSpeaker {
     public func streamSpeak(_ text: String, track: TrackPriority) async {
         guard isAvailable else {
             logger.log(source: "tts", message: "[info] Cartesia unavailable — would say: \(text)")
+            return
+        }
+        if hangStreamSpeakForTest {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
             return
         }
         guard let key = apiKey,
@@ -266,4 +273,5 @@ public actor CartesiaSpeaker {
         }
     }
     var pendingReasoningBufferCountForTest: Int { pendingReasoningBuffers.count }
+    func setHangStreamSpeakForTest(_ value: Bool) { hangStreamSpeakForTest = value }
 }

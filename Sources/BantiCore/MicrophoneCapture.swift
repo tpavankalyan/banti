@@ -8,6 +8,7 @@ public final class MicrophoneCapture {
     private let soundClassifier: SoundClassifier
     private let logger: Logger
     private var converter: AVAudioConverter?
+    private var lastSignalDiagnosticAt: Date = .distantPast
     private let targetFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16,
         sampleRate: 16_000,
@@ -128,8 +129,29 @@ public final class MicrophoneCapture {
         let byteCount = Int(outputBuffer.frameLength) * 2  // 2 bytes per Int16 frame
         guard let int16Ptr = outputBuffer.int16ChannelData?[0] else { return }
         let chunk = Data(bytes: int16Ptr, count: byteCount)
+        let now = Date()
+        if now.timeIntervalSince(lastSignalDiagnosticAt) >= 2.0 {
+            lastSignalDiagnosticAt = now
+            let peak = Self.relativePeakLevel(for: chunk)
+            let state = peak >= 0.02 ? "active" : "near-silent"
+            logger.log(source: "audio", message: String(format: "[debug] mic signal %@ (peak=%.2f)", state, peak))
+        }
 
         // AVAudioEngine tap is synchronous; use Task to call the async dispatcher
         Task { await dispatcher.dispatch(pcmChunk: chunk) }
+    }
+
+    static func relativePeakLevel(for chunk: Data) -> Double {
+        guard chunk.count >= 2 else { return 0 }
+
+        var peak = 0
+        chunk.withUnsafeBytes { rawBuffer in
+            let samples = rawBuffer.bindMemory(to: Int16.self)
+            for sample in samples {
+                peak = max(peak, abs(Int(sample)))
+            }
+        }
+
+        return min(Double(peak) / Double(Int16.max), 1.0)
     }
 }

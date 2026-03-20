@@ -38,7 +38,7 @@ public actor AudioCortex: CorticalNode {
         }
     }
 
-    private func isSuppressed() -> Bool {
+    func isSuppressed() -> Bool {
         isSpeaking || BantiClock.nowNs() < tailWindowEndNs
     }
 

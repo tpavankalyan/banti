@@ -12,7 +12,7 @@ nodes:
     prompt_file: prompts/limbic.md
     timeout_s: 3
   prefrontal:
-    model: llama-3.3-70b
+    model: llama3.1-8b
     subscribes: [brain.route, memory.retrieve]
     publishes: [brain.prefrontal.response]
     prompt_file: prompts/prefrontal.md

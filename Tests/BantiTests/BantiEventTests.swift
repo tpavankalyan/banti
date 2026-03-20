@@ -99,11 +99,15 @@ final class BantiEventTests: XCTestCase {
         XCTAssertEqual(rp.tracks, ["reflex"])
 
         // brainResponse
+        let responseEpisodeID = UUID()
         let respEvent = BantiEvent(source: "s", topic: "brain.response", surprise: 0,
-            payload: .brainResponse(BrainResponsePayload(track: "reflex", text: "ok", activatedTracks: ["reflex"])))
+            payload: .brainResponse(BrainResponsePayload(track: "reflex", text: "ok",
+                                                         activatedTracks: ["reflex"],
+                                                         episodeID: responseEpisodeID)))
         let decodedResp = try roundTrip(respEvent)
         guard case .brainResponse(let rsp) = decodedResp.payload else { return XCTFail("brainResponse") }
         XCTAssertEqual(rsp.text, "ok")
+        XCTAssertEqual(rsp.episodeID, responseEpisodeID)
 
         // speechPlan
         let planEvent = BantiEvent(source: "s", topic: "motor.speech_plan", surprise: 0,

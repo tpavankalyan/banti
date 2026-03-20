@@ -52,6 +52,28 @@ final class DeepgramStreamerTests: XCTestCase {
         XCTAssertNil(DeepgramStreamer.parseResponse(Data("not json".utf8)))
     }
 
+    func testTranscriptDebugInfoExtractsInterimTranscript() {
+        let json = """
+        {
+          "channel": { "alternatives": [{ "transcript": "hello there", "confidence": 0.5, "words": [] }] },
+          "is_final": false
+        }
+        """
+        let info = DeepgramStreamer.transcriptDebugInfo(json.data(using: .utf8)!)
+        XCTAssertEqual(info?.transcript, "hello there")
+        XCTAssertEqual(info?.isFinal, false)
+    }
+
+    func testTranscriptDebugInfoReturnsNilForEmptyTranscript() {
+        let json = """
+        {
+          "channel": { "alternatives": [{ "transcript": "   ", "confidence": 0.5, "words": [] }] },
+          "is_final": false
+        }
+        """
+        XCTAssertNil(DeepgramStreamer.transcriptDebugInfo(json.data(using: .utf8)!))
+    }
+
     // MARK: KeepAlive logic
 
     func testShouldSendKeepAliveAfter8Seconds() {

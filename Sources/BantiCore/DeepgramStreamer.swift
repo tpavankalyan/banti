@@ -2,6 +2,11 @@
 import Foundation
 
 public actor DeepgramStreamer {
+    struct TranscriptDebugInfo {
+        let transcript: String
+        let isFinal: Bool
+    }
+
     private let apiKey: String
     private let logger: Logger
     private let session: URLSession
@@ -19,6 +24,7 @@ public actor DeepgramStreamer {
     private var lastChunkAt: Date?
     private var isConnected = false
     private var disconnectedAt: Date?
+    private var lastInterimTranscriptLogAt: Date = .distantPast
 
     public var onFinalTranscript: (@Sendable (String) async -> Void)?
 
@@ -168,8 +174,16 @@ public actor DeepgramStreamer {
         @unknown default:       data = nil
         }
 
-        guard let data,
-              let state = DeepgramStreamer.parseResponse(data) else { return }
+        guard let data else { return }
+
+        if let info = DeepgramStreamer.transcriptDebugInfo(data),
+           !info.isFinal,
+           Date().timeIntervalSince(lastInterimTranscriptLogAt) >= 1.5 {
+            lastInterimTranscriptLogAt = Date()
+            logger.log(source: "deepgram", message: "[debug] interim transcript: \(info.transcript)")
+        }
+
+        guard let state = DeepgramStreamer.parseResponse(data) else { return }
 
         logger.log(source: "deepgram", message: "[\(state.speakerID.map { "spk:\($0)" } ?? "?")] \(state.transcript)")
 
@@ -206,6 +220,22 @@ public actor DeepgramStreamer {
             confidence: confidence,
             resolvedName: nil,
             updatedAt: Date()
+        )
+    }
+
+    static func transcriptDebugInfo(_ data: Data) -> TranscriptDebugInfo? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let channel = json["channel"] as? [String: Any],
+              let alternatives = channel["alternatives"] as? [[String: Any]],
+              let first = alternatives.first,
+              let transcript = first["transcript"] as? String else { return nil }
+
+        let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        return TranscriptDebugInfo(
+            transcript: trimmed,
+            isFinal: (json["is_final"] as? Bool) ?? false
         )
     }
 

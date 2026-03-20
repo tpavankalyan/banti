@@ -33,7 +33,7 @@ final class MemorySidecarTests: XCTestCase {
     // MARK: - post shim returns nil when not running
 
     func testPostShimReturnsNilWhenNotRunning() async throws {
-        let sidecar = MemorySidecar(logger: Logger())
+        let sidecar = MemorySidecar(socketPath: "/tmp/banti_missing_\(UUID().uuidString).sock", logger: Logger())
         let result = await sidecar.post(path: "/health", body: [String: String]())
         XCTAssertNil(result)
     }
@@ -105,7 +105,9 @@ final class MemorySidecarTests: XCTestCase {
         try XCTSkipIf(!sidecarAvailable, "Sidecar not running — skipping socket integration test")
 
         let sidecar = MemorySidecar(logger: Logger())
-        let (answer, _) = await sidecar.query("test query")
-        XCTAssertFalse(answer.isEmpty)
+        let resp = await sidecar.send(method: "query_memory", payload: ["q": "test query"])
+        XCTAssertNil(resp["error"] as? String)
+        XCTAssertNotNil(resp["answer"] as? String)
+        XCTAssertNotNil(resp["sources"] as? [Any])
     }
 }

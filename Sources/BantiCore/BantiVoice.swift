@@ -7,6 +7,7 @@ public actor BantiVoice {
     private let conversationBuffer: ConversationBuffer
     private let logger: Logger
     private var bus: EventBus?
+    private var streamSpeakTimeoutMsOverride: Int?
 
     public init(
         cartesiaSpeaker: CartesiaSpeaker,
@@ -42,7 +43,14 @@ public actor BantiVoice {
         }
         await selfSpeechLog.register(text: text)        // efference copy — before audio
         await conversationBuffer.addBantiTurn(text)     // conversation record
-        await cartesiaSpeaker.streamSpeak(text, track: track)  // actual audio
+        let timeoutMs = streamSpeakTimeoutMsOverride ?? 8000
+        let completed = await runWithTimeout(ms: timeoutMs) { [cartesiaSpeaker] in
+            await cartesiaSpeaker.streamSpeak(text, track: track)
+        }
+        if !completed {
+            logger.log(source: "tts", message: "[warn] streamSpeak timed out after \(timeoutMs)ms for track \(track)")
+            await cartesiaSpeaker.cancelTrack(track)
+        }
     }
 
     /// Called by BrainLoop.streamTrack() unconditionally when the SSE loop exits.
@@ -87,4 +95,21 @@ public actor BantiVoice {
     // MARK: - Test helpers (accessible via @testable import)
     func selfSpeechLogForTest() -> SelfSpeechLog { selfSpeechLog }
     func conversationBufferForTest() -> ConversationBuffer { conversationBuffer }
+    func setStreamSpeakTimeoutMsForTest(_ ms: Int?) { streamSpeakTimeoutMsOverride = ms }
+
+    private func runWithTimeout(ms: Int, operation: @escaping @Sendable () async -> Void) async -> Bool {
+        await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                await operation()
+                return true
+            }
+            group.addTask {
+                try? await Task.sleep(nanoseconds: UInt64(max(ms, 1)) * 1_000_000)
+                return false
+            }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
+        }
+    }
 }

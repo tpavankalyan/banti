@@ -43,8 +43,7 @@ public actor MemoryConsolidator: CorticalNode {
 
         do {
             let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 60)
-            guard let data = response.data(using: .utf8),
-                  let json = try? JSONDecoder().decode(StoreDecision.self, from: data),
+            guard let json = LLMJSON.decode(StoreDecision.self, from: response),
                   json.store else { return }
             await storeSidecar(episode.text)
             if let bus = _bus {
@@ -54,7 +53,9 @@ public actor MemoryConsolidator: CorticalNode {
                     topic: "memory.write"
                 )
             }
-        } catch { /* drop */ }
+        } catch {
+            print("[banti:memory_consolidator] cerebras error: \(error)")
+        }
     }
 
     private struct StoreDecision: Codable {

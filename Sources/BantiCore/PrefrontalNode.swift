@@ -5,6 +5,7 @@ public actor PrefrontalNode: CorticalNode {
     public let id = "prefrontal"
     public let subscribedTopics = ["brain.route", "memory.retrieve"]
     private let cerebras: CerebrasCompletion
+    private let model: String
     private var _bus: EventBus?
 
     // Cache: personID → (payload, receivedAt)
@@ -21,7 +22,10 @@ public actor PrefrontalNode: CorticalNode {
         systemPrompt = prompt
     }
 
-    public init(cerebras: @escaping CerebrasCompletion) { self.cerebras = cerebras }
+    public init(cerebras: @escaping CerebrasCompletion, model: String = "llama3.1-8b") {
+        self.cerebras = cerebras
+        self.model = model
+    }
 
     public func start(bus: EventBus) async {
         _bus = bus
@@ -59,16 +63,19 @@ public actor PrefrontalNode: CorticalNode {
         }
 
         do {
-            let text = try await cerebras("llama-3.3-70b", systemPrompt, userContent, 150)
+            let text = try await cerebras(model, systemPrompt, userContent, 150)
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed != "[silent]" && !trimmed.isEmpty else { return }
             let response = BrainResponsePayload(track: "prefrontal", text: trimmed,
-                                                activatedTracks: route.tracks)
+                                                activatedTracks: route.tracks,
+                                                episodeID: route.episode.episodeID)
             await bus.publish(
                 BantiEvent(source: id, topic: "brain.prefrontal.response", surprise: 0,
                            payload: .brainResponse(response)),
                 topic: "brain.prefrontal.response"
             )
-        } catch { /* drop */ }
+        } catch {
+            print("[banti:prefrontal] cerebras error: \(error)")
+        }
     }
 }

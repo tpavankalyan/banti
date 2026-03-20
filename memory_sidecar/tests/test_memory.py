@@ -2,6 +2,7 @@
 import pytest
 import json
 import os
+import sys
 from unittest.mock import patch, AsyncMock, MagicMock
 from httpx import AsyncClient, ASGITransport
 
@@ -69,6 +70,80 @@ async def test_query_returns_empty_answer_when_mem0_disabled(tmp_path):
             response = await client.post("/memory/query", json={"q": "anything"})
     assert response.status_code == 200
     assert response.json()["answer"] == ""
+
+@pytest.mark.asyncio
+async def test_socket_query_memory_person_id_returns_person_facts(tmp_path):
+    db_path = tmp_path / "identity.db"
+    with patch.dict(os.environ, {"BANTI_DB_PATH": str(db_path)}):
+        from db import init_db, create_person, update_person_name
+        init_db(str(db_path))
+        person_id = create_person(str(db_path), display_name=None, face_embedding=None, voice_embedding=None)
+        update_person_name(str(db_path), person_id, "Alice")
+
+        stub_anthropic = MagicMock()
+        stub_anthropic.AsyncAnthropic = MagicMock()
+        stub_openai = MagicMock()
+        stub_openai.AsyncOpenAI = MagicMock()
+        stub_msgpack = MagicMock()
+        sys.modules.pop("memory", None)
+        with patch.dict(sys.modules, {"anthropic": stub_anthropic, "openai": stub_openai, "msgpack": stub_msgpack}):
+            with patch("memory.GRAPHITI", None), patch("memory.MEM0") as mock_mem0:
+                mock_mem0.search.return_value = [
+                    {"memory": "likes chai"},
+                    {"memory": "works on banti"},
+                ]
+                from socket_server import query_memory as socket_query_memory
+                result = await socket_query_memory({"person_id": person_id})
+
+        assert result["person_name"] == "Alice"
+        assert result["facts"] == ["likes chai", "works on banti"]
+
+@pytest.mark.asyncio
+async def test_socket_query_memory_person_id_falls_back_to_self_memory(tmp_path):
+    db_path = tmp_path / "identity.db"
+    with patch.dict(os.environ, {"BANTI_DB_PATH": str(db_path)}):
+        from db import init_db, create_person, update_person_name
+        init_db(str(db_path))
+        person_id = create_person(str(db_path), display_name=None, face_embedding=None, voice_embedding=None)
+        update_person_name(str(db_path), person_id, "Alice")
+
+        stub_anthropic = MagicMock()
+        stub_anthropic.AsyncAnthropic = MagicMock()
+        stub_openai = MagicMock()
+        stub_openai.AsyncOpenAI = MagicMock()
+        stub_msgpack = MagicMock()
+        sys.modules.pop("memory", None)
+        with patch.dict(sys.modules, {"anthropic": stub_anthropic, "openai": stub_openai, "msgpack": stub_msgpack}):
+            with patch("memory.GRAPHITI", None), patch("memory.MEM0") as mock_mem0:
+                mock_mem0.search.side_effect = [
+                    [],
+                    [{"memory": "Alice likes chai"}],
+                ]
+                from socket_server import query_memory as socket_query_memory
+                result = await socket_query_memory({"person_id": person_id})
+
+        assert result["person_name"] == "Alice"
+        assert result["facts"] == ["Alice likes chai"]
+
+@pytest.mark.asyncio
+async def test_ingest_snapshot_accepts_plain_episode_text():
+    from datetime import datetime
+    stub_anthropic = MagicMock()
+    stub_anthropic.AsyncAnthropic = MagicMock()
+    stub_openai = MagicMock()
+    stub_openai.AsyncOpenAI = MagicMock()
+    sys.modules.pop("memory", None)
+    with patch.dict(sys.modules, {"anthropic": stub_anthropic, "openai": stub_openai}):
+        with patch("memory.GRAPHITI") as mock_graphiti, patch("memory.MEM0") as mock_mem0:
+            mock_graphiti.add_episode = AsyncMock()
+            mock_mem0.add = MagicMock()
+            from memory import ingest_snapshot
+            result = await ingest_snapshot("Pavan fixed the bug", datetime(2026, 3, 19, 10, 0, 0))
+
+    assert result["skipped"] is False
+    assert result["episode"] == "Pavan fixed the bug"
+    mock_graphiti.add_episode.assert_called_once()
+    mock_mem0.add.assert_any_call("Pavan fixed the bug", user_id="banti_self")
 
 async def test_reflect_returns_summary(app_with_mock_memory):
     app, _, _ = app_with_mock_memory

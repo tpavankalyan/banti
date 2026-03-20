@@ -4,7 +4,6 @@ import os
 import re
 import uuid
 import json
-import anthropic
 from datetime import datetime
 from typing import Optional
 from collections import deque
@@ -32,8 +31,6 @@ def extract_sentences(buffer: str, min_words: int = 4) -> tuple[list[str], str]:
     remaining = buffer[last_emitted:]
     return sentences, remaining
 
-
-from openai import AsyncOpenAI
 
 REFLEX_SYSTEM_PROMPT = """\
 You are banti, an ambient AI assistant watching over the user's Mac.
@@ -64,6 +61,8 @@ async def _reflex_stream(req):
     if not cerebras_key:
         yield _sse({"type": "error"})
         return
+
+    from openai import AsyncOpenAI
 
     client = AsyncOpenAI(base_url="https://api.cerebras.ai/v1", api_key=cerebras_key)
     conversation = _format_conversation(req.conversation_history)
@@ -113,6 +112,24 @@ MEM0 = None
 
 _episode_buffer: deque = deque(maxlen=100)
 _last_snapshot_text: Optional[str] = None
+
+
+def _memory_db_path() -> str:
+    return os.environ.get(
+        "BANTI_DB_PATH",
+        os.path.expanduser("~/Library/Application Support/banti/data/identity.db"),
+    )
+
+
+def _dedupe_strings(values: list[str]) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
 
 async def init_memory() -> None:
     global GRAPHITI, MEM0
@@ -178,12 +195,17 @@ async def ingest_snapshot(snapshot_json: str, wall_ts: datetime) -> dict:
     if snapshot_json == "{}" or not snapshot_json.strip():
         return {"skipped": True, "reason": "empty"}
 
+    snapshot = {}
     try:
         snapshot = json.loads(snapshot_json)
     except json.JSONDecodeError:
-        return {"skipped": True, "reason": "invalid json"}
-
-    episode_text = snapshot_to_episode(snapshot, wall_ts)
+        episode_text = snapshot_json.strip()
+    else:
+        if isinstance(snapshot, str):
+            episode_text = snapshot.strip()
+            snapshot = {}
+        else:
+            episode_text = snapshot_to_episode(snapshot, wall_ts)
     if not episode_text:
         return {"skipped": True, "reason": "no meaningful content"}
 
@@ -221,6 +243,45 @@ async def ingest_snapshot(snapshot_json: str, wall_ts: datetime) -> dict:
     return {"skipped": False, "episode": episode_text}
 
 
+async def query_person_memory(person_id: str) -> dict:
+    from db import get_person_by_id
+
+    person = get_person_by_id(_memory_db_path(), person_id)
+    person_name = person["display_name"] if person else None
+    mem0_user_id = (
+        person.get("mem0_user_id")
+        if person and person.get("mem0_user_id")
+        else f"person_{person_id}"
+    )
+
+    facts: list[str] = []
+    if MEM0 is not None:
+        try:
+            query_text = person_name or person_id
+            hits = MEM0.search(query_text, user_id=mem0_user_id, limit=5)
+            facts.extend(h["memory"] for h in hits if "memory" in h)
+        except Exception as e:
+            print(f"[warn] mem0 person search failed for {mem0_user_id}: {e}")
+
+        # Swift currently ingests plain episode text without person-scoped metadata,
+        # so fall back to banti_self to recover useful facts until richer payloads arrive.
+        try:
+            query_text = person_name or person_id
+            hits = MEM0.search(query_text, user_id="banti_self", limit=5)
+            facts.extend(h["memory"] for h in hits if "memory" in h)
+        except Exception as e:
+            print(f"[warn] mem0 self search failed for {query_text}: {e}")
+
+    if GRAPHITI is not None and person_name:
+        try:
+            edges = await GRAPHITI.search(person_name, num_results=5)
+            facts.extend(edge.fact for edge in edges if edge.fact)
+        except Exception as e:
+            print(f"[warn] Graphiti person search failed for {person_name}: {e}")
+
+    return {"person_name": person_name, "facts": _dedupe_strings(facts)}
+
+
 async def query_memory(q: str, context_json: Optional[str] = None) -> dict:
     results = []
 
@@ -246,6 +307,7 @@ async def query_memory(q: str, context_json: Optional[str] = None) -> dict:
         return {"answer": ". ".join(results[:3]), "sources": results}
 
     try:
+        import anthropic
         client = anthropic.AsyncAnthropic(api_key=anthropic_key)
         facts = "\n".join(f"- {r}" for r in results)
         system_content = "You are banti's memory. Answer the user's question using only the provided facts. Be concise."
@@ -300,6 +362,7 @@ Recent observations:
 {context}"""
 
     try:
+        import anthropic
         client = anthropic.AsyncAnthropic(api_key=anthropic_key)
         resp = await client.messages.create(
             model="claude-opus-4-6",
@@ -437,6 +500,7 @@ async def brain_decide(req) -> "ProactiveDecisionResponse":
     user_content = "\n\n".join(context_parts) if context_parts else "No context available yet."
 
     try:
+        import anthropic
         client = anthropic.AsyncAnthropic(api_key=anthropic_key)
         response = await client.messages.create(
             model="claude-opus-4-6",

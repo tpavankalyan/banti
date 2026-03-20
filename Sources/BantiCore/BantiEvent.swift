@@ -141,8 +141,12 @@ public struct BrainResponsePayload: Codable, Sendable {
     public let track: String
     public let text: String
     public let activatedTracks: [String]
-    public init(track: String, text: String, activatedTracks: [String]) {
-        self.track = track; self.text = text; self.activatedTracks = activatedTracks
+    public let episodeID: UUID
+    public init(track: String, text: String, activatedTracks: [String], episodeID: UUID) {
+        self.track = track
+        self.text = text
+        self.activatedTracks = activatedTracks
+        self.episodeID = episodeID
     }
 }
 

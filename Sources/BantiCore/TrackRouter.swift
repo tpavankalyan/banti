@@ -55,15 +55,19 @@ public actor TrackRouter: CorticalNode {
         let userContent = "Episode: \(episode.text)\nTone: \(episode.emotionalTone)\nParticipants: \(episode.participants.joined(separator: ", "))"
         do {
             let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 60)
-            guard let data = response.data(using: .utf8),
-                  let json = try? JSONDecoder().decode(RouteJSON.self, from: data) else { return }
+            guard let json = LLMJSON.decode(RouteJSON.self, from: response) else {
+                print("[banti:track_router] bad JSON from cerebras: \(response)")
+                return
+            }
             let route = BrainRoutePayload(tracks: json.tracks, reason: json.reason, episode: episode)
             await bus.publish(
                 BantiEvent(source: id, topic: "brain.route", surprise: 1.0,
                            payload: .brainRoute(route)),
                 topic: "brain.route"
             )
-        } catch { /* silently drop */ }
+        } catch {
+            print("[banti:track_router] cerebras error: \(error)")
+        }
     }
 
     private func checkUnknownPerson(face: FacePayload) async {

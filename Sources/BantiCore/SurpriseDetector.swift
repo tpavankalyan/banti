@@ -31,25 +31,39 @@ public actor SurpriseDetector: CorticalNode {
     }
 
     private var _bus: EventBus?
+    private var lastCallTimes: [String: Date] = [:]
+    private var inFlightTopics: Set<String> = []
+    private static let minCallIntervalSeconds: TimeInterval = 2.0
 
     public func handle(_ event: BantiEvent) async {
+        let now = Date()
+        let throttleKey = throttleKey(for: event)
+        guard !inFlightTopics.contains(throttleKey) else { return }
+        let lastCallTime = lastCallTimes[throttleKey] ?? .distantPast
+        guard now.timeIntervalSince(lastCallTime) >= SurpriseDetector.minCallIntervalSeconds else { return }
         guard let bus = _bus else { return }
+        inFlightTopics.insert(throttleKey)
+        defer { inFlightTopics.remove(throttleKey) }
         let description = describeEvent(event)
-        let previous = lastDescriptions[event.topic] ?? "(nothing)"
-        lastDescriptions[event.topic] = description
+        let previous = lastDescriptions[throttleKey] ?? "(nothing)"
 
         let userContent = "Previous: \(previous)\nCurrent: \(description)"
         let score: Float
         do {
             let response = try await cerebras("llama3.1-8b", systemPrompt, userContent, 20)
-            guard let data = response.data(using: .utf8),
-                  let json = try? JSONDecoder().decode([String: Float].self, from: data),
-                  let s = json["surprise"] else { return }
+            guard let json = LLMJSON.decode([String: Float].self, from: response),
+                  let s = json["surprise"] else {
+                print("[banti:surprise_detector] bad JSON from cerebras: \(response)")
+                return
+            }
             score = s
         } catch {
-            return // silently drop on Cerebras error
+            print("[banti:surprise_detector] cerebras error: \(error)")
+            return
         }
 
+        lastDescriptions[throttleKey] = description
+        lastCallTimes[throttleKey] = now
         guard score >= 0.3 else { return }
         let forwarded = BantiEvent(source: event.source, topic: event.topic,
                                    surprise: score, payload: event.payload)
@@ -64,6 +78,23 @@ public actor SurpriseDetector: CorticalNode {
         case .emotionUpdate(let p): return "Emotion: \(p.emotions.first.map { "\($0.label) \($0.score)" } ?? "none")"
         case .soundUpdate(let p): return "Sound: \(p.label)"
         default: return "event:\(event.topic)"
+        }
+    }
+
+    private func throttleKey(for event: BantiEvent) -> String {
+        switch event.payload {
+        case .speechDetected:
+            return "\(event.topic):speech"
+        case .emotionUpdate(let payload):
+            return "\(event.topic):emotion:\(payload.source)"
+        case .faceUpdate:
+            return "\(event.topic):face"
+        case .screenUpdate:
+            return "\(event.topic):screen"
+        case .soundUpdate:
+            return "\(event.topic):sound"
+        default:
+            return event.topic
         }
     }
 }
