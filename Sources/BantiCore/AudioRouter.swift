@@ -7,6 +7,11 @@ public actor AudioRouter: AudioChunkDispatcher {
 
     private var deepgram: DeepgramStreamer?
     private var hume: HumeVoiceAnalyzer?
+    private var bus: EventBus?
+
+    public func setBus(_ bus: EventBus) {
+        self.bus = bus
+    }
     private var humeBuffer: Data = Data()
     private var pcmRingBuffer: Data = Data()
     /// 3 seconds at 16kHz × 1 channel × 2 bytes/sample = 96,000 bytes.
@@ -43,7 +48,19 @@ public actor AudioRouter: AudioChunkDispatcher {
     }
 
     public func setTranscriptCallback(_ callback: @escaping @Sendable (String) async -> Void) async {
-        await deepgram?.setTranscriptCallback(callback)
+        let capturedBus = bus
+        await deepgram?.setTranscriptCallback { @Sendable transcript in
+            await callback(transcript)
+            if let b = capturedBus {
+                let event = BantiEvent(
+                    source: "audio_cortex",
+                    topic: "sensor.audio",
+                    surprise: 1.0,
+                    payload: .speechDetected(SpeechPayload(transcript: transcript, speakerID: nil))
+                )
+                await b.publish(event, topic: "sensor.audio")
+            }
+        }
     }
 
     // MARK: - Dispatch (AudioChunkDispatcher)
@@ -71,10 +88,24 @@ public actor AudioRouter: AudioChunkDispatcher {
         if humeBuffer.count >= AudioRouter.humeFlushThreshold {
             if let analyzer = hume {
                 let segment = humeBuffer
+                let capturedBus = bus
                 Task { [weak self] in
                     guard let self else { return }
                     if let state = await analyzer.analyze(pcmData: segment) {
                         await self.context.update(.voiceEmotion(state))
+                        if let b = capturedBus {
+                            let emotions = state.emotions.map {
+                                EmotionPayload.Emotion(label: $0.label, score: $0.score)
+                            }
+                            let payload = EmotionPayload(emotions: emotions, source: "hume_voice")
+                            let event = BantiEvent(
+                                source: "audio_cortex",
+                                topic: "sensor.audio",
+                                surprise: 0.4,
+                                payload: .emotionUpdate(payload)
+                            )
+                            await b.publish(event, topic: "sensor.audio")
+                        }
                     }
                 }
             }
