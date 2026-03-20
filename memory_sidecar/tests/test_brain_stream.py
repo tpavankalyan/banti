@@ -1,20 +1,80 @@
 # memory_sidecar/tests/test_brain_stream.py
 import pytest
-from models import BrainStreamRequest
-
-def test_brain_stream_request_defaults():
-    req = BrainStreamRequest(track="reflex", snapshot_json="{}")
-    assert req.track == "reflex"
-    assert req.recent_speech == []
-    assert req.last_spoke_seconds_ago == 9999.0
-    assert req.last_spoke_text is None
-
-def test_brain_stream_request_reasoning_track():
-    req = BrainStreamRequest(track="reasoning", snapshot_json="{}")
-    assert req.track == "reasoning"
+from models import BrainStreamRequest, ConversationTurn
 
 
+class TestBrainStreamRequest:
+
+    def test_accepts_conversation_history(self):
+        req = BrainStreamRequest(
+            track="reflex",
+            ambient_context='{"face": {}}',
+            conversation_history=[
+                ConversationTurn(speaker="human", text="hello banti", timestamp=1000.0),
+                ConversationTurn(speaker="banti", text="hi there", timestamp=1001.0),
+            ],
+        )
+        assert len(req.conversation_history) == 2
+        assert req.conversation_history[0].speaker == "human"
+
+    def test_ambient_context_defaults_to_empty_object(self):
+        req = BrainStreamRequest(track="reflex")
+        assert req.ambient_context == "{}"
+
+    def test_conversation_history_defaults_to_empty(self):
+        req = BrainStreamRequest(track="reflex")
+        assert req.conversation_history == []
+
+    def test_last_banti_utterance_defaults_to_none(self):
+        req = BrainStreamRequest(track="reflex")
+        assert req.last_banti_utterance is None
+
+    def test_old_snapshot_json_field_does_not_exist(self):
+        req = BrainStreamRequest(track="reflex")
+        assert not hasattr(req, "snapshot_json")
+
+    def test_old_recent_speech_field_does_not_exist(self):
+        req = BrainStreamRequest(track="reflex")
+        assert not hasattr(req, "recent_speech")
+
+
+class TestFormatConversation:
+    """Tests for the _format_conversation helper used in prompt assembly."""
+
+    def test_empty_history_returns_placeholder(self):
+        from memory import _format_conversation
+        result = _format_conversation([])
+        assert result == "(no conversation yet)"
+
+    def test_human_turn_prefixed_correctly(self):
+        from memory import _format_conversation
+        turn = ConversationTurn(speaker="human", text="hello", timestamp=1000.0)
+        result = _format_conversation([turn])
+        assert result == "Human: hello"
+
+    def test_banti_turn_prefixed_correctly(self):
+        from memory import _format_conversation
+        turn = ConversationTurn(speaker="banti", text="hi there", timestamp=1001.0)
+        result = _format_conversation([turn])
+        assert result == "Banti: hi there"
+
+    def test_mixed_turns_in_order(self):
+        from memory import _format_conversation
+        turns = [
+            ConversationTurn(speaker="human", text="hello", timestamp=1000.0),
+            ConversationTurn(speaker="banti", text="hi", timestamp=1001.0),
+            ConversationTurn(speaker="human", text="how are you", timestamp=1002.0),
+        ]
+        result = _format_conversation(turns)
+        assert result == "Human: hello\nBanti: hi\nHuman: how are you"
+
+
+import json
+import os
+from unittest.mock import patch, MagicMock, AsyncMock
+from httpx import AsyncClient, ASGITransport
 from memory import extract_sentences
+
 
 def test_extract_sentences_emits_long_sentences():
     sentences, remaining = extract_sentences(
@@ -42,12 +102,6 @@ def test_extract_sentences_empty_input():
 def test_extract_sentences_question_mark_boundary():
     sentences, remaining = extract_sentences("Have you tried running the tests? That might help.")
     assert "Have you tried running the tests?" in sentences
-
-
-import json
-import os
-from unittest.mock import patch, MagicMock, AsyncMock
-from httpx import AsyncClient, ASGITransport
 
 
 def _make_mock_openai_stream(tokens: list[str]):
@@ -84,7 +138,7 @@ async def test_brain_stream_returns_sse_content_type(app):
             )
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 async with client.stream("POST", "/brain/stream", json={
-                    "track": "reflex", "snapshot_json": "{}", "recent_speech": []
+                    "track": "reflex", "ambient_context": "{}", "conversation_history": []
                 }) as resp:
                     assert resp.status_code == 200
                     assert "text/event-stream" in resp.headers["content-type"]
@@ -95,7 +149,7 @@ async def test_brain_stream_reflex_emits_error_when_no_cerebras_key(app):
     with patch.dict(os.environ, env, clear=True):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             events = await _collect_sse(client, {
-                "track": "reflex", "snapshot_json": "{}", "recent_speech": []
+                "track": "reflex", "ambient_context": "{}", "conversation_history": []
             })
     types = [e["type"] for e in events]
     assert "error" in types
@@ -110,7 +164,7 @@ async def test_brain_stream_reflex_emits_sentences(app):
             )
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 events = await _collect_sse(client, {
-                    "track": "reflex", "snapshot_json": "{}", "recent_speech": []
+                    "track": "reflex", "ambient_context": "{}", "conversation_history": []
                 })
     sentence_events = [e for e in events if e["type"] == "sentence"]
     assert len(sentence_events) >= 1
@@ -125,7 +179,7 @@ async def test_brain_stream_reflex_emits_silent_for_silent_response(app):
             )
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 events = await _collect_sse(client, {
-                    "track": "reflex", "snapshot_json": "{}", "recent_speech": []
+                    "track": "reflex", "ambient_context": "{}", "conversation_history": []
                 })
     types = [e["type"] for e in events]
     assert "silent" in types
@@ -157,8 +211,8 @@ async def test_brain_stream_reasoning_emits_sentences(app):
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 events = await _collect_sse(client, {
                     "track": "reasoning",
-                    "snapshot_json": "{}",
-                    "recent_speech": [],
+                    "ambient_context": "{}",
+                    "conversation_history": [],
                 })
 
     types = [e["type"] for e in events]

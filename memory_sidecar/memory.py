@@ -47,6 +47,17 @@ def _sse(event: dict) -> str:
     return f"data: {json.dumps(event)}\n\n"
 
 
+def _format_conversation(turns) -> str:
+    """Format ConversationTurn list as Human:/Banti: dialogue string."""
+    if not turns:
+        return "(no conversation yet)"
+    lines = []
+    for t in turns:
+        label = "Banti" if t.speaker == "banti" else "Human"
+        lines.append(f"{label}: {t.text}")
+    return "\n".join(lines)
+
+
 async def _reflex_stream(req):
     """Async generator: yields SSE strings for the reflex track."""
     cerebras_key = os.environ.get("CEREBRAS_API_KEY")
@@ -55,7 +66,8 @@ async def _reflex_stream(req):
         return
 
     client = AsyncOpenAI(base_url="https://api.cerebras.ai/v1", api_key=cerebras_key)
-    user_msg = f"Snapshot:\n{req.snapshot_json}\n\nRecent speech:\n" + "\n".join(req.recent_speech)
+    conversation = _format_conversation(req.conversation_history)
+    user_msg = f"Ambient context:\n{req.ambient_context}\n\nConversation:\n{conversation}"
 
     buffer = ""
     try:
@@ -120,7 +132,7 @@ async def _reasoning_stream(req):
             if MEM0 is None:
                 return
             try:
-                snap_dict = json.loads(req.snapshot_json) if req.snapshot_json != "{}" else {}
+                snap_dict = json.loads(req.ambient_context) if req.ambient_context != "{}" else {}
                 person = snap_dict.get("person")
                 if person and person.get("name") and person.get("id"):
                     user_id = f"person_{person['id']}"
@@ -137,10 +149,11 @@ async def _reasoning_stream(req):
         await asyncio.gather(_fetch_graphiti(), _fetch_mem0())
 
     snapshot_summary = "\n\n".join(context_parts) if context_parts else "(no memory context)"
+    conversation = _format_conversation(req.conversation_history)
     user_msg = (
         f"Memory context:\n{snapshot_summary}\n\n"
-        f"Current snapshot:\n{req.snapshot_json}\n\n"
-        f"Recent speech:\n" + "\n".join(req.recent_speech)
+        f"Ambient context:\n{req.ambient_context}\n\n"
+        f"Conversation:\n{conversation}"
     )
 
     buffer = ""

@@ -51,9 +51,16 @@ class ProactiveDecisionResponse(BaseModel):
     text: Optional[str] = None
     reason: str
 
+class ConversationTurn(BaseModel):
+    speaker: str      # "banti" or "human"
+    text: str
+    timestamp: float  # unix timestamp
+
 class BrainStreamRequest(BaseModel):
     track: Literal["reflex", "reasoning"]
-    snapshot_json: str = "{}"
-    recent_speech: list[str] = []
+    ambient_context: str = "{}"                      # was: snapshot_json
+    conversation_history: list[ConversationTurn] = []  # was: recent_speech: list[str]
+    last_banti_utterance: Optional[str] = None       # was: last_spoke_text
     last_spoke_seconds_ago: float = 9999.0
-    last_spoke_text: Optional[str] = None
+    is_interruption: bool = False
+    current_speech: Optional[str] = None
