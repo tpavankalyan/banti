@@ -23,7 +23,7 @@ public class BrainMonitorViewModel: ObservableObject {
         // Track episode timestamp for latency calculation
         if case .episodeBound = event.payload { episodeTimestampNs = event.timestampNs }
         let latency = (event.topic.hasPrefix("brain.") || event.topic == "motor.speech_plan")
-            ? episodeTimestampNs.map { Double(event.timestampNs - $0) / 1_000_000 }
+            ? episodeTimestampNs.map { event.timestampNs >= $0 ? Double(event.timestampNs - $0) / 1_000_000 : 0 }
             : nil
         let monitor = MonitorEvent(source: event.source, topic: event.topic,
                                    timestampNs: event.timestampNs,
