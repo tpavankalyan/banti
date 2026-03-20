@@ -2,61 +2,46 @@
 import Foundation
 
 public actor SelfModel {
-    private let context: PerceptionContext
     private let sidecar: MemorySidecar
     private let logger: Logger
 
     private static let reflectionIntervalNanoseconds: UInt64 = 600_000_000_000
-    private var recentSnapshots: [String] = []
-    private static let maxSnapshotBuffer = 300
+    private var episodeBuffer: [String] = []
+    private static let maxEpisodes = 20
 
-    public init(context: PerceptionContext, sidecar: MemorySidecar, logger: Logger) {
-        self.context = context
+    public init(sidecar: MemorySidecar, logger: Logger) {
         self.sidecar = sidecar
         self.logger = logger
     }
 
-    public func start() {
-        Task { [weak self] in
-            guard let self else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                let snap = await self.context.snapshotJSON()
-                await self.addSnapshot(snap)
-            }
-        }
-        Task { [weak self] in
-            guard let self else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: SelfModel.reflectionIntervalNanoseconds)
-                await self.reflect()
-            }
+    // Called from the bus subscription
+    func handleEpisodeBound(_ episode: EpisodePayload) {
+        episodeBuffer.append(episode.text)
+        if episodeBuffer.count > SelfModel.maxEpisodes {
+            episodeBuffer.removeFirst()
         }
     }
 
-    private func addSnapshot(_ snap: String) {
-        if snap == "{}" { return }
-        if recentSnapshots.count >= SelfModel.maxSnapshotBuffer {
-            recentSnapshots.removeFirst()
+    // Wire up to EventBus and start periodic reflection
+    public func start(bus: EventBus) async {
+        await bus.subscribe(topic: "episode.bound") { [weak self] event in
+            guard case .episodeBound(let episode) = event.payload else { return }
+            await self?.handleEpisodeBound(episode)
         }
-        recentSnapshots.append(snap)
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: SelfModel.reflectionIntervalNanoseconds)
+                await self?.reflect()
+            }
+        }
     }
 
     private func reflect() async {
         guard await sidecar.isRunning else { return }
-        guard !recentSnapshots.isEmpty else { return }
-
-        struct ReflectBody: Encodable {
-            let snapshots: [String]
-        }
-
-        let body = ReflectBody(snapshots: recentSnapshots)
-        if let data = await sidecar.post(path: "/memory/reflect", body: body) {
-            struct ReflectResponse: Decodable { let summary: String }
-            if let response = try? JSONDecoder().decode(ReflectResponse.self, from: data) {
-                logger.log(source: "memory", message: "reflection: \(response.summary)")
-            }
-        }
-        recentSnapshots.removeAll()
+        guard !episodeBuffer.isEmpty else { return }
+        let snapshots = episodeBuffer
+        let summary = await sidecar.reflect(snapshots: snapshots)
+        logger.log(source: "memory", message: "reflection: \(summary)")
+        episodeBuffer.removeAll()
     }
 }

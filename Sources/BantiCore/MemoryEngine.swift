@@ -17,8 +17,6 @@ public actor MemoryEngine {
     public let conversationBuffer: ConversationBuffer
     public let memoryQuery: MemoryQuery
     public let eventBus: EventBus
-    private var contextAggregator: ContextAggregator?
-
     // Phase 2 cortical graph nodes
     private var surpriseDetector: SurpriseDetector?
     private var temporalBinder: TemporalBinder?
@@ -57,7 +55,7 @@ public actor MemoryEngine {
             sessionID: sessionID
         )
 
-        self.selfModel = SelfModel(context: context, sidecar: sidecar, logger: logger)
+        self.selfModel = SelfModel(sidecar: sidecar, logger: logger)
         self.cartesiaSpeaker = CartesiaSpeaker(engine: engine, logger: logger)
 
         let selfSpeechLog = SelfSpeechLog()
@@ -74,7 +72,6 @@ public actor MemoryEngine {
 
     public func start() async {
         await sidecar.start()
-        await selfModel.start()
         await speakerResolver.start()
 
         let bus = eventBus
@@ -82,11 +79,7 @@ public actor MemoryEngine {
         // Wire EventBus to sensor components
         await audioRouter.setBus(bus)
         await bantiVoice.setBus(bus)
-
-        // Start ContextAggregator
-        let aggregator = ContextAggregator()
-        await aggregator.start(bus: bus)
-        contextAggregator = aggregator
+        await selfModel.start(bus: bus)
 
         // --- Phase 2: cortical graph nodes ---
         let cerebrasKey = ProcessInfo.processInfo.environment["CEREBRAS_API_KEY"] ?? ""
