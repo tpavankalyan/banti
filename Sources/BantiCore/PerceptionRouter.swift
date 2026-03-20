@@ -12,6 +12,7 @@ public actor PerceptionRouter: PerceptionDispatcher {
     private var screen:   GPT4oScreenAnalyzer?
     private var faceIdentifier: FaceIdentifier?
     private var bantiVoice: BantiVoice?
+    private var bus: EventBus?
 
     public init(context: PerceptionContext, logger: Logger) {
         self.context = context
@@ -44,6 +45,18 @@ public actor PerceptionRouter: PerceptionDispatcher {
                                       landmarksDetected: obs.landmarks != nil,
                                       updatedAt: Date())
                 await context.update(.face(state))
+                if let b = bus {
+                    let person = await context.person
+                    let payload = FacePayload(
+                        boundingBox: state.boundingBox,
+                        personID: person?.id,
+                        personName: person?.name,
+                        confidence: person?.confidence ?? 1.0
+                    )
+                    let event = BantiEvent(source: "visual_cortex", topic: "sensor.visual",
+                                          surprise: 0.5, payload: .faceUpdate(payload))
+                    await b.publish(event, topic: "sensor.visual")
+                }
             }
             if case .bodyPoseDetected(let obs) = event {
                 let bodyPoints = extractBodyPoints(obs)
@@ -90,8 +103,21 @@ public actor PerceptionRouter: PerceptionDispatcher {
                                                     interpretation: cleanedInterp,
                                                     updatedAt: state.updatedAt)
                     await self.context.update(.screen(filteredState))
+                    if let b = await self.bus {
+                        let payload = ScreenPayload(ocrLines: filteredState.ocrLines,
+                                                    interpretation: filteredState.interpretation)
+                        let event = BantiEvent(source: "screen_cortex", topic: "sensor.screen",
+                                               surprise: 0.6, payload: .screenUpdate(payload))
+                        await b.publish(event, topic: "sensor.screen")
+                    }
                 } else {
                     await self.context.update(obs)
+                    if case .screen(let s) = obs, let b = await self.bus {
+                        let payload = ScreenPayload(ocrLines: s.ocrLines, interpretation: s.interpretation)
+                        let event = BantiEvent(source: "screen_cortex", topic: "sensor.screen",
+                                               surprise: 0.6, payload: .screenUpdate(payload))
+                        await b.publish(event, topic: "sensor.screen")
+                    }
                 }
             }
         }
@@ -124,6 +150,10 @@ public actor PerceptionRouter: PerceptionDispatcher {
 
     public func setBantiVoice(_ voice: BantiVoice) {
         bantiVoice = voice
+    }
+
+    public func setBus(_ bus: EventBus) {
+        self.bus = bus
     }
 
     // MARK: - Throttle helpers (internal for testability)
