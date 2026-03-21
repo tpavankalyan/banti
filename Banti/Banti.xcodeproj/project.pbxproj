@@ -40,6 +40,7 @@
 		BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */; };
 		C55985138258E88026B90693 /* BantiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A5232F659BAB269BF7D63C /* BantiApp.swift */; };
 		C9A8761EEC27AA7C6B83B7AD /* ClaudeVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */; };
+		B403AFB1548B41248A2730C6 /* EventLoggerActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */; };
 		DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */; };
 		E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */; };
 		F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */; };
@@ -82,6 +83,7 @@
 		9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActorTests.swift; sourceTree = "<group>"; };
 		A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramStreamingActor.swift; sourceTree = "<group>"; };
 		A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPerceptionModule.swift; sourceTree = "<group>"; };
+		D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLoggerActor.swift; sourceTree = "<group>"; };
 		ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHubActor.swift; sourceTree = "<group>"; };
 		AF1C8B04BDD355530465BB17 /* Banti.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Banti.entitlements; sourceTree = "<group>"; };
 		AF385C45F59FF8A8BD7E1C51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 			children = (
 				03835485E37E03DA196D1659 /* AudioRingBuffer.swift */,
 				F43B02A7E9EE573D65014D4D /* BantiModule.swift */,
+				D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */,
 				ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */,
 				DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */,
 				27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */,
@@ -350,7 +353,8 @@
 				8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */,
 				E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */,
 				49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */,
-				DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
+				B403AFB1548B41248A2730C6 /* EventLoggerActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */; };
+		DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
 				32D41898F2B2592CA0AFC21E /* MicrophoneCaptureActor.swift in Sources */,
 				5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */,
 				0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */,
