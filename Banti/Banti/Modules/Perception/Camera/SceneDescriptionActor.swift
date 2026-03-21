@@ -64,6 +64,7 @@ actor SceneDescriptionActor: BantiModule {
             return
         }
 
+        lastDescribedAt = Date()   // set before VLM call so interval is enforced even on failure
         let captureTime = event.timestamp
 
         do {

@@ -69,7 +69,7 @@ final class SceneDescriptionActorTests: XCTestCase {
         XCTAssertEqual(snapshot.count, 1, "Second frame within 10s interval should be throttled")
     }
 
-    func testVLMFailureDegradessHealth() async throws {
+    func testVLMFailureDegradesHealth() async throws {
         let hub = EventHubActor()
         let config = ConfigActor(content: "SCENE_DESCRIPTION_INTERVAL_S=0")
 
@@ -84,12 +84,18 @@ final class SceneDescriptionActorTests: XCTestCase {
         await hub.publish(makeFrame())
 
         await fulfillment(of: [callExp], timeout: 3)
-        try await Task.sleep(for: .milliseconds(50))
 
-        let health = await actor.health()
-        if case .degraded = health { /* pass */ } else {
-            XCTFail("Expected degraded health after VLM failure, got \(health.label)")
+        // Poll until health degrades or timeout expires.
+        let deadline = Date().addingTimeInterval(2)
+        var healthIsDegraded = false
+        while Date() < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+            if case .degraded = await actor.health() {
+                healthIsDegraded = true
+                break
+            }
         }
+        XCTAssertTrue(healthIsDegraded, "Expected degraded health after VLM failure")
     }
 
     func testCaptureTimeMatchesFrameTimestamp() async throws {
