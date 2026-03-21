@@ -51,6 +51,7 @@ actor EventLoggerActor: BantiModule {
             await eventHub.unsubscribe(subID)
         }
         subscriptionIDs.removeAll()
+        audioFrameCount = 0
     }
 
     func health() async -> ModuleHealth { _health }
@@ -59,7 +60,7 @@ actor EventLoggerActor: BantiModule {
 
     private func logAudio(_ event: AudioFrameEvent) {
         audioFrameCount += 1
-        guard audioFrameCount % 100 == 0 else { return }
+        guard audioFrameCount == 1 || audioFrameCount % 100 == 0 else { return }
         logger.debug("AudioFrame seq=\(event.sequenceNumber) bytes=\(event.audioData.count) sampleRate=\(event.sampleRate)")
     }
 
