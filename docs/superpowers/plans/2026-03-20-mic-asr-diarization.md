@@ -4,13 +4,15 @@
 
 **Goal:** Build a macOS SwiftUI app that continuously captures microphone audio, streams to Deepgram for real-time ASR with speaker diarization, and displays a live transcript — all on an actor-mesh architecture.
 
-**Architecture:** Each perception module is a Swift actor conforming to `PerceptionModule`. Modules communicate via typed events on `EventHubActor` (with bounded per-subscriber queues for backpressure). `ModuleSupervisorActor` manages lifecycle, health polling, and restart policies. Audio bridging uses an `@unchecked Sendable` ring buffer class drained by a cooperative task.
+**Architecture:** Each supervised module is a Swift actor conforming to **`BantiModule`**. Modules communicate via typed events on `EventHubActor` (with bounded per-subscriber queues for backpressure). `ModuleSupervisorActor` manages lifecycle, health polling, and restart policies. Audio bridging uses an `@unchecked Sendable` ring buffer class drained by a cooperative task.
 
 **Tech Stack:** Swift 5.9+, macOS 14+, SwiftUI, AVFoundation, URLSessionWebSocketTask, os.log. Zero third-party runtime dependencies.
 
 **Build prerequisite:** XcodeGen (`brew install xcodegen`) is used to generate the `.xcodeproj` from `project.yml`.
 
 **Spec:** `docs/superpowers/specs/2026-03-20-mic-asr-diarization-design.md`
+
+> **Repo sync (2026-03-20):** The app now uses **`BantiModule`** (not `PerceptionModule`), mic stack lives under **`Modules/Perception/Microphone/`**, and **Brain** + **Speech** actors are wired in `BantiApp`. Step checkboxes and the **File Map** below may lag the tree; use the design spec **§9 Project Structure** as the authoritative layout until this plan is fully reconciled.
 
 ---
 

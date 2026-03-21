@@ -1,13 +1,13 @@
 import Foundation
 import os
 
-actor TranscriptProjectionActor: PerceptionModule {
+actor TranscriptProjectionActor: BantiModule {
     nonisolated let id = ModuleID("transcript-projection")
     nonisolated let capabilities: Set<Capability> = [.projection]
 
     private let logger = Logger(subsystem: "com.banti.transcript-projection", category: "Projection")
     private let eventHub: EventHubActor
-    private var subscriptionID: SubscriptionID?
+    private var transcriptSubscriptionID: SubscriptionID?
     private var _health: ModuleHealth = .healthy
 
     private var speakerMap: [Int: String] = [:]
@@ -20,7 +20,7 @@ actor TranscriptProjectionActor: PerceptionModule {
     }
 
     func start() async throws {
-        subscriptionID = await eventHub.subscribe(RawTranscriptEvent.self) { [weak self] event in
+        transcriptSubscriptionID = await eventHub.subscribe(RawTranscriptEvent.self) { [weak self] event in
             guard let self else { return }
             await self.handleRawTranscript(event)
         }
@@ -28,9 +28,9 @@ actor TranscriptProjectionActor: PerceptionModule {
     }
 
     func stop() async {
-        if let subID = subscriptionID {
+        if let subID = transcriptSubscriptionID {
             await eventHub.unsubscribe(subID)
-            subscriptionID = nil
+            transcriptSubscriptionID = nil
         }
     }
 

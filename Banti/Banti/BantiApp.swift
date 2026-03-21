@@ -30,6 +30,8 @@ struct BantiApp: App {
     private let micCapture: MicrophoneCaptureActor
     private let deepgram: DeepgramStreamingActor
     private let projection: TranscriptProjectionActor
+    private let brain: BrainActor
+    private let speech: SpeechActor
 
     init() {
         let envPath = Self.resolveEnvPath()
@@ -42,6 +44,8 @@ struct BantiApp: App {
         let mic = MicrophoneCaptureActor(eventHub: hub)
         let dg = DeepgramStreamingActor(eventHub: hub, config: cfg, replayProvider: mic)
         let proj = TranscriptProjectionActor(eventHub: hub)
+        let brainActor = BrainActor(eventHub: hub, config: cfg)
+        let speechActor = SpeechActor(eventHub: hub, config: cfg)
 
         self.eventHub = hub
         self.config = cfg
@@ -50,6 +54,8 @@ struct BantiApp: App {
         self.micCapture = mic
         self.deepgram = dg
         self.projection = proj
+        self.brain = brainActor
+        self.speech = speechActor
 
         let vm = TranscriptViewModel(eventHub: hub)
         _viewModel = StateObject(wrappedValue: vm)
@@ -62,7 +68,10 @@ struct BantiApp: App {
         }
 
         Task {
-            await Self.bootstrap(sup: sup, mic: mic, dg: dg, proj: proj, vm: vm)
+            await Self.bootstrap(
+                sup: sup, mic: mic, dg: dg, proj: proj,
+                brain: brainActor, speech: speechActor, vm: vm
+            )
         }
     }
 
@@ -77,18 +86,27 @@ struct BantiApp: App {
         mic: MicrophoneCaptureActor,
         dg: DeepgramStreamingActor,
         proj: TranscriptProjectionActor,
+        brain: BrainActor,
+        speech: SpeechActor,
         vm: TranscriptViewModel
     ) async {
         let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
         logger.notice("bootstrap entered")
 
-        await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
-        await sup.register(dg, restartPolicy: .onFailure(maxRetries: 5, backoff: 1))
+        // Projection must be subscribed before RawTranscriptEvents; mic must run after Deepgram
+        // subscribes to AudioFrameEvent. Mic waits on both so topo order is never dg → mic → proj
+        // (which would drop transcripts — hub drops events with no subscribers).
         await sup.register(proj, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        await sup.register(dg, restartPolicy: .onFailure(maxRetries: 5, backoff: 1))
+        await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [dg.id, proj.id])
+        await sup.register(brain, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
+        await sup.register(speech, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
 
         do {
-            try await sup.startAll()
+            // Subscribe before any module can publish TranscriptSegmentEvent (async handlers run
+            // concurrently while startAll() is still progressing).
             await vm.startListening()
+            try await sup.startAll()
             logger.notice("bootstrap completed — pipeline running")
         } catch {
             logger.error("Pipeline failed: \(error.localizedDescription, privacy: .public)")

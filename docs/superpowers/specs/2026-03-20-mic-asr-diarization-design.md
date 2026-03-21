@@ -1,8 +1,8 @@
 # Microphone ASR + Speaker Diarization — Design Spec
 
-**Date:** 2026-03-20
-**Status:** Draft
-**Module:** Perception — Microphone + Deepgram ASR
+**Date:** 2026-03-20  
+**Status:** Draft (spec); **implementation** in repo extends beyond original V1 scope — see §13.  
+**Module:** Perception — Microphone + Deepgram ASR (+ optional Brain / Speech loop in app)  
 **Target:** macOS 14+ (Sonoma), Swift 5.9+, Xcode project (`.xcodeproj`)
 
 ## 1. Goal
@@ -15,11 +15,11 @@ The architecture must support adding many future perception modules (system audi
 
 ### 2.1 Core Model
 
-Every perception module is a Swift `actor` conforming to a shared `PerceptionModule` protocol. Modules never import each other — they communicate exclusively through typed events on an `EventHubActor`.
+Every supervised module is a Swift `actor` conforming to a shared **`BantiModule`** protocol (formerly described here as `PerceptionModule`; same lifecycle shape). Modules never import each other — they communicate exclusively through typed events on an `EventHubActor`. Event payloads still conform to **`PerceptionEvent`** (name retained for historical reasons).
 
 ### 2.2 Runtime Infrastructure
 
-These are **infrastructure actors** — they are not `PerceptionModule` conformers and are not supervised. They are initialized at app launch before the supervisor starts.
+These are **infrastructure actors** — they are not `BantiModule` conformers and are not supervised. They are initialized at app launch before the supervisor starts.
 
 | Actor | Responsibility |
 |---|---|
@@ -30,7 +30,7 @@ These are **infrastructure actors** — they are not `PerceptionModule` conforme
 
 ### 2.3 V1 Perception Modules
 
-These conform to `PerceptionModule` and are managed by the supervisor.
+These conform to `BantiModule` and are managed by the supervisor.
 
 | Actor | Role |
 |---|---|
@@ -38,7 +38,7 @@ These conform to `PerceptionModule` and are managed by the supervisor.
 | `DeepgramStreamingActor` | Streams audio over WebSocket to Deepgram, receives transcript JSON |
 | `TranscriptProjectionActor` | Merges partial results, produces finalized transcript segments |
 
-### 2.4 Supporting Components (not PerceptionModules)
+### 2.4 Supporting Components (not supervised `BantiModule`s)
 
 | Component | Role |
 |---|---|
@@ -47,7 +47,7 @@ These conform to `PerceptionModule` and are managed by the supervisor.
 ### 2.5 Extensibility Path
 
 New modules only need:
-1. `PerceptionModule` protocol conformance
+1. `BantiModule` protocol conformance
 2. Event contract declarations (new event types in `Core/Events/`)
 3. Registration with `ModuleSupervisorActor`
 
@@ -55,10 +55,10 @@ Existing modules remain untouched unless event schemas change.
 
 ## 3. Component Interfaces
 
-### 3.1 PerceptionModule Protocol
+### 3.1 BantiModule Protocol (supervised modules)
 
 ```swift
-protocol PerceptionModule: Actor {
+protocol BantiModule: Actor {
     var id: ModuleID { get }
     var capabilities: Set<Capability> { get }
     func start() async throws
@@ -105,7 +105,7 @@ actor EventHubActor {
 ```swift
 actor ModuleSupervisorActor {
     func register(
-        _ module: any PerceptionModule,
+        _ module: any BantiModule,
         restartPolicy: RestartPolicy,
         dependencies: Set<ModuleID> = []
     ) async
@@ -240,51 +240,61 @@ WebSocket URL query parameters (configurable via `ConfigActor`):
 | `interim_results` | `true` |
 | `punctuate` | `true` |
 
-## 9. Project Structure
+## 9. Project Structure (as implemented in repo)
 
 ```
 Banti/
 ├── Banti.xcodeproj
 ├── Banti/
-│   ├── BantiApp.swift                          # App entry point
+│   ├── BantiApp.swift                          # Wires EventHub, supervisor, mic, Deepgram, projection, Brain, Speech
 │   ├── Info.plist                              # NSMicrophoneUsageDescription
-│   ├── Banti.entitlements                      # com.apple.security.device.audio-input
+│   ├── Banti.entitlements                      # com.apple.security.device.audio-input (+ dev entitlements as needed)
 │   ├── Config/
-│   │   ├── ConfigActor.swift                   # .env parser + runtime config
-│   │   └── Environment.swift                   # Typed config keys
+│   │   ├── ConfigActor.swift                   # .env parser (supports quoted values) + runtime config
+│   │   └── Environment.swift                   # Typed config keys (Deepgram, Cerebras, Cartesia)
 │   ├── Core/
-│   │   ├── PerceptionModule.swift              # Protocol + ModuleID, Capability, ModuleHealth
+│   │   ├── BantiModule.swift                   # ModuleID, Capability, ModuleHealth, BantiModule protocol
 │   │   ├── PerceptionEvent.swift               # Event protocol + SubscriptionID
 │   │   ├── EventHubActor.swift                 # Pub/sub hub with backpressure
-│   │   ├── ModuleSupervisorActor.swift         # Lifecycle + restart + health polling
-│   │   ├── StateRegistryActor.swift            # Status tracking
+│   │   ├── ModuleSupervisorActor.swift         # Lifecycle + health polling + ModuleStatusEvent
+│   │   ├── StateRegistryActor.swift
+│   │   ├── AudioRingBuffer.swift
 │   │   └── Events/
 │   │       ├── AudioFrameEvent.swift
 │   │       ├── RawTranscriptEvent.swift
 │   │       ├── TranscriptSegmentEvent.swift
-│   │       └── ModuleStatusEvent.swift
+│   │       ├── ModuleStatusEvent.swift
+│   │       ├── BrainThoughtEvent.swift
+│   │       ├── BrainResponseEvent.swift
+│   │       └── SpeechPlaybackEvent.swift
 │   ├── Modules/
-│   │   └── Microphone/
-│   │       ├── MicrophoneCaptureActor.swift     # AVAudioEngine tap + ring buffers
-│   │       ├── DeepgramStreamingActor.swift     # WebSocket client
-│   │       └── TranscriptProjectionActor.swift  # Partial merge logic
+│   │   ├── Perception/Microphone/
+│   │   │   ├── MicrophoneCaptureActor.swift    # AVAudioEngine; voice processing optional (default off)
+│   │   │   ├── DeepgramStreamingActor.swift
+│   │   │   └── TranscriptProjectionActor.swift
+│   │   ├── Brain/BrainActor.swift              # Cerebras JSON decision loop → thoughts / spoken replies
+│   │   └── Action/SpeechActor.swift            # Cartesia TTS playback
 │   └── UI/
-│       ├── TranscriptViewModel.swift            # @MainActor ObservableObject
-│       └── TranscriptView.swift                 # SwiftUI transcript display
+│       ├── TranscriptViewModel.swift
+│       └── TranscriptView.swift
 ├── BantiTests/
+│   ├── BrainActorTests.swift
+│   ├── SpeechActorTests.swift
+│   ├── TranscriptProjectionActorTests.swift    # includes MicrophoneCaptureActor prompt-contract tests
 │   ├── EventHubActorTests.swift
-│   ├── MicrophoneCaptureActorTests.swift
-│   ├── DeepgramStreamingActorTests.swift
-│   ├── TranscriptProjectionActorTests.swift
-│   └── ModuleSupervisorActorTests.swift
-└── .env                                         # Deepgram API key (gitignored)
+│   ├── ConfigActorTests.swift
+│   ├── DeepgramParsingTests.swift
+│   ├── ModuleSupervisorActorTests.swift
+│   ├── StateRegistryActorTests.swift
+│   └── Helpers/ (MockPerceptionModule → BantiModule, TestRecorder)
+└── .env                                         # API keys (gitignored)
 ```
 
 ## 10. Testing Strategy
 
 - **Unit tests**: each actor tested in isolation with a mock `EventHubActor` — verify correct events published for given inputs.
 - **Integration test**: wire real actors with a mock Deepgram WebSocket server (local), verify end-to-end transcript output.
-- **Protocol conformance tests**: generic test suite any `PerceptionModule` can run against (start/stop/health lifecycle).
+- **Protocol conformance tests**: generic test suite any `BantiModule` can run against (start/stop/health lifecycle).
 - **No UI tests in v1** — correctness validated at the `TranscriptSegmentEvent` level.
 
 ## 11. Dependencies
@@ -295,11 +305,16 @@ Banti/
 - **os** (system framework) for `os_log` logging
 - **No third-party dependencies**
 
-## 12. Out of Scope (V1)
+## 12. Out of Scope (original V1 mic spec)
 
 - System audio capture (future `SystemAudioActor`)
-- Persistent transcript storage
-- Brain / reasoning modules
+- Persistent transcript storage (beyond optional `context.md` working memory for Brain)
 - Communication channels
 - Multi-device support
-- Audio playback
+
+**Note:** The running app may also include **Brain** (Cerebras) and **Speech** (Cartesia) modules; those were out of scope for the original mic-only V1 write-up but are present in the codebase.
+
+## 13. Known limitations (operational)
+
+- **Open-speaker + hot mic:** TTS playback can be picked up by the microphone, transcribed, and fed back into the cognitive loop. Mitigations (headphones, echo cancellation, or gating while `SpeechPlaybackEvent` is active) are not fully implemented; treat as a known risk when using built-in speakers.
+- **LLM output shape:** Brain decisions rely on JSON-shaped model output; malformed completions fall back to `wait` — prompt text is tuned but not formally schema-enforced.

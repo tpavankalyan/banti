@@ -7,7 +7,7 @@ actor ModuleSupervisorActor {
     private let stateRegistry: StateRegistryActor
 
     private struct ModuleEntry: Sendable {
-        let module: any PerceptionModule
+        let module: any BantiModule
         let restartPolicy: RestartPolicy
         let dependencies: Set<ModuleID>
     }
@@ -22,7 +22,7 @@ actor ModuleSupervisorActor {
     }
 
     func register(
-        _ module: any PerceptionModule,
+        _ module: any BantiModule,
         restartPolicy: RestartPolicy,
         dependencies: Set<ModuleID> = []
     ) {

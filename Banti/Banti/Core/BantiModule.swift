@@ -14,6 +14,8 @@ struct Capability: Hashable, Sendable {
     static let transcription = Capability("transcription")
     static let diarization = Capability("diarization")
     static let projection = Capability("projection")
+    static let reasoning = Capability("reasoning")
+    static let speech = Capability("speech")
 }
 
 enum ModuleHealth: Sendable {
@@ -36,7 +38,7 @@ enum RestartPolicy: Sendable {
     case always
 }
 
-protocol PerceptionModule: Actor {
+protocol BantiModule: Actor {
     nonisolated var id: ModuleID { get }
     nonisolated var capabilities: Set<Capability> { get }
     func start() async throws

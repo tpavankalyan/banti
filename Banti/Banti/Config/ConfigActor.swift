@@ -32,8 +32,15 @@ actor ConfigActor {
             guard let eqIndex = keyValue.firstIndex(of: "=") else { continue }
             let key = String(keyValue[keyValue.startIndex..<eqIndex])
                 .trimmingCharacters(in: .whitespaces)
-            let value = String(keyValue[keyValue.index(after: eqIndex)...])
+            var value = String(keyValue[keyValue.index(after: eqIndex)...])
                 .trimmingCharacters(in: .whitespaces)
+            if value.count >= 2 {
+                if value.first == "\"", value.last == "\"" {
+                    value = String(value.dropFirst().dropLast())
+                } else if value.first == "'", value.last == "'" {
+                    value = String(value.dropFirst().dropLast())
+                }
+            }
             result[key] = value
         }
         return result

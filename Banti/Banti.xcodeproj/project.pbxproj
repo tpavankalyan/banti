@@ -8,30 +8,38 @@
 
 /* Begin PBXBuildFile section */
 		0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */; };
+		047E3E62EE41C85192FBEEC2 /* SpeechActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 928BDB4683E6603C10823642 /* SpeechActor.swift */; };
 		05921957817FAB229F388097 /* DeepgramParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */; };
 		0CC6D3D986052CE2EB88181C /* AudioRingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03835485E37E03DA196D1659 /* AudioRingBuffer.swift */; };
 		13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */; };
 		16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */; };
 		21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */; };
+		23F3E665B7C24077F0D8EB6F /* BrainActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7246E3C61064BD12C62314B2 /* BrainActor.swift */; };
 		26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */; };
+		2BF328C945F9CAA2362E6FDC /* SpeechPlaybackEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DAA47A9B420029DD017C746 /* SpeechPlaybackEvent.swift */; };
+		2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */; };
+		32D41898F2B2592CA0AFC21E /* MicrophoneCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3B55E561509BA7F23CC609 /* MicrophoneCaptureActor.swift */; };
 		49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168FA5F5D4BBBBC4654987A1 /* Environment.swift */; };
 		5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */; };
 		587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */; };
 		5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */; };
+		5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B83E289D3AADF25670B1B8D /* TestRecorder.swift */; };
+		5B9022A6DAF0D8DDDA01B484 /* BantiModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43B02A7E9EE573D65014D4D /* BantiModule.swift */; };
 		5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256C24808236AB6EB630838D /* ModuleStatusEvent.swift */; };
+		6370045C2EBBDD2269108F1E /* SpeechActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B9B188391C868BC25C90F9 /* SpeechActorTests.swift */; };
 		63D2638DC97C505F744CDFC6 /* AudioFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */; };
-		698A3649D7D2D57E60D5A363 /* DeepgramStreamingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9C90A602281913E0BDE4A2 /* DeepgramStreamingActor.swift */; };
-		6D90DA0720B802B6155333CE /* MicrophoneCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12C379F49EF15927BB6C011 /* MicrophoneCaptureActor.swift */; };
 		87192CC8452BC41457542D70 /* EventHubActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */; };
 		8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3875E1430258F8FE36EA5C52 /* ConfigActor.swift */; };
+		8D1088A8C15C711485B43841 /* BrainResponseEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D47F1E06D9FD2D730E176F3 /* BrainResponseEvent.swift */; };
+		964EA0517B856B47339D9116 /* BrainThoughtEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E43F385E29A43A538C46FF8 /* BrainThoughtEvent.swift */; };
 		A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */; };
 		A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */; };
-		AE28B98F5096058826A2D589 /* PerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 038F61AE8957BA3AA464403D /* PerceptionModule.swift */; };
 		B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */; };
 		BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */; };
 		C55985138258E88026B90693 /* BantiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A5232F659BAB269BF7D63C /* BantiApp.swift */; };
-		C6F1BF6241A121BFB738E894 /* TranscriptProjectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4114755B34DBB3FA826CFF35 /* TranscriptProjectionActor.swift */; };
 		DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */; };
+		E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */; };
+		F3AD3859F426B67CF0B5E19C /* BrainActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221CCCFD0DD6F1D70055F68E /* BrainActorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,21 +54,28 @@
 
 /* Begin PBXFileReference section */
 		03835485E37E03DA196D1659 /* AudioRingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRingBuffer.swift; sourceTree = "<group>"; };
-		038F61AE8957BA3AA464403D /* PerceptionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionModule.swift; sourceTree = "<group>"; };
 		07A5232F659BAB269BF7D63C /* BantiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiApp.swift; sourceTree = "<group>"; };
 		168FA5F5D4BBBBC4654987A1 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
+		1A3B55E561509BA7F23CC609 /* MicrophoneCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneCaptureActor.swift; sourceTree = "<group>"; };
+		1DAA47A9B420029DD017C746 /* SpeechPlaybackEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechPlaybackEvent.swift; sourceTree = "<group>"; };
+		221CCCFD0DD6F1D70055F68E /* BrainActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainActorTests.swift; sourceTree = "<group>"; };
 		256C24808236AB6EB630838D /* ModuleStatusEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleStatusEvent.swift; sourceTree = "<group>"; };
 		27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionEvent.swift; sourceTree = "<group>"; };
 		36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateRegistryActor.swift; sourceTree = "<group>"; };
 		3875E1430258F8FE36EA5C52 /* ConfigActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActor.swift; sourceTree = "<group>"; };
-		4114755B34DBB3FA826CFF35 /* TranscriptProjectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActor.swift; sourceTree = "<group>"; };
 		421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramParsingTests.swift; sourceTree = "<group>"; };
 		4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptView.swift; sourceTree = "<group>"; };
 		53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptViewModel.swift; sourceTree = "<group>"; };
+		5D47F1E06D9FD2D730E176F3 /* BrainResponseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainResponseEvent.swift; sourceTree = "<group>"; };
 		637D4C47575CEAE1410E4D31 /* BantiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BantiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7246E3C61064BD12C62314B2 /* BrainActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainActor.swift; sourceTree = "<group>"; };
+		7E43F385E29A43A538C46FF8 /* BrainThoughtEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainThoughtEvent.swift; sourceTree = "<group>"; };
 		8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawTranscriptEvent.swift; sourceTree = "<group>"; };
+		928BDB4683E6603C10823642 /* SpeechActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechActor.swift; sourceTree = "<group>"; };
+		97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActor.swift; sourceTree = "<group>"; };
+		9B83E289D3AADF25670B1B8D /* TestRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRecorder.swift; sourceTree = "<group>"; };
 		9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActorTests.swift; sourceTree = "<group>"; };
-		9C9C90A602281913E0BDE4A2 /* DeepgramStreamingActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramStreamingActor.swift; sourceTree = "<group>"; };
+		A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramStreamingActor.swift; sourceTree = "<group>"; };
 		A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPerceptionModule.swift; sourceTree = "<group>"; };
 		ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHubActor.swift; sourceTree = "<group>"; };
 		AF1C8B04BDD355530465BB17 /* Banti.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Banti.entitlements; sourceTree = "<group>"; };
@@ -71,18 +86,19 @@
 		DC916A1BAE4C1951451BEF82 /* Banti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Banti.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActor.swift; sourceTree = "<group>"; };
 		DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFrameEvent.swift; sourceTree = "<group>"; };
+		E8B9B188391C868BC25C90F9 /* SpeechActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechActorTests.swift; sourceTree = "<group>"; };
 		E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActorTests.swift; sourceTree = "<group>"; };
 		F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegmentEvent.swift; sourceTree = "<group>"; };
-		F12C379F49EF15927BB6C011 /* MicrophoneCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneCaptureActor.swift; sourceTree = "<group>"; };
+		F43B02A7E9EE573D65014D4D /* BantiModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiModule.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		284685CA3232A1AF24AC0825 /* Microphone */ = {
+		4E904FCD47CCCF1B27EF352F /* Microphone */ = {
 			isa = PBXGroup;
 			children = (
-				9C9C90A602281913E0BDE4A2 /* DeepgramStreamingActor.swift */,
-				F12C379F49EF15927BB6C011 /* MicrophoneCaptureActor.swift */,
-				4114755B34DBB3FA826CFF35 /* TranscriptProjectionActor.swift */,
+				A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */,
+				1A3B55E561509BA7F23CC609 /* MicrophoneCaptureActor.swift */,
+				97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */,
 			);
 			path = Microphone;
 			sourceTree = "<group>";
@@ -109,8 +125,11 @@
 			isa = PBXGroup;
 			children = (
 				DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */,
+				5D47F1E06D9FD2D730E176F3 /* BrainResponseEvent.swift */,
+				7E43F385E29A43A538C46FF8 /* BrainThoughtEvent.swift */,
 				256C24808236AB6EB630838D /* ModuleStatusEvent.swift */,
 				8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */,
+				1DAA47A9B420029DD017C746 /* SpeechPlaybackEvent.swift */,
 				F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */,
 			);
 			path = Events;
@@ -119,10 +138,12 @@
 		89811AB7C011280EDA787521 /* BantiTests */ = {
 			isa = PBXGroup;
 			children = (
+				221CCCFD0DD6F1D70055F68E /* BrainActorTests.swift */,
 				9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */,
 				421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */,
 				D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */,
 				C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */,
+				E8B9B188391C868BC25C90F9 /* SpeechActorTests.swift */,
 				DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */,
 				E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */,
 				A1C4138736FD814449A0DDF7 /* Helpers */,
@@ -148,18 +169,43 @@
 			isa = PBXGroup;
 			children = (
 				A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */,
+				9B83E289D3AADF25670B1B8D /* TestRecorder.swift */,
 			);
 			path = Helpers;
+			sourceTree = "<group>";
+		};
+		AD08A2BAA8402AA0BBC4EF61 /* Brain */ = {
+			isa = PBXGroup;
+			children = (
+				7246E3C61064BD12C62314B2 /* BrainActor.swift */,
+			);
+			path = Brain;
+			sourceTree = "<group>";
+		};
+		C01ED59DB1A997668CDAA07B /* Perception */ = {
+			isa = PBXGroup;
+			children = (
+				4E904FCD47CCCF1B27EF352F /* Microphone */,
+			);
+			path = Perception;
+			sourceTree = "<group>";
+		};
+		C953B92410F4480EFB6823E3 /* Action */ = {
+			isa = PBXGroup;
+			children = (
+				928BDB4683E6603C10823642 /* SpeechActor.swift */,
+			);
+			path = Action;
 			sourceTree = "<group>";
 		};
 		CF111AEB773FC75010AEEEB2 /* Core */ = {
 			isa = PBXGroup;
 			children = (
 				03835485E37E03DA196D1659 /* AudioRingBuffer.swift */,
+				F43B02A7E9EE573D65014D4D /* BantiModule.swift */,
 				ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */,
 				DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */,
 				27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */,
-				038F61AE8957BA3AA464403D /* PerceptionModule.swift */,
 				36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */,
 				71C80B79F8548D794F3499FE /* Events */,
 			);
@@ -169,7 +215,9 @@
 		D33BC650CEE24862C26B1F4B /* Modules */ = {
 			isa = PBXGroup;
 			children = (
-				284685CA3232A1AF24AC0825 /* Microphone */,
+				C953B92410F4480EFB6823E3 /* Action */,
+				AD08A2BAA8402AA0BBC4EF61 /* Brain */,
+				C01ED59DB1A997668CDAA07B /* Perception */,
 			);
 			path = Modules;
 			sourceTree = "<group>";
@@ -269,18 +317,23 @@
 				63D2638DC97C505F744CDFC6 /* AudioFrameEvent.swift in Sources */,
 				0CC6D3D986052CE2EB88181C /* AudioRingBuffer.swift in Sources */,
 				C55985138258E88026B90693 /* BantiApp.swift in Sources */,
+				5B9022A6DAF0D8DDDA01B484 /* BantiModule.swift in Sources */,
+				23F3E665B7C24077F0D8EB6F /* BrainActor.swift in Sources */,
+				8D1088A8C15C711485B43841 /* BrainResponseEvent.swift in Sources */,
+				964EA0517B856B47339D9116 /* BrainThoughtEvent.swift in Sources */,
 				8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */,
-				698A3649D7D2D57E60D5A363 /* DeepgramStreamingActor.swift in Sources */,
+				E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */,
 				49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */,
 				DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
-				6D90DA0720B802B6155333CE /* MicrophoneCaptureActor.swift in Sources */,
+				32D41898F2B2592CA0AFC21E /* MicrophoneCaptureActor.swift in Sources */,
 				5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */,
 				0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */,
 				B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */,
-				AE28B98F5096058826A2D589 /* PerceptionModule.swift in Sources */,
 				16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */,
+				047E3E62EE41C85192FBEEC2 /* SpeechActor.swift in Sources */,
+				2BF328C945F9CAA2362E6FDC /* SpeechPlaybackEvent.swift in Sources */,
 				5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */,
-				C6F1BF6241A121BFB738E894 /* TranscriptProjectionActor.swift in Sources */,
+				2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */,
 				BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */,
 				587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */,
 				21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */,
@@ -291,12 +344,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3AD3859F426B67CF0B5E19C /* BrainActorTests.swift in Sources */,
 				A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */,
 				05921957817FAB229F388097 /* DeepgramParsingTests.swift in Sources */,
 				87192CC8452BC41457542D70 /* EventHubActorTests.swift in Sources */,
 				13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */,
 				26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */,
+				6370045C2EBBDD2269108F1E /* SpeechActorTests.swift in Sources */,
 				5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */,
+				5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */,
 				A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

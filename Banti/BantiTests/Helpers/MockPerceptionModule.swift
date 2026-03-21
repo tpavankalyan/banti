@@ -1,7 +1,7 @@
 import Foundation
 @testable import Banti
 
-actor MockPerceptionModule: PerceptionModule {
+actor MockPerceptionModule: BantiModule {
     nonisolated let id: ModuleID
     nonisolated let capabilities: Set<Capability>
     var started = false

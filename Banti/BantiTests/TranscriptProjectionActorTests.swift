@@ -6,10 +6,10 @@ final class TranscriptProjectionActorTests: XCTestCase {
         let hub = EventHubActor()
         let projection = TranscriptProjectionActor(eventHub: hub)
         let exp = XCTestExpectation(description: "segment received")
-        var segment: TranscriptSegmentEvent?
+        let segments = TestRecorder<TranscriptSegmentEvent>()
 
         _ = await hub.subscribe(TranscriptSegmentEvent.self) { event in
-            segment = event
+            await segments.append(event)
             exp.fulfill()
         }
 
@@ -21,21 +21,22 @@ final class TranscriptProjectionActorTests: XCTestCase {
         ))
         await fulfillment(of: [exp], timeout: 2)
 
-        XCTAssertEqual(segment?.text, "hello")
-        XCTAssertEqual(segment?.speakerLabel, "Speaker 1")
-        XCTAssertTrue(segment?.isFinal ?? false)
+        let snapshot = await segments.snapshot()
+        XCTAssertEqual(snapshot.last?.text, "hello")
+        XCTAssertEqual(snapshot.last?.speakerLabel, "Speaker 1")
+        XCTAssertTrue(snapshot.last?.isFinal ?? false)
     }
 
     func testSpeakerMappingIsStable() async {
         let hub = EventHubActor()
         let projection = TranscriptProjectionActor(eventHub: hub)
-        var segments: [TranscriptSegmentEvent] = []
+        let segments = TestRecorder<TranscriptSegmentEvent>()
         let exp = XCTestExpectation(description: "two segments")
         exp.expectedFulfillmentCount = 2
 
         _ = await hub.subscribe(TranscriptSegmentEvent.self) { event in
             if event.isFinal {
-                segments.append(event)
+                await segments.append(event)
                 exp.fulfill()
             }
         }
@@ -52,18 +53,19 @@ final class TranscriptProjectionActorTests: XCTestCase {
         ))
 
         await fulfillment(of: [exp], timeout: 2)
-        XCTAssertEqual(segments[0].speakerLabel, "Speaker 1")
-        XCTAssertEqual(segments[1].speakerLabel, "Speaker 2")
+        let snapshot = await segments.snapshot()
+        XCTAssertEqual(snapshot[0].speakerLabel, "Speaker 1")
+        XCTAssertEqual(snapshot[1].speakerLabel, "Speaker 2")
     }
 
     func testInterimResultsPublishNonFinal() async {
         let hub = EventHubActor()
         let projection = TranscriptProjectionActor(eventHub: hub)
         let exp = XCTestExpectation(description: "interim segment")
-        var segment: TranscriptSegmentEvent?
+        let segments = TestRecorder<TranscriptSegmentEvent>()
 
         _ = await hub.subscribe(TranscriptSegmentEvent.self) { event in
-            segment = event
+            await segments.append(event)
             exp.fulfill()
         }
 
@@ -75,17 +77,18 @@ final class TranscriptProjectionActorTests: XCTestCase {
         ))
 
         await fulfillment(of: [exp], timeout: 2)
-        XCTAssertFalse(segment?.isFinal ?? true)
-        XCTAssertEqual(segment?.text, "hel")
+        let snapshot = await segments.snapshot()
+        XCTAssertFalse(snapshot.last?.isFinal ?? true)
+        XCTAssertEqual(snapshot.last?.text, "hel")
     }
 
     func testTimestampDedup() async {
         let hub = EventHubActor()
         let projection = TranscriptProjectionActor(eventHub: hub)
-        var finalSegments: [TranscriptSegmentEvent] = []
+        let finalSegments = TestRecorder<TranscriptSegmentEvent>()
 
         _ = await hub.subscribe(TranscriptSegmentEvent.self) { event in
-            if event.isFinal { finalSegments.append(event) }
+            if event.isFinal { await finalSegments.append(event) }
         }
 
         try? await projection.start()
@@ -100,6 +103,24 @@ final class TranscriptProjectionActorTests: XCTestCase {
         ))
 
         try? await Task.sleep(for: .milliseconds(300))
-        XCTAssertEqual(finalSegments.count, 1)
+        let snapshot = await finalSegments.snapshot()
+        XCTAssertEqual(snapshot.count, 1)
+    }
+}
+
+final class MicrophoneCaptureActorTests: XCTestCase {
+    func testVoiceProcessingIsDisabledByDefault() {
+        let capture = MicrophoneCaptureActor(eventHub: EventHubActor())
+
+        XCTAssertFalse(capture.voiceProcessingEnabled)
+    }
+
+    func testVoiceProcessingCanBeExplicitlyEnabled() {
+        let capture = MicrophoneCaptureActor(
+            eventHub: EventHubActor(),
+            voiceProcessingEnabled: true
+        )
+
+        XCTAssertTrue(capture.voiceProcessingEnabled)
     }
 }

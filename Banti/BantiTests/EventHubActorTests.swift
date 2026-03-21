@@ -12,25 +12,26 @@ final class EventHubActorTests: XCTestCase {
     func testPublishDeliversToSubscriber() async {
         let hub = EventHubActor()
         let expectation = XCTestExpectation(description: "received event")
-        var received: String?
+        let received = TestRecorder<String>()
 
         _ = await hub.subscribe(TestEvent.self) { event in
-            received = event.value
+            await received.append(event.value)
             expectation.fulfill()
         }
 
         await hub.publish(TestEvent(value: "hello"))
         await fulfillment(of: [expectation], timeout: 2)
-        XCTAssertEqual(received, "hello")
+        let snapshot = await received.snapshot()
+        XCTAssertEqual(snapshot.last, "hello")
     }
 
     func testUnsubscribeStopsDelivery() async {
         let hub = EventHubActor()
         let exp = XCTestExpectation(description: "first event")
-        var count = 0
+        let received = TestRecorder<String>()
 
         let subID = await hub.subscribe(TestEvent.self) { _ in
-            count += 1
+            await received.append("event")
             exp.fulfill()
         }
 
@@ -40,7 +41,8 @@ final class EventHubActorTests: XCTestCase {
         await hub.unsubscribe(subID)
         await hub.publish(TestEvent(value: "b"))
         try? await Task.sleep(for: .milliseconds(200))
-        XCTAssertEqual(count, 1)
+        let snapshot = await received.snapshot()
+        XCTAssertEqual(snapshot.count, 1)
     }
 
     func testMultipleSubscribersReceive() async {

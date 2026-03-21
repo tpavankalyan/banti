@@ -6,9 +6,10 @@ protocol AudioFrameReplayProvider: Actor {
     func replayFrames(after lastSeq: UInt64) async -> [(seq: UInt64, data: Data)]
 }
 
-actor MicrophoneCaptureActor: PerceptionModule, AudioFrameReplayProvider {
+actor MicrophoneCaptureActor: BantiModule, AudioFrameReplayProvider {
     nonisolated let id = ModuleID("mic-capture")
     nonisolated let capabilities: Set<Capability> = [.audioCapture]
+    nonisolated let voiceProcessingEnabled: Bool
 
     private let logger = Logger(subsystem: "com.banti.mic-capture", category: "Capture")
     private let eventHub: EventHubActor
@@ -25,13 +26,26 @@ actor MicrophoneCaptureActor: PerceptionModule, AudioFrameReplayProvider {
     private var replayBuffer: [(seq: UInt64, data: Data)] = []
     private let maxReplayFrames = 100
 
-    init(eventHub: EventHubActor) {
+    init(eventHub: EventHubActor, voiceProcessingEnabled: Bool = false) {
         self.eventHub = eventHub
+        self.voiceProcessingEnabled = voiceProcessingEnabled
     }
 
     func start() async throws {
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
+
+        if voiceProcessingEnabled {
+            do {
+                try inputNode.setVoiceProcessingEnabled(true)
+                logger.notice("Voice processing (AEC) enabled on input node")
+            } catch {
+                logger.warning("Voice processing unavailable (continuing without AEC): \(error.localizedDescription)")
+            }
+        } else {
+            logger.notice("Voice processing disabled on input node")
+        }
+
         let hwFormat = inputNode.inputFormat(forBus: 0)
         guard hwFormat.sampleRate > 0 else {
             _health = .failed(error: ConfigError(message: "No audio input available"))

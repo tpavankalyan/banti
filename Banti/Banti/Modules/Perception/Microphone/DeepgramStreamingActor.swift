@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-actor DeepgramStreamingActor: PerceptionModule {
+actor DeepgramStreamingActor: BantiModule {
     nonisolated let id = ModuleID("deepgram-asr")
     nonisolated let capabilities: Set<Capability> = [.transcription, .diarization]
 
@@ -130,6 +130,20 @@ actor DeepgramStreamingActor: PerceptionModule {
     private func handleMessage(_ message: URLSessionWebSocketTask.Message) async {
         guard case .string(let text) = message,
               let data = text.data(using: .utf8) else { return }
+
+        if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            if let err = obj["err_msg"] as? String, !err.isEmpty {
+                logger.error("Deepgram API error: \(err, privacy: .public)")
+                _health = .failed(error: ConfigError(message: "Deepgram: \(err)"))
+                return
+            }
+            if let type = obj["type"] as? String, type == "Error",
+               let desc = (obj["description"] as? String) ?? (obj["message"] as? String) {
+                logger.error("Deepgram error message: \(desc, privacy: .public)")
+                _health = .failed(error: ConfigError(message: "Deepgram: \(desc)"))
+                return
+            }
+        }
 
         recordParse()
 
@@ -264,10 +278,10 @@ struct DeepgramAlternative: Decodable, Sendable {
 }
 
 struct DeepgramWord: Decodable, Sendable {
-    let word: String
-    let start: Double
-    let end: Double
-    let confidence: Double
+    let word: String?
+    let start: Double?
+    let end: Double?
+    let confidence: Double?
     let speaker: Int?
     let punctuatedWord: String?
 
