@@ -109,7 +109,7 @@ final class EventLogViewModel: ObservableObject {
     }
 
     private func format(_ e: CameraFrameEvent) -> String {
-        "frame=\(e.sequenceNumber) bytes=\(e.jpeg.count) size=\(e.frameWidth)x\(e.frameHeight)"
+        "frame=\(e.sequenceNumber) size=\(e.frameWidth)x\(e.frameHeight)"
     }
 
     private func format(_ e: RawTranscriptEvent) -> String {
