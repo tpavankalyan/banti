@@ -51,10 +51,10 @@ struct EventLogView: View {
                 }
                 .padding()
             }
-            .onChange(of: viewModel.entries.count) { _, _ in
-                if let last = viewModel.entries.last {
+            .onChange(of: viewModel.entries.last?.id) { _, id in
+                if let id {
                     withAnimation {
-                        proxy.scrollTo(last.id, anchor: .bottom)
+                        proxy.scrollTo(id, anchor: .bottom)
                     }
                 }
             }

@@ -27,6 +27,11 @@ final class EventLogViewModel: ObservableObject {
     // MARK: - Lifecycle
 
     func startListening() async {
+        // Clean up any existing subscriptions before re-subscribing (defensive against double-call)
+        for id in subscriptionIDs {
+            await eventHub.unsubscribe(id)
+        }
+        subscriptionIDs.removeAll()
         audioFrameCount = 0
         subscriptionIDs.append(await eventHub.subscribe(AudioFrameEvent.self) { [weak self] event in
             guard let self else { return }
