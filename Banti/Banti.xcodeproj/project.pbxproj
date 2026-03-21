@@ -53,6 +53,8 @@
 		E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */; };
 		F3AD3859F426B67CF0B5E19C /* BrainActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221CCCFD0DD6F1D70055F68E /* BrainActorTests.swift */; };
 		F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */; };
+		A1B2C3D4E5F601234567890A /* SceneDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */; };
+		A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,6 +118,8 @@
 		F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegmentEvent.swift; sourceTree = "<group>"; };
 		F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProvider.swift; sourceTree = "<group>"; };
 		F43B02A7E9EE573D65014D4D /* BantiModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiModule.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActor.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -125,6 +129,7 @@
 				7297CC34E70D9D5115206275 /* Providers */,
 				8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */,
 				D60D84126027B0503C76FF09 /* CameraFrameActor.swift */,
+				A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */,
 			);
 			name = Camera;
 			path = Camera;
@@ -198,6 +203,7 @@
 				CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */,
 				19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */,
 				48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */,
+				A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -399,6 +405,7 @@
 				0498E2A12AC3CBD3EB2743F9 /* VisionProvider.swift in Sources */,
 				C9A8761EEC27AA7C6B83B7AD /* ClaudeVisionProvider.swift in Sources */,
 				7EBDAA36BEB59F7C103EA064 /* CameraFrameActor.swift in Sources */,
+				A1B2C3D4E5F601234567890A /* SceneDescriptionActor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,6 +427,7 @@
 				123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */,
 				F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */,
 				67C47B2F7CA0BD797D192FCD /* CameraFrameActorTests.swift in Sources */,
+				A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
