@@ -353,8 +353,8 @@
 				8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */,
 				E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */,
 				49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */,
-				B403AFB1548B41248A2730C6 /* EventLoggerActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */; };
-		DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
+				B403AFB1548B41248A2730C6 /* EventLoggerActor.swift in Sources */,
+				DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
 				32D41898F2B2592CA0AFC21E /* MicrophoneCaptureActor.swift in Sources */,
 				5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */,
 				0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */,
