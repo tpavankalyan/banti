@@ -301,6 +301,6 @@ final class BrainActorTests: XCTestCase {
         XCTAssertTrue(found, "Scene description was not written to context.md within timeout")
 
         let context = try String(contentsOfFile: tempContextPath, encoding: .utf8)
-        XCTAssertTrue(context.contains("(scene)"), "Context must contain (scene) tag")
+        XCTAssertTrue(context.contains("(scene) \"Coffee cup on the desk.\""), "Context must contain correctly formatted scene entry")
     }
 }
