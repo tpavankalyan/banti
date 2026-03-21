@@ -1,7 +1,8 @@
+// Banti/Banti/UI/EventLogView.swift
 import SwiftUI
 
-struct TranscriptView: View {
-    @ObservedObject var viewModel: TranscriptViewModel
+struct EventLogView: View {
+    @ObservedObject var viewModel: EventLogViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -19,7 +20,7 @@ struct TranscriptView: View {
                 .background(Color.red.opacity(0.1))
             }
             Divider()
-            transcriptList
+            feedList
         }
         .frame(minWidth: 500, minHeight: 400)
     }
@@ -29,65 +30,64 @@ struct TranscriptView: View {
             Circle()
                 .fill(viewModel.isListening ? Color.red : Color.gray)
                 .frame(width: 10, height: 10)
-            Text(viewModel.isListening ? "Listening..." : "Stopped")
+            Text(viewModel.isListening ? "Listening…" : "Stopped")
                 .font(.headline)
             Spacer()
-            Text("\(viewModel.segments.filter(\.isFinal).count) segments")
+            Text("\(viewModel.entries.count) events")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding()
     }
 
-    private var transcriptList: some View {
+    private var feedList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    ForEach(viewModel.segments) { segment in
-                        segmentRow(segment)
-                            .id(segment.id)
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    ForEach(viewModel.entries) { entry in
+                        entryRow(entry)
+                            .id(entry.id)
                     }
                 }
                 .padding()
             }
-            .onChange(of: viewModel.segments.count) { _, _ in
-                if let last = viewModel.segments.last {
+            .onChange(of: viewModel.entries.last?.id) { _, id in
+                if let id {
                     withAnimation {
-                        proxy.scrollTo(last.id, anchor: .bottom)
+                        proxy.scrollTo(id, anchor: .bottom)
                     }
                 }
             }
         }
     }
 
-    private func segmentRow(_ segment: TranscriptSegmentEvent) -> some View {
+    private func entryRow(_ entry: EventLogEntry) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(segment.speakerLabel)
-                .font(.caption)
+            Text(entry.tag)
+                .font(.system(.caption, design: .monospaced))
                 .fontWeight(.bold)
-                .foregroundStyle(colorForSpeaker(segment.speakerLabel))
-                .frame(width: 80, alignment: .trailing)
+                .foregroundStyle(color(for: entry.tag))
+                .frame(width: 72, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(segment.text)
+                Text(entry.text)
                     .font(.body)
-                    .opacity(segment.isFinal ? 1.0 : 0.5)
-                Text(formatTime(segment.startTime))
+                Text(entry.timestampFormatted)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
         }
     }
 
-    private func colorForSpeaker(_ label: String) -> Color {
-        let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .cyan]
-        let hash = abs(label.hashValue)
-        return colors[hash % colors.count]
-    }
-
-    private func formatTime(_ seconds: TimeInterval) -> String {
-        let mins = Int(seconds) / 60
-        let secs = Int(seconds) % 60
-        return String(format: "%d:%02d", mins, secs)
+    private func color(for tag: String) -> Color {
+        switch tag {
+        case "[AUDIO]":   return .secondary
+        case "[CAMERA]":  return .blue
+        case "[RAW]":     return .orange
+        case "[SEGMENT]": return .green
+        case "[SCENE]":   return .purple
+        case "[MODULE]":  return .cyan
+        default:          return .primary
+        }
     }
 }

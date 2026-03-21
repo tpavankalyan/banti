@@ -14,7 +14,10 @@
 		123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */; };
 		13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */; };
 		16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */; };
-		21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */; };
+
+		AA00000000000000000000A1 /* EventLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B1 /* EventLogEntry.swift */; };
+		AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B3 /* EventLogViewModel.swift */; };
+		AA00000000000000000000A4 /* EventLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B4 /* EventLogView.swift */; };
 		22BEE8AF2932BFB1F467192E /* CameraLatestFrameBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */; };
 		26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */; };
 		2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */; };
@@ -23,7 +26,7 @@
 		49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168FA5F5D4BBBBC4654987A1 /* Environment.swift */; };
 		4CEFEE9F801D61EA0C5EB2C7 /* SceneDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */; };
 		5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */; };
-		587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */; };
+
 		5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */; };
 		5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B83E289D3AADF25670B1B8D /* TestRecorder.swift */; };
 		5B9022A6DAF0D8DDDA01B484 /* BantiModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43B02A7E9EE573D65014D4D /* BantiModule.swift */; };
@@ -35,6 +38,7 @@
 		8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3875E1430258F8FE36EA5C52 /* ConfigActor.swift */; };
 		A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */; };
 		A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */; };
+		AA00000000000000000000A2 /* EventLogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B2 /* EventLogViewModelTests.swift */; };
 		ABF33C207DDBDF6412B11A55 /* CameraFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */; };
 		B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */; };
 		BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */; };
@@ -71,8 +75,9 @@
 		3875E1430258F8FE36EA5C52 /* ConfigActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActor.swift; sourceTree = "<group>"; };
 		421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramParsingTests.swift; sourceTree = "<group>"; };
 		48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraFrameActorTests.swift; sourceTree = "<group>"; };
-		4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptView.swift; sourceTree = "<group>"; };
-		53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptViewModel.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B1 /* EventLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogEntry.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B3 /* EventLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModel.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B4 /* EventLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogView.swift; sourceTree = "<group>"; };
 		637D4C47575CEAE1410E4D31 /* BantiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BantiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VisionProvider.swift; sourceTree = "<group>"; };
 		8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawTranscriptEvent.swift; sourceTree = "<group>"; };
@@ -97,6 +102,7 @@
 		DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActor.swift; sourceTree = "<group>"; };
 		DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFrameEvent.swift; sourceTree = "<group>"; };
 		E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActorTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B2 /* EventLogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModelTests.swift; sourceTree = "<group>"; };
 		F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegmentEvent.swift; sourceTree = "<group>"; };
 		F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProvider.swift; sourceTree = "<group>"; };
 		F43B02A7E9EE573D65014D4D /* BantiModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiModule.swift; sourceTree = "<group>"; };
@@ -176,6 +182,7 @@
 				C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */,
 				DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */,
 				E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */,
+				AA00000000000000000000B2 /* EventLogViewModelTests.swift */,
 				A1C4138736FD814449A0DDF7 /* Helpers */,
 				CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */,
 				19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */,
@@ -261,8 +268,9 @@
 		ED09E317743B18AEFA4FEA53 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */,
-				53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */,
+				AA00000000000000000000B1 /* EventLogEntry.swift */,
+				AA00000000000000000000B3 /* EventLogViewModel.swift */,
+				AA00000000000000000000B4 /* EventLogView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -363,8 +371,9 @@
 				5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */,
 				2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */,
 				BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */,
-				587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */,
-				21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */,
+				AA00000000000000000000A1 /* EventLogEntry.swift in Sources */,
+				AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */,
+				AA00000000000000000000A4 /* EventLogView.swift in Sources */,
 				2DF9B44B116C102396E6F4CD /* CameraLatestFrameBuffer.swift in Sources */,
 				ABF33C207DDBDF6412B11A55 /* CameraFrameEvent.swift in Sources */,
 				4CEFEE9F801D61EA0C5EB2C7 /* SceneDescriptionEvent.swift in Sources */,
@@ -387,6 +396,7 @@
 				5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */,
 				5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */,
 				A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */,
+				AA00000000000000000000A2 /* EventLogViewModelTests.swift in Sources */,
 				22BEE8AF2932BFB1F467192E /* CameraLatestFrameBufferTests.swift in Sources */,
 				123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */,
 				F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */,

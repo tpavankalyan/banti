@@ -20,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct BantiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var viewModel: TranscriptViewModel
+    @StateObject private var viewModel: EventLogViewModel
     private let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
 
     private let eventHub: EventHubActor
@@ -60,7 +60,7 @@ struct BantiApp: App {
         self.camera = cameraActor
         self.sceneDesc = sceneDescActor
 
-        let vm = TranscriptViewModel(eventHub: hub)
+        let vm = EventLogViewModel(eventHub: hub)
         _viewModel = StateObject(wrappedValue: vm)
 
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -80,7 +80,7 @@ struct BantiApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TranscriptView(viewModel: viewModel)
+            EventLogView(viewModel: viewModel)
         }
     }
 
@@ -92,25 +92,21 @@ struct BantiApp: App {
         proj: TranscriptProjectionActor,
         camera: CameraFrameActor,
         sceneDesc: SceneDescriptionActor,
-        vm: TranscriptViewModel
+        vm: EventLogViewModel
     ) async {
         let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
         logger.notice("bootstrap entered")
 
-        // Event logger registered first — subscribed before any module can publish.
         await sup.register(eventLogger, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-        // Projection must subscribe to RawTranscriptEvent before mic starts.
-        // Mic depends on both dg and proj so topo order is: proj → dg → mic.
         await sup.register(proj, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(dg, restartPolicy: .onFailure(maxRetries: 5, backoff: 1))
         await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [dg.id, proj.id])
-        // Camera pipeline: sceneDesc must subscribe to CameraFrameEvent before camera starts.
         await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
 
         do {
-            // Subscribe before any module can publish TranscriptSegmentEvent (async handlers run
-            // concurrently while startAll() is still progressing).
+            // vm.startListening() MUST come before sup.startAll() — ensures EventLogViewModel
+            // is subscribed to all 6 event types before any module begins publishing.
             await vm.startListening()
             try await sup.startAll()
             logger.notice("bootstrap completed — pipeline running")
