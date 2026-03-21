@@ -36,6 +36,7 @@
 		8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3875E1430258F8FE36EA5C52 /* ConfigActor.swift */; };
 		A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */; };
 		A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */; };
+		AA00000000000000000000A2 /* EventLogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B2 /* EventLogViewModelTests.swift */; };
 		ABF33C207DDBDF6412B11A55 /* CameraFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */; };
 		B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */; };
 		BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */; };
@@ -99,6 +100,7 @@
 		DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActor.swift; sourceTree = "<group>"; };
 		DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFrameEvent.swift; sourceTree = "<group>"; };
 		E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActorTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B2 /* EventLogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModelTests.swift; sourceTree = "<group>"; };
 		F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegmentEvent.swift; sourceTree = "<group>"; };
 		F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProvider.swift; sourceTree = "<group>"; };
 		F43B02A7E9EE573D65014D4D /* BantiModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiModule.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 				C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */,
 				DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */,
 				E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */,
+				AA00000000000000000000B2 /* EventLogViewModelTests.swift */,
 				A1C4138736FD814449A0DDF7 /* Helpers */,
 				CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */,
 				19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */,
@@ -391,6 +394,7 @@
 				5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */,
 				5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */,
 				A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */,
+				AA00000000000000000000A2 /* EventLogViewModelTests.swift in Sources */,
 				22BEE8AF2932BFB1F467192E /* CameraLatestFrameBufferTests.swift in Sources */,
 				123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */,
 				F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */,
