@@ -27,11 +27,10 @@ struct BantiApp: App {
     private let config: ConfigActor
     private let stateRegistry: StateRegistryActor
     private let supervisor: ModuleSupervisorActor
+    private let eventLogger: EventLoggerActor
     private let micCapture: MicrophoneCaptureActor
     private let deepgram: DeepgramStreamingActor
     private let projection: TranscriptProjectionActor
-    private let brain: BrainActor
-    private let speech: SpeechActor
     private let camera: CameraFrameActor
     private let sceneDesc: SceneDescriptionActor
 
@@ -43,11 +42,10 @@ struct BantiApp: App {
         let cfg = ConfigActor(envFilePath: envPath)
         let reg = StateRegistryActor()
         let sup = ModuleSupervisorActor(eventHub: hub, stateRegistry: reg)
+        let loggerActor = EventLoggerActor(eventHub: hub)
         let mic = MicrophoneCaptureActor(eventHub: hub)
         let dg = DeepgramStreamingActor(eventHub: hub, config: cfg, replayProvider: mic)
         let proj = TranscriptProjectionActor(eventHub: hub)
-        let brainActor = BrainActor(eventHub: hub, config: cfg)
-        let speechActor = SpeechActor(eventHub: hub, config: cfg)
         let cameraActor = CameraFrameActor(eventHub: hub, config: cfg)
         let sceneDescActor = SceneDescriptionActor(eventHub: hub, config: cfg, replayProvider: cameraActor)
 
@@ -55,11 +53,10 @@ struct BantiApp: App {
         self.config = cfg
         self.stateRegistry = reg
         self.supervisor = sup
+        self.eventLogger = loggerActor
         self.micCapture = mic
         self.deepgram = dg
         self.projection = proj
-        self.brain = brainActor
-        self.speech = speechActor
         self.camera = cameraActor
         self.sceneDesc = sceneDescActor
 
@@ -75,8 +72,7 @@ struct BantiApp: App {
 
         Task {
             await Self.bootstrap(
-                sup: sup, mic: mic, dg: dg, proj: proj,
-                brain: brainActor, speech: speechActor,
+                sup: sup, eventLogger: loggerActor, mic: mic, dg: dg, proj: proj,
                 camera: cameraActor, sceneDesc: sceneDescActor, vm: vm
             )
         }
@@ -90,11 +86,10 @@ struct BantiApp: App {
 
     private static func bootstrap(
         sup: ModuleSupervisorActor,
+        eventLogger: EventLoggerActor,
         mic: MicrophoneCaptureActor,
         dg: DeepgramStreamingActor,
         proj: TranscriptProjectionActor,
-        brain: BrainActor,
-        speech: SpeechActor,
         camera: CameraFrameActor,
         sceneDesc: SceneDescriptionActor,
         vm: TranscriptViewModel
@@ -102,23 +97,18 @@ struct BantiApp: App {
         let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
         logger.notice("bootstrap entered")
 
-        // Projection must be subscribed before RawTranscriptEvents; mic must run after Deepgram
-        // subscribes to AudioFrameEvent. Mic waits on both so topo order is never dg → mic → proj
-        // (which would drop transcripts — hub drops events with no subscribers).
+        // Event logger registered first — subscribed before any module can publish.
+        await sup.register(eventLogger, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        // Projection must subscribe to RawTranscriptEvent before mic starts.
+        // Mic depends on both dg and proj so topo order is: proj → dg → mic.
         await sup.register(proj, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(dg, restartPolicy: .onFailure(maxRetries: 5, backoff: 1))
         await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [dg.id, proj.id])
-        await sup.register(brain, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
-        await sup.register(speech, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
-        // Camera pipeline — required start order: brain → sceneDesc → camera
-        // brain must subscribe to SceneDescriptionEvent before sceneDesc starts publishing.
-        // sceneDesc must subscribe to CameraFrameEvent before camera starts publishing.
-        await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1), dependencies: [brain.id])
-        await sup.register(camera,    restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
+        // Camera pipeline: sceneDesc must subscribe to CameraFrameEvent before camera starts.
+        await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
 
         do {
-            // Subscribe before any module can publish TranscriptSegmentEvent (async handlers run
-            // concurrently while startAll() is still progressing).
             await vm.startListening()
             try await sup.startAll()
             logger.notice("bootstrap completed — pipeline running")
