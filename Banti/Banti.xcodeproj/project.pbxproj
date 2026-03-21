@@ -16,6 +16,8 @@
 		16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */; };
 		21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */; };
 		AA00000000000000000000A1 /* EventLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B1 /* EventLogEntry.swift */; };
+		AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B3 /* EventLogViewModel.swift */; };
+		AA00000000000000000000A4 /* EventLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B4 /* EventLogView.swift */; };
 		22BEE8AF2932BFB1F467192E /* CameraLatestFrameBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */; };
 		26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */; };
 		2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */; };
@@ -76,6 +78,8 @@
 		4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptView.swift; sourceTree = "<group>"; };
 		53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptViewModel.swift; sourceTree = "<group>"; };
 		AA00000000000000000000B1 /* EventLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogEntry.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B3 /* EventLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModel.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B4 /* EventLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogView.swift; sourceTree = "<group>"; };
 		637D4C47575CEAE1410E4D31 /* BantiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BantiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VisionProvider.swift; sourceTree = "<group>"; };
 		8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawTranscriptEvent.swift; sourceTree = "<group>"; };
@@ -269,6 +273,8 @@
 				4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */,
 				53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */,
 				AA00000000000000000000B1 /* EventLogEntry.swift */,
+				AA00000000000000000000B3 /* EventLogViewModel.swift */,
+				AA00000000000000000000B4 /* EventLogView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -372,6 +378,8 @@
 				587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */,
 				21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */,
 				AA00000000000000000000A1 /* EventLogEntry.swift in Sources */,
+				AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */,
+				AA00000000000000000000A4 /* EventLogView.swift in Sources */,
 				2DF9B44B116C102396E6F4CD /* CameraLatestFrameBuffer.swift in Sources */,
 				ABF33C207DDBDF6412B11A55 /* CameraFrameEvent.swift in Sources */,
 				4CEFEE9F801D61EA0C5EB2C7 /* SceneDescriptionEvent.swift in Sources */,
