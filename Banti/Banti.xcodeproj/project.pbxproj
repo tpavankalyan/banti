@@ -14,7 +14,7 @@
 		123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */; };
 		13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */; };
 		16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */; };
-		21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */; };
+
 		AA00000000000000000000A1 /* EventLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B1 /* EventLogEntry.swift */; };
 		AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B3 /* EventLogViewModel.swift */; };
 		AA00000000000000000000A4 /* EventLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B4 /* EventLogView.swift */; };
@@ -26,7 +26,7 @@
 		49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168FA5F5D4BBBBC4654987A1 /* Environment.swift */; };
 		4CEFEE9F801D61EA0C5EB2C7 /* SceneDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */; };
 		5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */; };
-		587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */; };
+
 		5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */; };
 		5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B83E289D3AADF25670B1B8D /* TestRecorder.swift */; };
 		5B9022A6DAF0D8DDDA01B484 /* BantiModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43B02A7E9EE573D65014D4D /* BantiModule.swift */; };
@@ -75,8 +75,6 @@
 		3875E1430258F8FE36EA5C52 /* ConfigActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActor.swift; sourceTree = "<group>"; };
 		421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramParsingTests.swift; sourceTree = "<group>"; };
 		48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraFrameActorTests.swift; sourceTree = "<group>"; };
-		4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptView.swift; sourceTree = "<group>"; };
-		53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptViewModel.swift; sourceTree = "<group>"; };
 		AA00000000000000000000B1 /* EventLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogEntry.swift; sourceTree = "<group>"; };
 		AA00000000000000000000B3 /* EventLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModel.swift; sourceTree = "<group>"; };
 		AA00000000000000000000B4 /* EventLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogView.swift; sourceTree = "<group>"; };
@@ -270,8 +268,6 @@
 		ED09E317743B18AEFA4FEA53 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				4A19B66EAEF63DBCB7838079 /* TranscriptView.swift */,
-				53E8950AC3396D75EFA06066 /* TranscriptViewModel.swift */,
 				AA00000000000000000000B1 /* EventLogEntry.swift */,
 				AA00000000000000000000B3 /* EventLogViewModel.swift */,
 				AA00000000000000000000B4 /* EventLogView.swift */,
@@ -375,8 +371,6 @@
 				5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */,
 				2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */,
 				BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */,
-				587B7DD3651913F588D2038B /* TranscriptView.swift in Sources */,
-				21CF435B1D6770A364684075 /* TranscriptViewModel.swift in Sources */,
 				AA00000000000000000000A1 /* EventLogEntry.swift in Sources */,
 				AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */,
 				AA00000000000000000000A4 /* EventLogView.swift in Sources */,
