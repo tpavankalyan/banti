@@ -32,6 +32,8 @@ struct BantiApp: App {
     private let projection: TranscriptProjectionActor
     private let brain: BrainActor
     private let speech: SpeechActor
+    private let camera: CameraFrameActor
+    private let sceneDesc: SceneDescriptionActor
 
     init() {
         let envPath = Self.resolveEnvPath()
@@ -46,6 +48,8 @@ struct BantiApp: App {
         let proj = TranscriptProjectionActor(eventHub: hub)
         let brainActor = BrainActor(eventHub: hub, config: cfg)
         let speechActor = SpeechActor(eventHub: hub, config: cfg)
+        let cameraActor = CameraFrameActor(eventHub: hub, config: cfg)
+        let sceneDescActor = SceneDescriptionActor(eventHub: hub, config: cfg, replayProvider: cameraActor)
 
         self.eventHub = hub
         self.config = cfg
@@ -56,6 +60,8 @@ struct BantiApp: App {
         self.projection = proj
         self.brain = brainActor
         self.speech = speechActor
+        self.camera = cameraActor
+        self.sceneDesc = sceneDescActor
 
         let vm = TranscriptViewModel(eventHub: hub)
         _viewModel = StateObject(wrappedValue: vm)
@@ -70,7 +76,8 @@ struct BantiApp: App {
         Task {
             await Self.bootstrap(
                 sup: sup, mic: mic, dg: dg, proj: proj,
-                brain: brainActor, speech: speechActor, vm: vm
+                brain: brainActor, speech: speechActor,
+                camera: cameraActor, sceneDesc: sceneDescActor, vm: vm
             )
         }
     }
@@ -88,6 +95,8 @@ struct BantiApp: App {
         proj: TranscriptProjectionActor,
         brain: BrainActor,
         speech: SpeechActor,
+        camera: CameraFrameActor,
+        sceneDesc: SceneDescriptionActor,
         vm: TranscriptViewModel
     ) async {
         let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
@@ -101,6 +110,11 @@ struct BantiApp: App {
         await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [dg.id, proj.id])
         await sup.register(brain, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
         await sup.register(speech, restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
+        // Camera pipeline — required start order: brain → sceneDesc → camera
+        // brain must subscribe to SceneDescriptionEvent before sceneDesc starts publishing.
+        // sceneDesc must subscribe to CameraFrameEvent before camera starts publishing.
+        await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1), dependencies: [brain.id])
+        await sup.register(camera,    restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
 
         do {
             // Subscribe before any module can publish TranscriptSegmentEvent (async handlers run
