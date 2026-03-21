@@ -86,7 +86,7 @@ final class EventLogViewModel: ObservableObject {
 
     private func handleCamera(_ event: CameraFrameEvent) {
         cameraFrameCount += 1
-        guard cameraFrameCount == 1 || cameraFrameCount % 30 == 0 else { return }
+        guard cameraFrameCount == 1 || cameraFrameCount % 300 == 0 else { return }
         append(tag: "[CAMERA]", text: format(event))
     }
 
