@@ -16,6 +16,8 @@ struct Capability: Hashable, Sendable {
     static let projection = Capability("projection")
     static let reasoning = Capability("reasoning")
     static let speech = Capability("speech")
+    static let videoCapture     = Capability("video-capture")
+    static let sceneDescription = Capability("scene-description")
 }
 
 enum ModuleHealth: Sendable {
