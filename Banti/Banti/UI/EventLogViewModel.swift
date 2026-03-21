@@ -11,6 +11,7 @@ final class EventLogViewModel: ObservableObject {
     private let eventHub: EventHubActor
     private var subscriptionIDs: [SubscriptionID] = []
     private var audioFrameCount: UInt64 = 0
+    private var cameraFrameCount: UInt64 = 0
 
     private static let timestampFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -33,13 +34,14 @@ final class EventLogViewModel: ObservableObject {
         }
         subscriptionIDs.removeAll()
         audioFrameCount = 0
+        cameraFrameCount = 0
         subscriptionIDs.append(await eventHub.subscribe(AudioFrameEvent.self) { [weak self] event in
             guard let self else { return }
             await self.handleAudio(event)
         })
         subscriptionIDs.append(await eventHub.subscribe(CameraFrameEvent.self) { [weak self] event in
             guard let self else { return }
-            await self.append(tag: "[CAMERA]", text: self.format(event))
+            await self.handleCamera(event)
         })
         subscriptionIDs.append(await eventHub.subscribe(RawTranscriptEvent.self) { [weak self] event in
             guard let self else { return }
@@ -66,6 +68,7 @@ final class EventLogViewModel: ObservableObject {
         }
         subscriptionIDs.removeAll()
         audioFrameCount = 0
+        cameraFrameCount = 0
         isListening = false
     }
 
@@ -79,6 +82,12 @@ final class EventLogViewModel: ObservableObject {
         audioFrameCount += 1
         guard audioFrameCount == 1 || audioFrameCount % 100 == 0 else { return }
         append(tag: "[AUDIO]", text: format(event))
+    }
+
+    private func handleCamera(_ event: CameraFrameEvent) {
+        cameraFrameCount += 1
+        guard cameraFrameCount == 1 || cameraFrameCount % 30 == 0 else { return }
+        append(tag: "[CAMERA]", text: format(event))
     }
 
     private func append(tag: String, text: String) {
