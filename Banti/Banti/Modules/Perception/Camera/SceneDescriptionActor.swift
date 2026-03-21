@@ -8,6 +8,9 @@ actor SceneDescriptionActor: BantiModule {
     private let logger = Logger(subsystem: "com.banti.scene-description", category: "Scene")
     private let eventHub: EventHubActor
     private let config: ConfigActor
+    // Stored for forward-compatibility only. VLM calls are stateless HTTP — there is no stream
+    // to resume, so replay is not used on reconnect. Future analysis actors that do need replay
+    // (e.g. motion detection) must explicitly cap replayed frames to avoid N VLM calls on restart.
     private let replayProvider: (any CameraFrameReplayProvider)?
     private let overrideProvider: (any VisionProvider)?
 
