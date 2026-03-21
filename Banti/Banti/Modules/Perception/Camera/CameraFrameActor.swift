@@ -35,6 +35,7 @@ actor CameraFrameActor: BantiModule, CameraFrameReplayProvider {
     // Inner class: bridges AVFoundation delegate callback (non-isolated) to actor-safe buffer.
     private final class CaptureDelegate: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
         private let buffer: CameraLatestFrameBuffer
+        private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
 
         init(buffer: CameraLatestFrameBuffer) {
             self.buffer = buffer
@@ -45,7 +46,7 @@ actor CameraFrameActor: BantiModule, CameraFrameReplayProvider {
             didOutput sampleBuffer: CMSampleBuffer,
             from connection: AVCaptureConnection
         ) {
-            guard let jpeg = sampleBuffer.toScaledJPEG(maxEdge: 1280, quality: 0.7) else { return }
+            guard let jpeg = sampleBuffer.toScaledJPEG(maxEdge: 1280, quality: 0.7, context: ciContext) else { return }
             buffer.store(jpeg)
         }
     }
@@ -112,9 +113,13 @@ actor CameraFrameActor: BantiModule, CameraFrameReplayProvider {
         replayBuffer.filter { $0.seq > lastSeq }
     }
 
-    // Used by tests to inject frames without starting AVCaptureSession.
+    /// Testing only — do not call from production code.
     func injectFrameForTesting(jpeg: Data, seq: UInt64) {
-        replayBuffer.append((seq: seq, data: jpeg))
+        appendToReplayBuffer(seq: seq, data: jpeg)
+    }
+
+    private func appendToReplayBuffer(seq: UInt64, data: Data) {
+        replayBuffer.append((seq: seq, data: data))
         if replayBuffer.count > maxReplayFrames {
             replayBuffer.removeFirst()
         }
@@ -124,7 +129,7 @@ actor CameraFrameActor: BantiModule, CameraFrameReplayProvider {
         drainTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(intervalMs))
-                guard let self else { return }
+                guard !Task.isCancelled, let self else { return }
                 await self.drainLatestFrame()
             }
         }
@@ -145,10 +150,7 @@ actor CameraFrameActor: BantiModule, CameraFrameReplayProvider {
             frameHeight: height
         )
 
-        replayBuffer.append((seq: sequenceNumber, data: jpeg))
-        if replayBuffer.count > maxReplayFrames {
-            replayBuffer.removeFirst()
-        }
+        appendToReplayBuffer(seq: sequenceNumber, data: jpeg)
 
         await eventHub.publish(event)
 
@@ -170,7 +172,7 @@ actor CameraFrameActor: BantiModule, CameraFrameReplayProvider {
 // MARK: - CMSampleBuffer → Scaled JPEG
 
 private extension CMSampleBuffer {
-    func toScaledJPEG(maxEdge: CGFloat, quality: CGFloat) -> Data? {
+    func toScaledJPEG(maxEdge: CGFloat, quality: CGFloat, context: CIContext) -> Data? {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(self) else { return nil }
 
         let width = CGFloat(CVPixelBufferGetWidth(imageBuffer))
@@ -182,7 +184,6 @@ private extension CMSampleBuffer {
             ? ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
             : ciImage
 
-        let context = CIContext(options: [.useSoftwareRenderer: false])
         guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
 
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
