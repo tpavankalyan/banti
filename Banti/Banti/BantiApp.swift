@@ -33,6 +33,10 @@ struct BantiApp: App {
     private let projection: TranscriptProjectionActor
     private let camera: CameraFrameActor
     private let sceneDesc: SceneDescriptionActor
+    private let screenCapture: ScreenCaptureActor
+    private let screenDesc: ScreenDescriptionActor
+    private let activeApp: ActiveAppActor
+    private let axFocus: AXFocusActor
 
     init() {
         let envPath = Self.resolveEnvPath()
@@ -48,6 +52,10 @@ struct BantiApp: App {
         let proj = TranscriptProjectionActor(eventHub: hub)
         let cameraActor = CameraFrameActor(eventHub: hub, config: cfg)
         let sceneDescActor = SceneDescriptionActor(eventHub: hub, config: cfg, replayProvider: cameraActor)
+        let screenCaptureActor = ScreenCaptureActor(eventHub: hub, config: cfg)
+        let screenDescActor = ScreenDescriptionActor(eventHub: hub, config: cfg)
+        let activeAppActor = ActiveAppActor(eventHub: hub)
+        let axFocusActor = AXFocusActor(eventHub: hub, config: cfg)
 
         self.eventHub = hub
         self.config = cfg
@@ -59,6 +67,10 @@ struct BantiApp: App {
         self.projection = proj
         self.camera = cameraActor
         self.sceneDesc = sceneDescActor
+        self.screenCapture = screenCaptureActor
+        self.screenDesc = screenDescActor
+        self.activeApp = activeAppActor
+        self.axFocus = axFocusActor
 
         let vm = EventLogViewModel(eventHub: hub)
         _viewModel = StateObject(wrappedValue: vm)
@@ -73,7 +85,9 @@ struct BantiApp: App {
         Task {
             await Self.bootstrap(
                 sup: sup, eventLogger: loggerActor, mic: mic, dg: dg, proj: proj,
-                camera: cameraActor, sceneDesc: sceneDescActor, vm: vm
+                camera: cameraActor, sceneDesc: sceneDescActor,
+                screenCapture: screenCaptureActor, screenDesc: screenDescActor,
+                activeApp: activeAppActor, axFocus: axFocusActor, vm: vm
             )
         }
     }
@@ -92,6 +106,10 @@ struct BantiApp: App {
         proj: TranscriptProjectionActor,
         camera: CameraFrameActor,
         sceneDesc: SceneDescriptionActor,
+        screenCapture: ScreenCaptureActor,
+        screenDesc: ScreenDescriptionActor,
+        activeApp: ActiveAppActor,
+        axFocus: AXFocusActor,
         vm: EventLogViewModel
     ) async {
         let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
@@ -103,6 +121,11 @@ struct BantiApp: App {
         await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [dg.id, proj.id])
         await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
+        await sup.register(activeApp, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        await sup.register(screenDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        await sup.register(screenCapture, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [screenDesc.id])
+        // AX permission won't change without user action in System Settings — no retry.
+        await sup.register(axFocus, restartPolicy: .never)
 
         do {
             // vm.startListening() MUST come before sup.startAll() — ensures EventLogViewModel

@@ -12,6 +12,7 @@ final class EventLogViewModel: ObservableObject {
     private var subscriptionIDs: [SubscriptionID] = []
     private var audioFrameCount: UInt64 = 0
     private var lastCameraLog: Date = .distantPast
+    private var lastScreenLog: Date = .distantPast
 
     private static let timestampFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -35,6 +36,7 @@ final class EventLogViewModel: ObservableObject {
         subscriptionIDs.removeAll()
         audioFrameCount = 0
         lastCameraLog = .distantPast
+        lastScreenLog = .distantPast
         subscriptionIDs.append(await eventHub.subscribe(AudioFrameEvent.self) { [weak self] event in
             guard let self else { return }
             await self.handleAudio(event)
@@ -59,6 +61,22 @@ final class EventLogViewModel: ObservableObject {
             guard let self else { return }
             await self.append(tag: "[MODULE]", text: self.format(event))
         })
+        subscriptionIDs.append(await eventHub.subscribe(ScreenFrameEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.handleScreen(event)
+        })
+        subscriptionIDs.append(await eventHub.subscribe(ScreenDescriptionEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.append(tag: "[SCREEN]", text: self.format(event))
+        })
+        subscriptionIDs.append(await eventHub.subscribe(ActiveAppEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.append(tag: "[APP]", text: self.format(event))
+        })
+        subscriptionIDs.append(await eventHub.subscribe(AXFocusEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.append(tag: "[AX]", text: self.format(event))
+        })
         isListening = true
     }
 
@@ -69,6 +87,7 @@ final class EventLogViewModel: ObservableObject {
         subscriptionIDs.removeAll()
         audioFrameCount = 0
         lastCameraLog = .distantPast
+        lastScreenLog = .distantPast
         isListening = false
     }
 
@@ -89,6 +108,13 @@ final class EventLogViewModel: ObservableObject {
         guard now.timeIntervalSince(lastCameraLog) >= 60 else { return }
         lastCameraLog = now
         append(tag: "[CAMERA]", text: format(event))
+    }
+
+    private func handleScreen(_ event: ScreenFrameEvent) {
+        let now = Date()
+        guard now.timeIntervalSince(lastScreenLog) >= 60 else { return }
+        lastScreenLog = now
+        append(tag: "[SCRFRM]", text: format(event))
     }
 
     private func append(tag: String, text: String) {
@@ -129,5 +155,26 @@ final class EventLogViewModel: ObservableObject {
 
     private func format(_ e: ModuleStatusEvent) -> String {
         "\(e.moduleID.rawValue): \(e.oldStatus) \u{2192} \(e.newStatus)"
+    }
+
+    private func format(_ e: ScreenFrameEvent) -> String {
+        "frame=\(e.sequenceNumber) size=\(e.displayWidth)x\(e.displayHeight)"
+    }
+
+    private func format(_ e: ScreenDescriptionEvent) -> String {
+        let ms = Int(e.responseTime.timeIntervalSince(e.captureTime) * 1000)
+        return "latency=\(ms)ms | \(e.text)"
+    }
+
+    private func format(_ e: ActiveAppEvent) -> String {
+        let prev = e.previousAppName.map { "\($0) → " } ?? ""
+        return "\(prev)\(e.appName) (\(e.bundleIdentifier))"
+    }
+
+    private func format(_ e: AXFocusEvent) -> String {
+        var parts = "\(e.changeKind.rawValue) | \(e.appName) | \(e.elementRole)"
+        if let title = e.elementTitle { parts += " · \(title)" }
+        if let sel = e.selectedText { parts += " | selected: '\(String(sel.prefix(40)))'" }
+        return parts
     }
 }

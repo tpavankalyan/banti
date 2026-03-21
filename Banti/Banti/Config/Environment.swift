@@ -10,4 +10,9 @@ enum EnvKey {
     static let sceneDescriptionIntervalS = "SCENE_DESCRIPTION_INTERVAL_S"
     static let sceneDescriptionPrompt    = "SCENE_DESCRIPTION_PROMPT"
     static let anthropicVisionModel      = "ANTHROPIC_VISION_MODEL"
+    static let screenCaptureIntervalMs   = "SCREEN_CAPTURE_INTERVAL_MS"
+    static let screenDescriptionIntervalS = "SCREEN_DESCRIPTION_INTERVAL_S"
+    static let screenDescriptionPrompt   = "SCREEN_DESCRIPTION_PROMPT"
+    static let axDebounceMs              = "AX_DEBOUNCE_MS"
+    static let axSelectedTextMaxChars    = "AX_SELECTED_TEXT_MAX_CHARS"
 }

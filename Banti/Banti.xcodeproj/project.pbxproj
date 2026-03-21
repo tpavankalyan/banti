@@ -50,6 +50,10 @@
 		F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */; };
 		A1B2C3D4E5F601234567890A /* SceneDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */; };
 		A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */; };
+		AX0000000000000000000011 /* AXFocusEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000001 /* AXFocusEvent.swift */; };
+		AX0000000000000000000012 /* AXEventBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000002 /* AXEventBridge.swift */; };
+		AX0000000000000000000013 /* AXFocusActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000003 /* AXFocusActor.swift */; };
+		AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000004 /* AXFocusActorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -108,6 +112,10 @@
 		F43B02A7E9EE573D65014D4D /* BantiModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiModule.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActor.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActorTests.swift; sourceTree = "<group>"; };
+		AX0000000000000000000001 /* AXFocusEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusEvent.swift; sourceTree = "<group>"; };
+		AX0000000000000000000002 /* AXEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXEventBridge.swift; sourceTree = "<group>"; };
+		AX0000000000000000000003 /* AXFocusActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusActor.swift; sourceTree = "<group>"; };
+		AX0000000000000000000004 /* AXFocusActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AXFocusActorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -160,6 +168,7 @@
 				F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */,
 				97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */,
 				985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */,
+				AX0000000000000000000001 /* AXFocusEvent.swift */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -188,6 +197,7 @@
 				19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */,
 				48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */,
 				A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */,
+				AX0000000000000000000004 /* AXFocusActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -223,11 +233,21 @@
 			path = Brain;
 			sourceTree = "<group>";
 		};
+		AX0000000000000000000021 /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				AX0000000000000000000002 /* AXEventBridge.swift */,
+				AX0000000000000000000003 /* AXFocusActor.swift */,
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
 		C01ED59DB1A997668CDAA07B /* Perception */ = {
 			isa = PBXGroup;
 			children = (
 				4E904FCD47CCCF1B27EF352F /* Microphone */,
 				0F35798E2A7CB504C3EB213D /* Camera */,
+				AX0000000000000000000021 /* Accessibility */,
 			);
 			path = Perception;
 			sourceTree = "<group>";
@@ -381,6 +401,9 @@
 				C9A8761EEC27AA7C6B83B7AD /* ClaudeVisionProvider.swift in Sources */,
 				7EBDAA36BEB59F7C103EA064 /* CameraFrameActor.swift in Sources */,
 				A1B2C3D4E5F601234567890A /* SceneDescriptionActor.swift in Sources */,
+				AX0000000000000000000011 /* AXFocusEvent.swift in Sources */,
+				AX0000000000000000000012 /* AXEventBridge.swift in Sources */,
+				AX0000000000000000000013 /* AXFocusActor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -402,6 +425,7 @@
 				F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */,
 				67C47B2F7CA0BD797D192FCD /* CameraFrameActorTests.swift in Sources */,
 				A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */,
+				AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

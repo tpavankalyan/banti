@@ -22,5 +22,9 @@
 	<string>Banti uses the microphone to transcribe speech in real time.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Banti uses the camera to understand the visual scene and provide context-aware assistance.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Banti captures your screen to understand what you are working on and provide context-aware assistance.</string>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Banti reads your focused UI element and selected text to provide context-aware assistance.</string>
 </dict>
 </plist>

@@ -42,8 +42,24 @@ actor EventLoggerActor: BantiModule {
             guard let self else { return }
             await self.logModuleStatus(event)
         })
+        subscriptionIDs.append(await eventHub.subscribe(ScreenFrameEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.logScreenFrame(event)
+        })
+        subscriptionIDs.append(await eventHub.subscribe(ScreenDescriptionEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.logScreenDescription(event)
+        })
+        subscriptionIDs.append(await eventHub.subscribe(ActiveAppEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.logActiveApp(event)
+        })
+        subscriptionIDs.append(await eventHub.subscribe(AXFocusEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.logAXFocus(event)
+        })
         _health = .healthy
-        logger.notice("EventLoggerActor started — subscribed to 6 event types")
+        logger.notice("EventLoggerActor started — subscribed to 10 event types")
     }
 
     func stop() async {
@@ -84,5 +100,24 @@ actor EventLoggerActor: BantiModule {
 
     private func logModuleStatus(_ event: ModuleStatusEvent) {
         logger.notice("ModuleStatus module=\(event.moduleID.rawValue, privacy: .public) \(event.oldStatus, privacy: .public) → \(event.newStatus, privacy: .public)")
+    }
+
+    private func logScreenFrame(_ event: ScreenFrameEvent) {
+        logger.debug("ScreenFrame seq=\(event.sequenceNumber) bytes=\(event.jpeg.count) size=\(event.displayWidth)x\(event.displayHeight)")
+    }
+
+    private func logScreenDescription(_ event: ScreenDescriptionEvent) {
+        let latencyMs = Int(event.responseTime.timeIntervalSince(event.captureTime) * 1000)
+        logger.notice("ScreenDescription latency=\(latencyMs)ms text=\(String(event.text.prefix(60)), privacy: .public)")
+    }
+
+    private func logActiveApp(_ event: ActiveAppEvent) {
+        let prev = event.previousAppName ?? "none"
+        logger.notice("ActiveApp \(prev, privacy: .public) → \(event.appName, privacy: .public) (\(event.bundleIdentifier, privacy: .public))")
+    }
+
+    private func logAXFocus(_ event: AXFocusEvent) {
+        let selection = event.selectedText.map { " selected='\(String($0.prefix(40)))'" } ?? ""
+        logger.notice("AXFocus kind=\(event.changeKind.rawValue, privacy: .public) app=\(event.appName, privacy: .public) role=\(event.elementRole, privacy: .public)\(selection, privacy: .public)")
     }
 }
