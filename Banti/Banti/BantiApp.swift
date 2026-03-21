@@ -109,6 +109,8 @@ struct BantiApp: App {
         await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
 
         do {
+            // Subscribe before any module can publish TranscriptSegmentEvent (async handlers run
+            // concurrently while startAll() is still progressing).
             await vm.startListening()
             try await sup.startAll()
             logger.notice("bootstrap completed — pipeline running")
