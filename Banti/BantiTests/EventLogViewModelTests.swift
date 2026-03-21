@@ -38,6 +38,16 @@ final class EventLogViewModelTests: XCTestCase {
         ModuleStatusEvent(moduleID: ModuleID("mic"), oldStatus: "starting", newStatus: "running")
     }
 
+    /// Waits until the VM's entries reach the expected count, or a deadline passes.
+    /// Needed because the AsyncStream → subscription task → MainActor hop takes multiple
+    /// cooperative scheduler cycles — a single Task.yield() is not sufficient.
+    func waitForEntries(_ vm: EventLogViewModel, count: Int) async {
+        let deadline = Date().addingTimeInterval(2)
+        while vm.entries.count < count, Date() < deadline {
+            await Task.yield()
+        }
+    }
+
     // MARK: - Entry appended per event type
 
     func testAudioFrameCreatesEntry() async {
@@ -46,7 +56,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeAudioFrame(seq: 1))
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         XCTAssertEqual(vm.entries[0].tag, "[AUDIO]")
@@ -58,7 +68,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeCameraFrame())
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         XCTAssertEqual(vm.entries[0].tag, "[CAMERA]")
@@ -70,7 +80,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeRawTranscript())
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         XCTAssertEqual(vm.entries[0].tag, "[RAW]")
@@ -82,7 +92,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeSegment())
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         XCTAssertEqual(vm.entries[0].tag, "[SEGMENT]")
@@ -94,7 +104,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeScene())
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         XCTAssertEqual(vm.entries[0].tag, "[SCENE]")
@@ -106,7 +116,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeModuleStatus())
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         XCTAssertEqual(vm.entries[0].tag, "[MODULE]")
@@ -122,7 +132,7 @@ final class EventLogViewModelTests: XCTestCase {
         for seq in UInt64(1)...200 {
             await hub.publish(makeAudioFrame(seq: seq))
         }
-        await Task.yield()
+        await waitForEntries(vm, count: 3)
 
         XCTAssertEqual(vm.entries.count, 3)
         XCTAssertTrue(vm.entries.allSatisfy { $0.tag == "[AUDIO]" })
@@ -136,13 +146,13 @@ final class EventLogViewModelTests: XCTestCase {
         for seq in UInt64(1)...50 {
             await hub.publish(makeAudioFrame(seq: seq))
         }
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
         XCTAssertEqual(vm.entries.count, 1)
 
         await vm.stopListening()
         await vm.startListening()
         await hub.publish(makeAudioFrame(seq: 51))
-        await Task.yield()
+        await waitForEntries(vm, count: 2)
 
         XCTAssertEqual(vm.entries.count, 2)
         XCTAssertEqual(vm.entries[1].tag, "[AUDIO]")
@@ -156,12 +166,12 @@ final class EventLogViewModelTests: XCTestCase {
         for seq in UInt64(1)...50 {
             await hub.publish(makeAudioFrame(seq: seq))
         }
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
         let countAfterFirstSession = vm.entries.count
 
         await vm.startListening()
         await hub.publish(makeAudioFrame(seq: 99))
-        await Task.yield()
+        await waitForEntries(vm, count: countAfterFirstSession + 1)
 
         XCTAssertGreaterThan(vm.entries.count, countAfterFirstSession)
     }
@@ -175,7 +185,7 @@ final class EventLogViewModelTests: XCTestCase {
 
         let longText = String(repeating: "a", count: 120)
         await hub.publish(makeSegment(text: longText))
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
         let text = vm.entries[0].text
@@ -189,7 +199,7 @@ final class EventLogViewModelTests: XCTestCase {
         await vm.startListening()
 
         await hub.publish(makeSegment(text: "short"))
-        await Task.yield()
+        await waitForEntries(vm, count: 1)
 
         XCTAssertFalse(vm.entries[0].text.hasSuffix("…"))
     }
@@ -204,13 +214,13 @@ final class EventLogViewModelTests: XCTestCase {
         for i in 0..<500 {
             await hub.publish(makeScene(text: "scene \(i)"))
         }
-        await Task.yield()
+        await waitForEntries(vm, count: 500)
         XCTAssertEqual(vm.entries.count, 500)
 
         let secondEntryText = vm.entries[1].text
 
         await hub.publish(makeScene(text: "scene 500"))
-        await Task.yield()
+        await waitForEntries(vm, count: 500)
 
         XCTAssertEqual(vm.entries.count, 500)
         XCTAssertTrue(vm.entries[0].text.contains(secondEntryText.prefix(20)),
