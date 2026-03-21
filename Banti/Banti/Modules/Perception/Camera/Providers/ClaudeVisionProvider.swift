@@ -5,9 +5,10 @@ struct ClaudeVisionProvider: VisionProvider {
     private let logger = Logger(subsystem: "com.banti.vision", category: "Claude")
 
     private let apiKey: String
-    let model: String  // internal let — exposed for testability
+    private let model: String
 
     static let defaultModel = "claude-haiku-4-5"
+    private static let maxDescriptionTokens = 256
 
     init(apiKey: String, model: String = ClaudeVisionProvider.defaultModel) {
         self.apiKey = apiKey
@@ -25,7 +26,7 @@ struct ClaudeVisionProvider: VisionProvider {
         let base64Image = jpeg.base64EncodedString()
         let body: [String: Any] = [
             "model": model,
-            "max_tokens": 256,
+            "max_tokens": Self.maxDescriptionTokens,
             "messages": [
                 [
                     "role": "user",
