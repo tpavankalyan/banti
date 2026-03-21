@@ -6,83 +6,90 @@ struct BrainDecision: Sendable {
     let content: String
 }
 
+// Wraps a closure so tests can inject decision logic without a full provider.
+private struct ClosureProvider: LLMProvider {
+    let decide: @Sendable (String, String) async throws -> BrainDecision
+    func decide(context: String, input: String) async throws -> BrainDecision {
+        try await decide(context, input)
+    }
+}
+
 actor BrainActor: BantiModule {
     nonisolated let id = ModuleID("brain")
     nonisolated let capabilities: Set<Capability> = [.reasoning]
 
-    static let systemPromptTemplate = """
-    You are Banti, Pavan's personal assistant. You can hear what he says.
-
-    Your current working memory:
-    <CONTEXT>
-
-    New input just arrived:
-    <INPUT>
-
-    Decide what to do. Respond with ONLY valid JSON, no other text:
-    {"action": "think", "content": "..."} or {"action": "speak", "content": "..."} or {"action": "wait", "content": ""}
-
-    - "think": internal thought. Content is written to your memory but NOT spoken aloud.
-    - "speak": say this to Pavan. Content will be spoken aloud via TTS. Keep it concise and conversational.
-    - "wait": nothing to do right now. Content can be empty.
-
-    Guidelines:
-    - Only speak when Pavan is addressing you or asking a question
-    - If Pavan asks you a direct question or contact check like "can you hear me", "are you there", or a short greeting meant for you, answer aloud even if he has asked something similar recently
-    - Do not stay silent just because the question seems repetitive if it is clearly directed at you
-    - Use think to reason, plan, or note observations silently
-    - Use wait when Pavan is talking to someone else or the input is ambient noise
-    """
+    // Speaker label assigned to Banti's own voice by Deepgram diarization.
+    // Brain ignores transcripts from this speaker — same as the human
+    // efference-copy mechanism that prevents us reacting to our own voice.
+    private static let selfSpeakerLabel = "Speaker 2"
 
     private let logger = Logger(subsystem: "com.banti.brain", category: "Brain")
     private let eventHub: EventHubActor
     private let config: ConfigActor
     private let debounceDuration: Duration
-    private let decisionMaker: (@Sendable (String, String) async throws -> BrainDecision)?
+    private let overrideProvider: (any LLMProvider)?
 
     private var transcriptSubscriptionID: SubscriptionID?
+    private var sceneSubscriptionID: SubscriptionID?
     private var _health: ModuleHealth = .healthy
     private var pendingText = ""
     private var debounceTask: Task<Void, Never>?
     private let contextFilePath: String
     private let maxContextLines = 100
 
+    // MARK: - Init
+
     init(
         eventHub: EventHubActor,
         config: ConfigActor,
         debounceDuration: Duration = .seconds(2),
         contextFilePath: String? = nil,
-        decisionMaker: (@Sendable (String, String) async throws -> BrainDecision)? = nil
+        provider: (any LLMProvider)? = nil
     ) {
         self.eventHub = eventHub
         self.config = config
         self.debounceDuration = debounceDuration
-        self.decisionMaker = decisionMaker
-
-        if let contextFilePath {
-            self.contextFilePath = contextFilePath
-        } else {
-            let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            ).first!.appendingPathComponent("Banti")
-            self.contextFilePath = appSupport.appendingPathComponent("context.md").path
-        }
+        self.overrideProvider = provider
+        self.contextFilePath = Self.resolveContextPath(contextFilePath)
     }
 
-    func start() async throws {
-        let cerebrasKey = await config.value(for: EnvKey.cerebrasAPIKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !cerebrasKey.isEmpty else {
-            logger.warning("CEREBRAS_API_KEY not set — BrainActor idle; mic/ASR pipeline still runs")
-            _health = .degraded(reason: "CEREBRAS_API_KEY not set")
-            return
-        }
+    /// Convenience init for tests — wraps a closure as an `LLMProvider`.
+    init(
+        eventHub: EventHubActor,
+        config: ConfigActor,
+        debounceDuration: Duration = .seconds(2),
+        contextFilePath: String? = nil,
+        _ decisionMaker: @escaping @Sendable (String, String) async throws -> BrainDecision
+    ) {
+        self.eventHub = eventHub
+        self.config = config
+        self.debounceDuration = debounceDuration
+        self.overrideProvider = ClosureProvider(decide: decisionMaker)
+        self.contextFilePath = Self.resolveContextPath(contextFilePath)
+    }
 
+    private static func resolveContextPath(_ override: String?) -> String {
+        if let override { return override }
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory, in: .userDomainMask
+        ).first!.appendingPathComponent("Banti")
+        return appSupport.appendingPathComponent("context.md").path
+    }
+
+    // MARK: - BantiModule
+
+    func start() async throws {
+        let provider = try await buildProvider()
         ensureContextFileExists()
 
         transcriptSubscriptionID = await eventHub.subscribe(TranscriptSegmentEvent.self) { [weak self] event in
             guard let self else { return }
-            await self.handleTranscript(event)
+            await self.handleTranscript(event, provider: provider)
+        }
+
+        sceneSubscriptionID = await eventHub.subscribe(SceneDescriptionEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.handleSceneDescription(event)
         }
 
         _health = .healthy
@@ -96,20 +103,45 @@ actor BrainActor: BantiModule {
             await eventHub.unsubscribe(id)
             transcriptSubscriptionID = nil
         }
+        if let id = sceneSubscriptionID {
+            await eventHub.unsubscribe(id)
+            sceneSubscriptionID = nil
+        }
     }
 
     func health() -> ModuleHealth { _health }
 
-    static func makeSystemPrompt(context: String, input: String) -> String {
-        systemPromptTemplate
-            .replacingOccurrences(of: "<CONTEXT>", with: context)
-            .replacingOccurrences(of: "<INPUT>", with: input)
+    // MARK: - Provider factory
+
+    private func buildProvider() async throws -> any LLMProvider {
+        if let override = overrideProvider { return override }
+
+        let selected = (await config.value(for: EnvKey.llmProvider) ?? "claude")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        switch selected {
+        case "cerebras":
+            let key = try await config.require(EnvKey.cerebrasAPIKey)
+            let model = (await config.value(for: EnvKey.cerebrasModel)) ?? CerebrasProvider.defaultModel
+            logger.notice("Brain using Cerebras (\(model, privacy: .public))")
+            return CerebrasProvider(apiKey: key, model: model)
+
+        default: // "claude" or unset
+            let key = try await config.require(EnvKey.anthropicAPIKey)
+            let model = (await config.value(for: EnvKey.anthropicModel)) ?? ClaudeProvider.defaultModel
+            logger.notice("Brain using Claude (\(model, privacy: .public))")
+            return ClaudeProvider(apiKey: key, model: model)
+        }
     }
 
     // MARK: - Cognitive loop
 
-    private func handleTranscript(_ event: TranscriptSegmentEvent) {
+    private func handleTranscript(_ event: TranscriptSegmentEvent, provider: any LLMProvider) {
         guard event.isFinal else { return }
+
+        // Efference-copy equivalent: ignore Banti's own voice picked up by mic.
+        guard event.speakerLabel != Self.selfSpeakerLabel else { return }
 
         if !pendingText.isEmpty { pendingText += " " }
         pendingText += event.text
@@ -119,11 +151,11 @@ actor BrainActor: BantiModule {
         debounceTask = Task { [weak self] in
             try? await Task.sleep(for: debounceDuration)
             guard !Task.isCancelled else { return }
-            await self?.perceiveThinkAct()
+            await self?.perceiveThinkAct(provider: provider)
         }
     }
 
-    private func perceiveThinkAct() async {
+    private func perceiveThinkAct(provider: any LLMProvider) async {
         let input = pendingText.trimmingCharacters(in: .whitespacesAndNewlines)
         pendingText = ""
         guard !input.isEmpty else { return }
@@ -134,12 +166,7 @@ actor BrainActor: BantiModule {
         let context = readContext()
 
         do {
-            let decision: BrainDecision
-            if let decisionMaker {
-                decision = try await decisionMaker(context, input)
-            } else {
-                decision = try await callCerebras(context: context, input: input)
-            }
+            let decision = try await provider.decide(context: context, input: input)
 
             await eventHub.publish(BrainThoughtEvent(text: decision.content, action: decision.action))
 
@@ -158,6 +185,12 @@ actor BrainActor: BantiModule {
             logger.error("Brain error: \(error.localizedDescription, privacy: .public)")
             _health = .degraded(reason: "cognitive loop failed")
         }
+    }
+
+    private func handleSceneDescription(_ event: SceneDescriptionEvent) {
+        let timestamp = Self.timestamp()
+        appendToContext("[\(timestamp)] (scene) \"\(event.text)\"")
+        logger.notice("Scene appended to context: \(event.text.prefix(60), privacy: .public)")
     }
 
     // MARK: - Working memory (context.md)
@@ -183,14 +216,12 @@ actor BrainActor: BantiModule {
     private func appendToContext(_ line: String) {
         var content = readContext()
         content += line + "\n"
-
         let lines = content.components(separatedBy: .newlines)
         if lines.count > maxContextLines {
             let headerEnd = min(3, lines.count)
             let kept = Array(lines[0..<headerEnd]) + Array(lines.suffix(maxContextLines - headerEnd))
             content = kept.joined(separator: "\n")
         }
-
         try? content.write(toFile: contextFilePath, atomically: true, encoding: .utf8)
     }
 
@@ -198,79 +229,5 @@ actor BrainActor: BantiModule {
         let fmt = DateFormatter()
         fmt.dateFormat = "HH:mm:ss"
         return fmt.string(from: Date())
-    }
-
-    // MARK: - Cerebras API
-
-    private func callCerebras(context: String, input: String) async throws -> BrainDecision {
-        let apiKey = try await config.require(EnvKey.cerebrasAPIKey)
-        let model = (await config.value(for: EnvKey.cerebrasModel)) ?? "llama3.1-8b"
-
-        let prompt = Self.makeSystemPrompt(context: context, input: input)
-
-        let url = URL(string: "https://api.cerebras.ai/v1/chat/completions")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body: [String: Any] = [
-            "model": model,
-            "messages": [
-                ["role": "system", "content": prompt],
-            ],
-            "max_tokens": 256,
-            "temperature": 0.3,
-        ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let http = response as? HTTPURLResponse else {
-            throw ConfigError(message: "Invalid response from Cerebras")
-        }
-        guard http.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "unknown"
-            throw ConfigError(message: "Cerebras \(http.statusCode): \(body)")
-        }
-
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let message = choices.first?["message"] as? [String: Any],
-              let content = message["content"] as? String
-        else {
-            throw ConfigError(message: "Unexpected Cerebras response format")
-        }
-
-        return parseDecision(content)
-    }
-
-    private func parseDecision(_ raw: String) -> BrainDecision {
-        var cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if cleaned.hasPrefix("```") {
-            cleaned = cleaned
-                .replacingOccurrences(of: "```json", with: "")
-                .replacingOccurrences(of: "```", with: "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        if let start = cleaned.firstIndex(of: "{"),
-           let end = cleaned.lastIndex(of: "}") {
-            cleaned = String(cleaned[start...end])
-        }
-
-        if let jsonData = cleaned.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-           let action = parsed["action"] as? String,
-           let content = parsed["content"] as? String {
-            let validActions = ["think", "speak", "wait"]
-            if validActions.contains(action) {
-                return BrainDecision(action: action, content: content)
-            }
-        }
-
-        logger.warning("Failed to parse structured decision, falling back to wait: \(raw.prefix(200), privacy: .public)")
-        return BrainDecision(action: "wait", content: "")
     }
 }

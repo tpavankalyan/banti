@@ -206,22 +206,101 @@ final class BrainActorTests: XCTestCase {
         XCTAssertEqual(receivedInputs.first, "hello banti")
     }
 
-    func testDecisionPromptPrefersSpokenRepliesForRepeatedDirectQuestions() {
-        let prompt = BrainActor.makeSystemPrompt(
-            context: """
-            # Banti Context
+    func testSpeaker2TranscriptsAreIgnoredToPreventSelfEcho() async throws {
+        // Brain must NOT react to Speaker 2 (Banti's own voice picked up by mic).
+        let hub = EventHubActor()
+        let config = ConfigActor(content: "ANTHROPIC_API_KEY=test-key")
+        var decisionCalled = false
 
-            ## Conversation
-            [17:18:39] Pavan: "Hello. Can you hear me?"
-            [17:18:39] (spoke) "Yes, I can hear you."
-            """,
-            input: "Hello. Can you hear me?"
-        )
+        let brain = BrainActor(
+            eventHub: hub,
+            config: config,
+            debounceDuration: .milliseconds(50),
+            contextFilePath: tempContextPath
+        ) { _, _ in
+            decisionCalled = true
+            return BrainDecision(action: "speak", content: "should not happen")
+        }
 
-        XCTAssertTrue(
-            prompt.contains("If Pavan asks you a direct question or contact check like \"can you hear me\""),
-            "Prompt should explicitly bias direct repeated questions toward spoken replies"
-        )
-        XCTAssertTrue(prompt.contains("answer aloud"))
+        try await brain.start()
+
+        // Publish as Speaker 2 (Banti's own voice) — should be silently dropped.
+        await hub.publish(TranscriptSegmentEvent(
+            speakerLabel: "Speaker 2", text: "Hello Pavan how can I help",
+            startTime: 0, endTime: 1, isFinal: true
+        ))
+
+        // Wait longer than the debounce to confirm nothing fires.
+        try? await Task.sleep(for: .milliseconds(200))
+
+        XCTAssertFalse(decisionCalled, "Brain must not react to its own voice (Speaker 2)")
+    }
+
+    func testSceneDescriptionDoesNotTriggerCognitiveLoop() async throws {
+        let hub = EventHubActor()
+        let config = ConfigActor(content: "ANTHROPIC_API_KEY=test-key")
+        var decisionCalled = false
+
+        let brain = BrainActor(
+            eventHub: hub,
+            config: config,
+            debounceDuration: .milliseconds(50),
+            contextFilePath: tempContextPath
+        ) { _, _ in
+            decisionCalled = true
+            return BrainDecision(action: "wait", content: "")
+        }
+
+        try await brain.start()
+
+        await hub.publish(SceneDescriptionEvent(
+            text: "A person at a desk with two monitors.",
+            captureTime: Date(),
+            responseTime: Date()
+        ))
+
+        // Wait longer than the debounce to confirm the cognitive loop never fires.
+        try await Task.sleep(for: .milliseconds(300))
+
+        XCTAssertFalse(decisionCalled, "SceneDescriptionEvent must not trigger the cognitive loop")
+    }
+
+    func testSceneDescriptionIsWrittenToContextFile() async throws {
+        let hub = EventHubActor()
+        let config = ConfigActor(content: "ANTHROPIC_API_KEY=test-key")
+
+        let brain = BrainActor(
+            eventHub: hub,
+            config: config,
+            debounceDuration: .milliseconds(50),
+            contextFilePath: tempContextPath
+        ) { _, _ in
+            BrainDecision(action: "wait", content: "")
+        }
+
+        try await brain.start()
+
+        await hub.publish(SceneDescriptionEvent(
+            text: "Coffee cup on the desk.",
+            captureTime: Date(),
+            responseTime: Date()
+        ))
+
+        // Poll the file until the write completes or timeout is reached.
+        let deadline = Date().addingTimeInterval(3)
+        var found = false
+        while Date() < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+            let context = (try? String(contentsOfFile: tempContextPath, encoding: .utf8)) ?? ""
+            if context.contains("Coffee cup on the desk.") {
+                found = true
+                break
+            }
+        }
+
+        XCTAssertTrue(found, "Scene description was not written to context.md within timeout")
+
+        let context = try String(contentsOfFile: tempContextPath, encoding: .utf8)
+        XCTAssertTrue(context.contains("(scene)"), "Context must contain (scene) tag")
     }
 }
