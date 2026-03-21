@@ -79,7 +79,7 @@ All logging uses `os.Logger(subsystem: "com.banti.core", category: "EventLog")` 
 |---|---|---|
 | `AudioFrameEvent` | seq#, byte count, sampleRate | Every 100th frame (fires ~10×/sec) |
 | `CameraFrameEvent` | seq#, byte count, WxH | None |
-| `RawTranscriptEvent` | speaker, confidence, isFinal, text | None |
+| `RawTranscriptEvent` | speakerIndex, confidence, isFinal, text | None |
 | `TranscriptSegmentEvent` | speaker, isFinal, text | None |
 | `SceneDescriptionEvent` | VLM latency (responseTime − captureTime), text prefix (60 chars) | None |
 | `ModuleStatusEvent` | moduleID, old→new status | None |
@@ -99,23 +99,25 @@ await sup.register(eventLogger, restartPolicy: .onFailure(maxRetries: 3, backoff
 
 ## Testing
 
-No new test file needed. `EventLoggerActor` is a pure observer with no outputs other than log lines. Correct registration order (logger first) is verified by the existing `ModuleSupervisorActorTests`.
+No new test file needed. `EventLoggerActor` is a pure observer with no outputs other than log lines. Registration-order correctness is guaranteed structurally: all `register()` calls in `bootstrap()` complete before `startAll()` is called, and `subscribe()` installs the handler immediately — so no events can be missed.
 
 ---
 
 ## Files Changed Summary
 
-| Action | File |
-|---|---|
-| Create | `Banti/Core/EventLoggerActor.swift` |
-| Modify | `Banti/BantiApp.swift` |
-| Delete | `Banti/Modules/Brain/BrainActor.swift` |
-| Delete | `Banti/Modules/Brain/LLMProvider.swift` |
-| Delete | `Banti/Modules/Brain/CerebrasProvider.swift` |
-| Delete | `Banti/Modules/Brain/ClaudeProvider.swift` |
-| Delete | `Banti/Modules/Action/SpeechActor.swift` |
-| Delete | `Banti/Core/Events/BrainResponseEvent.swift` |
-| Delete | `Banti/Core/Events/BrainThoughtEvent.swift` |
-| Delete | `Banti/Core/Events/SpeechPlaybackEvent.swift` |
-| Delete | `BantiTests/BrainActorTests.swift` |
-| Delete | `BantiTests/SpeechActorTests.swift` |
+| Action | File | Notes |
+|---|---|---|
+| Create | `Banti/Core/EventLoggerActor.swift` | Add via Xcode (auto-adds to project) |
+| Modify | `Banti/BantiApp.swift` | Remove Brain/Speech wiring |
+| Modify | `Banti/Config/Environment.swift` | Remove dead EnvKey constants: `cerebrasAPIKey`, `cerebrasModel`, `anthropicModel`, `llmProvider`, `cartesiaAPIKey`, `cartesiaVoiceID`, `cartesiaModel`. Keep `anthropicAPIKey` and `anthropicVisionModel` (both still used by `SceneDescriptionActor`) |
+| Modify | `Banti/Banti.xcodeproj/project.pbxproj` | **Delete files through Xcode's Delete dialog ("Move to Trash")** — this removes project references atomically. Do not delete on disk and edit pbxproj manually. |
+| Delete | `Banti/Modules/Brain/BrainActor.swift` | Via Xcode |
+| Delete | `Banti/Modules/Brain/LLMProvider.swift` | Via Xcode |
+| Delete | `Banti/Modules/Brain/CerebrasProvider.swift` | Via Xcode |
+| Delete | `Banti/Modules/Brain/ClaudeProvider.swift` | Via Xcode |
+| Delete | `Banti/Modules/Action/SpeechActor.swift` | Via Xcode |
+| Delete | `Banti/Core/Events/BrainResponseEvent.swift` | Via Xcode |
+| Delete | `Banti/Core/Events/BrainThoughtEvent.swift` | Via Xcode |
+| Delete | `Banti/Core/Events/SpeechPlaybackEvent.swift` | Via Xcode |
+| Delete | `BantiTests/BrainActorTests.swift` | Via Xcode |
+| Delete | `BantiTests/SpeechActorTests.swift` | Via Xcode |
