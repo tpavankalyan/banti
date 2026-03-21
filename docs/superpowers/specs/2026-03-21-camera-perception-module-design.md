@@ -9,7 +9,7 @@
 
 Add a Camera perception module to Banti, mirroring the existing Microphone pipeline architecture. A single `CameraFrameActor` continuously captures frames and publishes them to EventHub. Analysis actors subscribe independently and self-throttle. The first analysis actor is `SceneDescriptionActor`, which sends frames to a configurable `VisionProvider` and publishes plain-text scene descriptions to Brain.
 
-The design is explicitly extensible: adding future actors (emotion detection, face detection, body movement) requires no changes to the capture layer.
+The design is explicitly extensible: adding future actors (emotion detection, face detection, body movement) requires no changes to the capture layer or `VisionProvider`.
 
 ---
 
@@ -17,18 +17,24 @@ The design is explicitly extensible: adding future actors (emotion detection, fa
 
 ```
 AVCaptureSession (camera hardware)
-    │ tap on serial queue → JPEG compression → CameraFrameBuffer
+    │ tap on serial queue → JPEG compression → CameraLatestFrameBuffer
     ▼
 CameraFrameActor          → publishes CameraFrameEvent every CAMERA_CAPTURE_INTERVAL_MS (default 200ms)
     │ (EventHub)
     ▼
 SceneDescriptionActor     → self-throttles to SCENE_DESCRIPTION_INTERVAL_S (default 5s)
                           → calls VisionProvider.describe(jpeg:, prompt:)
-                          → publishes SceneDescriptionEvent (text, captureStartTime, captureEndTime)
+                          → publishes SceneDescriptionEvent (text, captureTime, responseTime)
     │ (EventHub)
     ▼
 BrainActor                → subscribes to SceneDescriptionEvent alongside TranscriptSegmentEvent
                           → appends to context.md: [HH:mm:ss] (scene) "..."
+```
+
+Existing mic pipeline for reference:
+```
+MicrophoneCaptureActor → AudioFrameEvent → DeepgramStreamingActor → RawTranscriptEvent
+    → TranscriptProjectionActor → TranscriptSegmentEvent → BrainActor
 ```
 
 ---
@@ -39,14 +45,17 @@ BrainActor                → subscribes to SceneDescriptionEvent alongside Tran
 Banti/Banti/Modules/Perception/Camera/
     CameraFrameActor.swift           — AVCaptureSession capture, publishes CameraFrameEvent
     SceneDescriptionActor.swift      — throttle + VisionProvider call, publishes SceneDescriptionEvent
-    VisionProvider.swift             — protocol + factory
+    VisionProvider.swift             — protocol definition
 
 Banti/Banti/Modules/Perception/Camera/Providers/
     ClaudeVisionProvider.swift       — Anthropic messages API with image content block
 
+Banti/Banti/Core/
+    CameraLatestFrameBuffer.swift    — thread-safe single-slot frame buffer (see below)
+
 Banti/Banti/Core/Events/
-    CameraFrameEvent.swift           — PerceptionEvent: jpeg Data, sequenceNumber, frameSize
-    SceneDescriptionEvent.swift      — PerceptionEvent: text, captureStartTime, captureEndTime
+    CameraFrameEvent.swift           — PerceptionEvent: jpeg Data, sequenceNumber, frameWidth, frameHeight
+    SceneDescriptionEvent.swift      — PerceptionEvent: text, captureTime, responseTime
 ```
 
 ---
@@ -59,12 +68,40 @@ protocol VisionProvider: Sendable {
 }
 ```
 
-Mirrors `LLMProvider` exactly. A `VisionProviderFactory` reads `VISION_PROVIDER` from config (initially only `"claude"` supported). Adding a new provider (GPT-4V, on-device CoreML) means a new conformance + one case in the factory — no actor changes.
+Mirrors `LLMProvider` exactly. `SceneDescriptionActor` has a private `buildProvider() async throws -> any VisionProvider` method (same pattern as `BrainActor.buildProvider()`), reading `VISION_PROVIDER` from config. Initially only `"claude"` is supported. Adding a new provider means a new conformance + one case in the switch — no actor changes.
 
 `ClaudeVisionProvider` sends a single Anthropic messages API request with:
-- JPEG as a base64 `image` content block
+- JPEG as a base64 `image` content block (`"type": "image"`, `"source": {"type": "base64", "media_type": "image/jpeg", "data": "..."}`)
 - Prompt as a `text` content block
-- Uses `ANTHROPIC_API_KEY` (shared with Brain) and `ANTHROPIC_VISION_MODEL` (default `claude-opus-4-6`)
+- Uses `ANTHROPIC_API_KEY` (shared with Brain) and `ANTHROPIC_VISION_MODEL` (default `claude-haiku-4-5` — same family as the default LLM provider, balances cost and latency)
+- `max_tokens: 256` (scene descriptions are short)
+
+---
+
+## CameraLatestFrameBuffer
+
+A thread-safe single-slot buffer. Unlike `AudioRingBuffer` (which accumulates all frames), the camera buffer keeps only the most recent frame — there is no value in processing stale frames when only ambient awareness is needed.
+
+```swift
+// CameraLatestFrameBuffer.swift
+final class CameraLatestFrameBuffer: @unchecked Sendable {
+    private var latest: Data?
+    private let lock = NSLock()
+
+    func store(_ jpeg: Data) {
+        lock.withLock { latest = jpeg }
+    }
+
+    func take() -> Data? {
+        lock.withLock {
+            defer { latest = nil }
+            return latest
+        }
+    }
+}
+```
+
+The `drainTask` calls `take()` — if no new frame arrived since the last drain, it returns `nil` and skips publishing.
 
 ---
 
@@ -74,21 +111,27 @@ Mirrors `LLMProvider` exactly. A `VisionProviderFactory` reads `VISION_PROVIDER`
 
 **Capture loop:**
 - `AVCaptureSession` with `AVCaptureVideoDataOutput` on a dedicated serial `DispatchQueue` (non-actor thread, same bridge pattern as `AudioRingBuffer`)
-- Each frame compressed to JPEG at quality 0.7 and pushed into a thread-safe `CameraFrameBuffer`
-- A `drainTask` wakes every `CAMERA_CAPTURE_INTERVAL_MS` (default 200ms), pulls the **latest** frame from the buffer (not all — only the most recent matters), assigns a monotonic `sequenceNumber`, publishes `CameraFrameEvent`
+- Each frame downscaled to max 1280px on the long edge before JPEG compression (prevents oversized payloads; at quality 0.7 this produces ~80–150 KB per frame, safe for EventHub queue)
+- Compressed JPEG pushed into `CameraLatestFrameBuffer`
+- A `drainTask` wakes every `CAMERA_CAPTURE_INTERVAL_MS` (default 200ms), calls `buffer.take()`, and if non-nil assigns a monotonic `sequenceNumber` and publishes `CameraFrameEvent`
 
 **Replay buffer:**
-- Conforms to `CameraFrameReplayProvider` protocol (parallel to `AudioFrameReplayProvider`):
-  ```swift
-  protocol CameraFrameReplayProvider: Actor {
-      func replayFrames(after lastSeq: UInt64) async -> [(seq: UInt64, jpeg: Data)]
-  }
-  ```
-- Rolling buffer of last **30 frames** (≈6s at 200ms) — smaller than mic's 100 due to larger frame sizes
-- Analysis actors accept `(any CameraFrameReplayProvider)?` in init for future restart recovery
+Conforms to `CameraFrameReplayProvider` for forward-compatibility with future analysis actors that may need recent frame history (e.g. a motion detection actor that restarts mid-session):
+
+```swift
+protocol CameraFrameReplayProvider: Actor {
+    func replayFrames(after lastSeq: UInt64) async -> [(seq: UInt64, data: Data)]
+}
+```
+
+Note: the tuple label is `data:` (matching `AudioFrameReplayProvider`) rather than `jpeg:` for consistency across replay protocols. Callers should not rely on the label to convey encoding — the `CameraFrameEvent` type carries that semantic.
+
+- Rolling buffer of last **30 published frames** (≈6s at 200ms)
+- Analysis actors accept `(any CameraFrameReplayProvider)?` in init
+- `SceneDescriptionActor` accepts the replay provider but does not use it on reconnect — VLM calls are stateless HTTP, there is no stream to resume. An actor that does need replay (future use) must explicitly cap replayed frames to avoid triggering N VLM calls on restart.
 
 **Platform requirements:**
-- `NSCameraUsageDescription` in `Info.plist`
+- `NSCameraUsageDescription` in `Info.plist`: `"Banti uses the camera to understand the visual scene and provide context-aware assistance."`
 - Camera entitlement in `.entitlements`
 
 ---
@@ -98,11 +141,19 @@ Mirrors `LLMProvider` exactly. A `VisionProviderFactory` reads `VISION_PROVIDER`
 **Capabilities:** `.sceneDescription`
 
 **Behavior:**
-- Subscribes to `CameraFrameEvent` from EventHub
-- Self-throttles: skips frames until `SCENE_DESCRIPTION_INTERVAL_S` (default 5s) has elapsed since last successful VLM call, tracked via `lastDescribedAt: Date?`
-- On a chosen frame: calls `VisionProvider.describe(jpeg:, prompt:)` with prompt from `SCENE_DESCRIPTION_PROMPT` (default: `"Describe the visual scene concisely, focusing on people, objects, and activities."`)
+- On `start()`: calls `buildProvider()` to instantiate the `VisionProvider`, then subscribes to `CameraFrameEvent`. The provider is captured by value in the EventHub subscription closure (not stored as an actor property), matching `BrainActor`'s pattern exactly:
+  ```swift
+  let provider = try await buildProvider()
+  subscriptionID = await eventHub.subscribe(CameraFrameEvent.self) { [weak self] event in
+      guard let self else { return }
+      await self.handleFrame(event, provider: provider)
+  }
+  ```
+- Self-throttles: skips frames until `SCENE_DESCRIPTION_INTERVAL_S` (default 5s) has elapsed since `lastDescribedAt: Date?`. On a chosen frame, calls `VisionProvider.describe(jpeg:, prompt:)` async.
+- `captureTime` in the published event = `event.timestamp` (the moment the frame was captured by `CameraFrameActor`). `responseTime` = `Date()` after the VLM call returns.
+- Prompt sourced from `SCENE_DESCRIPTION_PROMPT` (default: `"Describe the visual scene concisely, focusing on people, objects, and activities."`)
 - Publishes `SceneDescriptionEvent` to EventHub
-- On VLM failure: marks health `.degraded`, skips frame, waits for next interval (no retry — stateless HTTP)
+- On VLM failure: logs error, marks health `.degraded`, skips frame, waits for next interval (no retry — stateless HTTP, next interval will retry naturally)
 - Accepts `(any CameraFrameReplayProvider)?` in init for forward-compatibility
 
 ---
@@ -129,8 +180,8 @@ struct SceneDescriptionEvent: PerceptionEvent {
     let timestamp: Date
     let sourceModule: ModuleID   // "scene-description"
     let text: String
-    let captureStartTime: Date
-    let captureEndTime: Date
+    let captureTime: Date        // event.timestamp from the source CameraFrameEvent
+    let responseTime: Date       // Date() after VLM call completes
 }
 ```
 
@@ -146,37 +197,45 @@ static let sceneDescription = Capability("scene-description")
 
 ### New EnvKeys (Environment.swift)
 ```swift
-static let cameraCapturIntervalMs    = "CAMERA_CAPTURE_INTERVAL_MS"   // default 200
+static let cameraCaptureIntervalMs   = "CAMERA_CAPTURE_INTERVAL_MS"   // default 200
 static let visionProvider            = "VISION_PROVIDER"               // "claude"
 static let sceneDescriptionIntervalS = "SCENE_DESCRIPTION_INTERVAL_S"  // default 5
 static let sceneDescriptionPrompt    = "SCENE_DESCRIPTION_PROMPT"
-static let anthropicVisionModel      = "ANTHROPIC_VISION_MODEL"        // default "claude-opus-4-6"
+static let anthropicVisionModel      = "ANTHROPIC_VISION_MODEL"        // default "claude-haiku-4-5"
 ```
 
 ---
 
 ## BrainActor Integration
 
-`BrainActor` subscribes to `SceneDescriptionEvent` alongside `TranscriptSegmentEvent`. Scene descriptions are appended to `context.md`:
+`BrainActor` subscribes to `SceneDescriptionEvent` in `start()`, storing a second subscription ID `sceneSubscriptionID: SubscriptionID?`. `stop()` unsubscribes both IDs.
+
+Scene descriptions are **not** debounced or accumulated into `pendingText` — they arrive on their own 5s schedule, independent of speech. Instead, `BrainActor` appends each scene description directly to `context.md` without triggering a cognitive loop:
 
 ```
 [14:32:01] (scene) "A person sitting at a desk, looking at two monitors. Coffee cup visible."
 ```
 
-This gives the LLM ambient visual context interleaved with conversation history.
+This enriches the context passively. The cognitive loop continues to be triggered only by final transcript segments (speech debounce unchanged).
 
 ---
 
 ## App Wiring (BantiApp.swift)
 
-Registration order follows the same topological constraint as the mic pipeline — analysis actors must subscribe before capture starts:
+Registration order follows the same topological constraint as the mic pipeline — analysis actors and Brain must subscribe before capture starts publishing. `BrainActor` subscribes to `SceneDescriptionEvent` in its own `start()`, so it must be registered and started before `sceneDesc`:
 
 ```swift
 let camera = CameraFrameActor(eventHub: hub, config: cfg)
 let sceneDesc = SceneDescriptionActor(eventHub: hub, config: cfg, replayProvider: camera)
 
-await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
+// Required start order: brain → sceneDesc → camera
+// brain must subscribe to SceneDescriptionEvent before sceneDesc starts publishing.
+// sceneDesc must subscribe to CameraFrameEvent before camera starts publishing.
+// Each dependency is declared explicitly on the downstream actor so topologicalSort
+// deterministically enforces the chain: sceneDesc depends on brain, camera depends on sceneDesc.
+await sup.register(brain,     restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
+await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1), dependencies: [brain.id])
+await sup.register(camera,    restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
 ```
 
 ---
@@ -186,8 +245,10 @@ await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2),
 Adding a future `EmotionDetectionActor`:
 1. Create `EmotionDetectionActor.swift` under `Modules/Perception/Camera/`
 2. Subscribe to `CameraFrameEvent`, self-throttle as needed
-3. Define `EmotionEvent` under `Core/Events/`
-4. Register in `BantiApp.swift` before `camera`
-5. Zero changes to `CameraFrameActor`, `VisionProvider`, or any existing actor
+3. Add `static let emotionDetection = Capability("emotion-detection")` to `BantiModule.swift`
+4. Define `EmotionEvent` under `Core/Events/`
+5. Register in `BantiApp.swift` before `camera`
 
-The same pattern applies to the microphone pipeline — future actors (e.g. speaker emotion from audio) follow the same: subscribe to `AudioFrameEvent`, self-throttle, publish new event type.
+Zero changes to `CameraFrameActor`, `VisionProvider`, or any existing analysis actor. The only edits to existing files are adding the capability constant and the wiring in `BantiApp.swift`.
+
+The same pattern applies to the microphone pipeline — future actors subscribe to `AudioFrameEvent` and self-throttle independently.
