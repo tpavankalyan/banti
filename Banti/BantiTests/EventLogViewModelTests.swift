@@ -48,6 +48,13 @@ final class EventLogViewModelTests: XCTestCase {
         }
     }
 
+    func waitForLastEntry(_ vm: EventLogViewModel, containing text: String) async {
+        let deadline = Date().addingTimeInterval(2)
+        while vm.entries.last?.text.contains(text) != true, Date() < deadline {
+            await Task.yield()
+        }
+    }
+
     // MARK: - Entry appended per event type
 
     func testAudioFrameCreatesEntry() async {
@@ -220,7 +227,7 @@ final class EventLogViewModelTests: XCTestCase {
         let secondEntryText = vm.entries[1].text
 
         await hub.publish(makeScene(text: "scene 500"))
-        await waitForEntries(vm, count: 500)
+        await waitForLastEntry(vm, containing: "scene 500")
 
         XCTAssertEqual(vm.entries.count, 500)
         XCTAssertTrue(vm.entries[0].text.contains(secondEntryText.prefix(20)),
