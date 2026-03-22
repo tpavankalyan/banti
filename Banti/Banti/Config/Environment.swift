@@ -19,4 +19,13 @@ enum EnvKey {
     static let cartesiaVoiceID           = "CARTESIA_VOICE_ID"
     static let sceneChangeThreshold      = "SCENE_CHANGE_THRESHOLD"
     static let screenChangeThreshold     = "SCREEN_CHANGE_THRESHOLD"
+    static let claudeModel                  = "CLAUDE_MODEL"
+    static let claudeMaxTokens              = "CLAUDE_MAX_TOKENS"
+    static let screenProactiveThreshold     = "SCREEN_PROACTIVE_THRESHOLD"
+    static let sceneProactiveThreshold      = "SCENE_PROACTIVE_THRESHOLD"
+    static let cognitiveScreenInterval      = "COGNITIVE_SCREEN_INTERVAL"
+    static let cognitiveSceneInterval       = "COGNITIVE_SCENE_INTERVAL"
+    static let cognitiveAppInterval         = "COGNITIVE_APP_INTERVAL"
+    static let perceptionLogMaxEntries      = "PERCEPTION_LOG_MAX_ENTRIES"
+    static let perceptionLogWindowSeconds   = "PERCEPTION_LOG_WINDOW_SECONDS"
 }

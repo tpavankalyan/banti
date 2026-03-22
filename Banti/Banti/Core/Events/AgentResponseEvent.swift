@@ -17,4 +17,12 @@ struct AgentResponseEvent: PerceptionEvent {
         self.userText = userText
         self.responseText = responseText
     }
+
+    init(userText: String, responseText: String, sourceModule: ModuleID) {
+        self.id = UUID()
+        self.timestamp = Date()
+        self.sourceModule = sourceModule
+        self.userText = userText
+        self.responseText = responseText
+    }
 }
