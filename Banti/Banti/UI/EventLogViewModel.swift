@@ -11,7 +11,6 @@ final class EventLogViewModel: ObservableObject {
     private let eventHub: EventHubActor
     private var subscriptionIDs: [SubscriptionID] = []
     private var audioFrameCount: UInt64 = 0
-    private var lastCameraLog: Date = .distantPast
     private var lastScreenLog: Date = .distantPast
 
     private static let timestampFormatter: DateFormatter = {
@@ -35,15 +34,14 @@ final class EventLogViewModel: ObservableObject {
         }
         subscriptionIDs.removeAll()
         audioFrameCount = 0
-        lastCameraLog = .distantPast
         lastScreenLog = .distantPast
         subscriptionIDs.append(await eventHub.subscribe(AudioFrameEvent.self) { [weak self] event in
             guard let self else { return }
             await self.handleAudio(event)
         })
-        subscriptionIDs.append(await eventHub.subscribe(CameraFrameEvent.self) { [weak self] event in
+        subscriptionIDs.append(await eventHub.subscribe(SceneChangeEvent.self) { [weak self] event in
             guard let self else { return }
-            await self.handleCamera(event)
+            await self.append(tag: "[CHANGE]", text: self.format(event))
         })
         subscriptionIDs.append(await eventHub.subscribe(RawTranscriptEvent.self) { [weak self] event in
             guard let self else { return }
@@ -90,7 +88,6 @@ final class EventLogViewModel: ObservableObject {
         }
         subscriptionIDs.removeAll()
         audioFrameCount = 0
-        lastCameraLog = .distantPast
         lastScreenLog = .distantPast
         isListening = false
     }
@@ -105,13 +102,6 @@ final class EventLogViewModel: ObservableObject {
         audioFrameCount += 1
         guard audioFrameCount == 1 || audioFrameCount % 100 == 0 else { return }
         append(tag: "[AUDIO]", text: format(event))
-    }
-
-    private func handleCamera(_ event: CameraFrameEvent) {
-        let now = Date()
-        guard now.timeIntervalSince(lastCameraLog) >= 60 else { return }
-        lastCameraLog = now
-        append(tag: "[CAMERA]", text: format(event))
     }
 
     private func handleScreen(_ event: ScreenFrameEvent) {
@@ -139,8 +129,10 @@ final class EventLogViewModel: ObservableObject {
         "frame=\(e.sequenceNumber) bytes=\(e.audioData.count)"
     }
 
-    private func format(_ e: CameraFrameEvent) -> String {
-        "frame=\(e.sequenceNumber) size=\(e.frameWidth)x\(e.frameHeight)"
+    private func format(_ e: SceneChangeEvent) -> String {
+        e.changeDistance == 0
+            ? "seq=\(e.sequenceNumber) first-frame"
+            : "seq=\(e.sequenceNumber) dist=\(String(format: "%.3f", e.changeDistance))"
     }
 
     private func format(_ e: RawTranscriptEvent) -> String {

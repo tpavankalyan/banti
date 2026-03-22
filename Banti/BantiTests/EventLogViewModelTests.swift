@@ -70,16 +70,16 @@ final class EventLogViewModelTests: XCTestCase {
         XCTAssertEqual(vm.entries[0].tag, "[AUDIO]")
     }
 
-    func testCameraFrameCreatesEntry() async {
+    func testSceneChangeCreatesEntry() async {
         let hub = EventHubActor()
         let vm = EventLogViewModel(eventHub: hub)
         await vm.startListening()
 
-        await hub.publish(makeCameraFrame())
+        await hub.publish(SceneChangeEvent(jpeg: Data("fake".utf8), changeDistance: 0.25, sequenceNumber: 1, captureTime: Date()))
         await waitForEntries(vm, count: 1)
 
         XCTAssertEqual(vm.entries.count, 1)
-        XCTAssertEqual(vm.entries[0].tag, "[CAMERA]")
+        XCTAssertEqual(vm.entries[0].tag, "[CHANGE]")
     }
 
     func testRawTranscriptCreatesEntry() async {
