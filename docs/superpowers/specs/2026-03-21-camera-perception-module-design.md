@@ -27,14 +27,15 @@ SceneDescriptionActor     → self-throttles to SCENE_DESCRIPTION_INTERVAL_S (de
                           → publishes SceneDescriptionEvent (text, captureTime, responseTime)
     │ (EventHub)
     ▼
-BrainActor                → subscribes to SceneDescriptionEvent alongside TranscriptSegmentEvent
-                          → appends to context.md: [HH:mm:ss] (scene) "..."
+EventLoggerActor + EventLogViewModel  (observers — no Brain actor yet)
 ```
+
+> **Note:** BrainActor has been removed from the codebase. `SceneDescriptionEvent` is currently consumed only by `EventLoggerActor` (Console logging) and `EventLogViewModel` (UI feed). When a Brain module is added in a future phase it will subscribe to `SceneDescriptionEvent` here.
 
 Existing mic pipeline for reference:
 ```
 MicrophoneCaptureActor → AudioFrameEvent → DeepgramStreamingActor → RawTranscriptEvent
-    → TranscriptProjectionActor → TranscriptSegmentEvent → BrainActor
+    → TranscriptProjectionActor → TranscriptSegmentEvent
 ```
 
 ---
@@ -206,37 +207,20 @@ static let anthropicVisionModel      = "ANTHROPIC_VISION_MODEL"        // defaul
 
 ---
 
-## BrainActor Integration
-
-`BrainActor` subscribes to `SceneDescriptionEvent` in `start()`, storing a second subscription ID `sceneSubscriptionID: SubscriptionID?`. `stop()` unsubscribes both IDs.
-
-Scene descriptions are **not** debounced or accumulated into `pendingText` — they arrive on their own 5s schedule, independent of speech. Instead, `BrainActor` appends each scene description directly to `context.md` without triggering a cognitive loop:
-
-```
-[14:32:01] (scene) "A person sitting at a desk, looking at two monitors. Coffee cup visible."
-```
-
-This enriches the context passively. The cognitive loop continues to be triggered only by final transcript segments (speech debounce unchanged).
-
----
-
 ## App Wiring (BantiApp.swift)
 
-Registration order follows the same topological constraint as the mic pipeline — analysis actors and Brain must subscribe before capture starts publishing. `BrainActor` subscribes to `SceneDescriptionEvent` in its own `start()`, so it must be registered and started before `sceneDesc`:
+Registration order follows the topological constraint — analysis actors must subscribe before capture starts publishing. `sceneDesc` depends on `camera` being started after it:
 
 ```swift
 let camera = CameraFrameActor(eventHub: hub, config: cfg)
 let sceneDesc = SceneDescriptionActor(eventHub: hub, config: cfg, replayProvider: camera)
 
-// Required start order: brain → sceneDesc → camera
-// brain must subscribe to SceneDescriptionEvent before sceneDesc starts publishing.
 // sceneDesc must subscribe to CameraFrameEvent before camera starts publishing.
-// Each dependency is declared explicitly on the downstream actor so topologicalSort
-// deterministically enforces the chain: sceneDesc depends on brain, camera depends on sceneDesc.
-await sup.register(brain,     restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
-await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1), dependencies: [brain.id])
+await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
 await sup.register(camera,    restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
 ```
+
+When a future Brain module is added, it should be registered before `sceneDesc` and listed as a dependency so the topology is preserved.
 
 ---
 

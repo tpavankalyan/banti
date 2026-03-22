@@ -1,7 +1,7 @@
 # Screen Perception Module Design
 
 **Date:** 2026-03-21
-**Status:** Draft
+**Status:** Approved — Implemented
 **Module:** Perception — Screen Capture + Active App Tracking
 **Target:** macOS 14+ (Sonoma), Swift 5.9+, Xcode project (`.xcodeproj`)
 
@@ -43,20 +43,21 @@ ScreenDescriptionActor     → self-throttles to SCREEN_DESCRIPTION_INTERVAL_S (
                            → publishes ScreenDescriptionEvent (text, captureTime, responseTime)
     │ (EventHub)
     ▼
-BrainActor                 → subscribes to ScreenDescriptionEvent alongside TranscriptSegmentEvent
-                           → appends to context: [HH:mm:ss] (screen) "..."
+EventLoggerActor + EventLogViewModel  (observers — no Brain actor yet)
 
 NSWorkspace (system events)
     ▼
 ActiveAppActor             → publishes ActiveAppEvent on frontmost app change
     │ (EventHub)
     ▼
-BrainActor                 → appends to context: [HH:mm:ss] (app) switched to "Xcode"
+EventLoggerActor + EventLogViewModel  (observers)
 ```
+
+> **Note:** BrainActor has been removed. `ScreenDescriptionEvent` and `ActiveAppEvent` are currently consumed only by the logger and the UI feed. Future Brain integration will subscribe here.
 
 Existing camera pipeline for reference:
 ```
-CameraFrameActor → CameraFrameEvent → SceneDescriptionActor → SceneDescriptionEvent → BrainActor
+CameraFrameActor → CameraFrameEvent → SceneDescriptionActor → SceneDescriptionEvent
 ```
 
 ---
@@ -139,11 +140,12 @@ struct ScreenFrameEvent: PerceptionEvent {
     let sequenceNumber: UInt64
     let displayWidth: Int
     let displayHeight: Int
-    let scaleFactor: CGFloat            // e.g. 2.0 for Retina; JPEG is already downscaled
 }
 ```
 
-JPEG is downscaled to max 1920px on the longest edge at quality 0.6 before publishing. Retina pixel dimensions are not exposed in the JPEG — only logical dimensions are stored.
+> **Implementation note:** `scaleFactor: CGFloat` was dropped from the final implementation. The JPEG is already downscaled to max 1920px on the longest edge at quality 0.6; consumers do not need the original Retina scale factor.
+
+JPEG is downscaled to max 1920px on the longest edge at quality 0.6 before publishing.
 
 ### 4.2 ScreenDescriptionEvent
 
@@ -252,10 +254,11 @@ let screenCapture = ScreenCaptureActor(eventHub: eventHub, config: config)
 let screenDescription = ScreenDescriptionActor(eventHub: eventHub, config: config)
 let activeApp = ActiveAppActor(eventHub: eventHub)
 
-await supervisor.register(screenCapture,    restartPolicy: .onFailure(maxRetries: 3, backoff: 2))
-await supervisor.register(screenDescription, restartPolicy: .onFailure(maxRetries: 3, backoff: 5),
-                          dependencies: [screenCapture.id])
-await supervisor.register(activeApp,        restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+// screenDesc must be subscribed before screenCapture starts publishing frames.
+await supervisor.register(activeApp,         restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+await supervisor.register(screenDescription, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+await supervisor.register(screenCapture,     restartPolicy: .onFailure(maxRetries: 3, backoff: 2),
+                           dependencies: [screenDescription.id])
 ```
 
 ---

@@ -28,7 +28,7 @@ actor AXFocusActor: BantiModule {
 
     // Health tracking for high-error-rate degradation
     private var recentErrorDates: [Date] = []
-    private var recentCallCount: Int = 0
+    private var recentCallDates: [Date] = []
     private let errorRateWindow: TimeInterval = 10
     private let errorRateThreshold: Double = 0.2
 
@@ -198,7 +198,7 @@ actor AXFocusActor: BantiModule {
     // MARK: - Attribute reading + publishing
 
     private func publishCurrentFocus(pid: pid_t, changeKind: AXChangeKind) async {
-        recentCallCount += 1
+        recentCallDates.append(Date())
 
         guard let app = NSRunningApplication(processIdentifier: pid) else { return }
         let appName = app.localizedName ?? "Unknown"
@@ -251,10 +251,11 @@ actor AXFocusActor: BantiModule {
     private func recordError() {
         let now = Date()
         recentErrorDates.append(now)
-        // Prune errors outside the window.
+        // Prune both arrays to the sliding window so the denominator is also windowed.
         recentErrorDates = recentErrorDates.filter { now.timeIntervalSince($0) <= errorRateWindow }
+        recentCallDates  = recentCallDates.filter  { now.timeIntervalSince($0) <= errorRateWindow }
 
-        let windowedCalls = max(recentCallCount, 1)
+        let windowedCalls = max(recentCallDates.count, 1)
         let errorRate = Double(recentErrorDates.count) / Double(windowedCalls)
         if errorRate > errorRateThreshold {
             _health = .degraded(reason: "AX read error rate \(Int(errorRate * 100))% in last \(Int(errorRateWindow))s")

@@ -87,6 +87,10 @@ struct EventLogView: View {
         case "[SEGMENT]": return .green
         case "[SCENE]":   return .purple
         case "[MODULE]":  return .cyan
+        case "[SCREEN]":  return .indigo
+        case "[SCRFRM]":  return .teal
+        case "[APP]":     return .mint
+        case "[AX]":      return .pink
         default:          return .primary
         }
     }

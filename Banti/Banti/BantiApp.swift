@@ -129,7 +129,7 @@ struct BantiApp: App {
 
         do {
             // vm.startListening() MUST come before sup.startAll() — ensures EventLogViewModel
-            // is subscribed to all 6 event types before any module begins publishing.
+            // is subscribed to all 10 event types before any module begins publishing.
             await vm.startListening()
             try await sup.startAll()
             logger.notice("bootstrap completed — pipeline running")

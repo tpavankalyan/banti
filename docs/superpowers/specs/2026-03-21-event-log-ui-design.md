@@ -17,11 +17,13 @@ Introduce two new types and delete two existing ones:
   - `@Published var entries: [EventLogEntry]`
   - `@Published var isListening: Bool`
   - `@Published var errorMessage: String?`
-  - `func startListening() async` — resets counter, subscribes to all 6 types, sets `isListening = true`
-  - `func stopListening() async` — unsubscribes all, clears subscription IDs, resets counter, sets `isListening = false`
+  - `func startListening() async` — resets counters/timers, subscribes to all 10 types, sets `isListening = true`
+  - `func stopListening() async` — unsubscribes all, clears subscription IDs, resets counters/timers, sets `isListening = false`
   - `func setError(_ message: String)` — sets `errorMessage`
   - `private var subscriptionIDs: [SubscriptionID]` (array, mirroring `EventLoggerActor`)
-  - `private var audioFrameCount: UInt64`
+  - `private var audioFrameCount: UInt64` — throttle counter for audio frames
+  - `private var lastCameraLog: Date` — time-based throttle for raw camera frames (1 per 60s)
+  - `private var lastScreenLog: Date` — time-based throttle for raw screen frames (1 per 60s)
   - `EventHubActor` is an `actor`, so `subscribe`/`unsubscribe` require `await` (actor isolation crossing) — both `startListening()` and `stopListening()` must therefore be `async`
 - Delete **`TranscriptViewModel`** and **`TranscriptView`**
 - Add **`EventLogView`** — replaces `TranscriptView` as the root view in `BantiApp.body`
@@ -42,16 +44,22 @@ The timestamp is formatted at entry creation time using a shared static `DateFor
 - `locale = Locale(identifier: "en_US_POSIX")`
 - `timeZone = TimeZone.current`
 
-| Event type | Tag | Format |
-|---|---|---|
-| `AudioFrameEvent` | `[AUDIO]` | `frame=<seq> bytes=<n>` |
-| `CameraFrameEvent` | `[CAMERA]` | `frame=<seq> bytes=<n> size=<w>x<h>` |
-| `RawTranscriptEvent` | `[RAW]` | `<speaker> \| conf=<0.00> \| <text>` — speaker is `"Speaker <n>"` when `speakerIndex` is set, `"unknown"` when nil; confidence formatted to 2 decimal places; `isFinal` intentionally omitted |
-| `TranscriptSegmentEvent` | `[SEGMENT]` | `<speakerLabel> \| <final\|interim> \| <text>` — use `event.speakerLabel` directly |
-| `SceneDescriptionEvent` | `[SCENE]` | `latency=<n>ms \| <text>` |
-| `ModuleStatusEvent` | `[MODULE]` | `<moduleID.rawValue>: <oldStatus> → <newStatus>` — arrow is U+2192 `→`; use `.rawValue` not string interpolation of the full type |
+| Event type | Tag | Format | Throttle |
+|---|---|---|---|
+| `AudioFrameEvent` | `[AUDIO]` | `frame=<seq> bytes=<n>` | Every 100th frame |
+| `CameraFrameEvent` | `[CAMERA]` | `frame=<seq> size=<w>x<h>` | At most once per 60s |
+| `RawTranscriptEvent` | `[RAW]` | `<speaker> \| conf=<0.00> \| <text>` — speaker is `"Speaker <n>"` when `speakerIndex` is set, `"unknown"` when nil; confidence to 2 d.p. | None |
+| `TranscriptSegmentEvent` | `[SEGMENT]` | `<speakerLabel> \| <final\|interim> \| <text>` — use `event.speakerLabel` directly | None |
+| `SceneDescriptionEvent` | `[SCENE]` | `latency=<n>ms \| <text>` | None |
+| `ModuleStatusEvent` | `[MODULE]` | `<moduleID.rawValue>: <oldStatus> → <newStatus>` — arrow is U+2192 `→` | None |
+| `ScreenFrameEvent` | `[SCRFRM]` | `frame=<seq> size=<w>x<h>` | At most once per 60s |
+| `ScreenDescriptionEvent` | `[SCREEN]` | `latency=<n>ms \| <text>` | None |
+| `ActiveAppEvent` | `[APP]` | `<prevApp> → <appName> (<bundleID>)` — `<prevApp> → ` omitted on first event | None |
+| `AXFocusEvent` | `[AX]` | `<changeKind> \| <appName> \| <elementRole> [· <title>] [\| selected: '<text>']` | None |
 
 **Audio throttling:** On every `AudioFrameEvent` received, `audioFrameCount` is incremented **unconditionally first** (mirroring `EventLoggerActor`), then the guard `audioFrameCount == 1 || audioFrameCount % 100 == 0` is checked — if it fails the handler returns without creating an entry. Counter is reset to `0` at the start of `startListening()` (defensive) and again in `stopListening()`.
+
+**Camera/screen frame throttling:** Raw `CameraFrameEvent` and `ScreenFrameEvent` are shown at most once every 60 seconds in the UI. This prevents high-frequency frame events from flooding the log while still providing an occasional status indicator. `lastCameraLog` and `lastScreenLog` track the last log time and are reset on `startListening()`/`stopListening()`.
 
 **Rolling buffer:** capped at 500 entries. When a new entry would exceed 500, `entries.removeFirst()` before appending.
 
@@ -63,7 +71,7 @@ The timestamp is formatted at entry creation time using a shared static `DateFor
 - **Header bar**: red dot (`.red` when `isListening`, `.gray` otherwise) + "Listening…" / "Stopped" label, spacer, `"\(viewModel.entries.count) events"` count label
 - **Error banner** (unchanged): yellow triangle + message when `errorMessage` is set
 - **Divider**
-- **Scrolling feed**: `LazyVStack` of rows inside a `ScrollViewReader`; auto-scrolls with animation to the last entry's `id` on `.onChange(of: viewModel.entries.count)`. Always tracks the tail — no manual scroll suppression.
+- **Scrolling feed**: `LazyVStack` of rows inside a `ScrollViewReader`; auto-scrolls with animation to the last entry's `id` on `.onChange(of: viewModel.entries.last?.id)`. Always tracks the tail — no manual scroll suppression.
 - **Frame**: `.frame(minWidth: 500, minHeight: 400)` — same as existing `TranscriptView`
 
 Each row:
@@ -78,7 +86,11 @@ Tag rendered in a fixed-width monospace label, color-coded by type:
 - `[RAW]` → `.orange`
 - `[SEGMENT]` → `.green`
 - `[SCENE]` → `.purple`
-- `[MODULE]` → `.cyan` (distinct from `[RAW]`'s orange)
+- `[MODULE]` → `.cyan`
+- `[SCREEN]` → `.indigo`
+- `[SCRFRM]` → `.teal`
+- `[APP]` → `.mint`
+- `[AX]` → `.pink`
 
 ## Error Handling
 

@@ -7,6 +7,8 @@
 
 Strip the codebase down to perception modules only (Camera + Microphone pipelines), remove Brain and Action modules, and add a passive `EventLoggerActor` that logs every event on the bus to Console.app so the input pipeline can be observed and debugged in real time.
 
+> **Status:** Completed. Brain/Speech/TranscriptView/TranscriptViewModel have been deleted. EventLoggerActor is live and subscribes to all 10 event types.
+
 ---
 
 ## Part 1 — Remove Non-Perception Code
@@ -71,18 +73,22 @@ actor EventLoggerActor: BantiModule {
 
 ### Behaviour
 
-On `start()`, subscribes to all 6 event types. On `stop()`, unsubscribes all.
+On `start()`, subscribes to all 10 event types. On `stop()`, unsubscribes all.
 
 All logging uses `os.Logger(subsystem: "com.banti.core", category: "EventLog")` — filterable in Console.app with `category == "EventLog"`.
 
 | Event | Log fields | Throttle |
 |---|---|---|
-| `AudioFrameEvent` | seq#, byte count, sampleRate | Every 100th frame (fires ~10×/sec) |
-| `CameraFrameEvent` | seq#, byte count, WxH | None |
+| `AudioFrameEvent` | seq#, byte count, sampleRate | Every 100th frame (~10×/sec) |
+| `CameraFrameEvent` | seq#, byte count, WxH | None (debug level) |
 | `RawTranscriptEvent` | speakerIndex, confidence, isFinal, text | None |
 | `TranscriptSegmentEvent` | speaker, isFinal, text | None |
 | `SceneDescriptionEvent` | VLM latency (responseTime − captureTime), text prefix (60 chars) | None |
 | `ModuleStatusEvent` | moduleID, old→new status | None |
+| `ScreenFrameEvent` | seq#, byte count, WxH | None (debug level) |
+| `ScreenDescriptionEvent` | VLM latency, text prefix (60 chars) | None |
+| `ActiveAppEvent` | prev app → new app, bundleID | None |
+| `AXFocusEvent` | changeKind, app, role, selected text prefix | None |
 
 `AudioFrameEvent` throttling uses a simple counter (`audioFrameCount % 100 == 0`) to avoid flooding Console at audio buffer rate.
 
@@ -92,7 +98,7 @@ Registered **first** in the bootstrap before any other module, so it is subscrib
 
 ```swift
 await sup.register(eventLogger, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-// ... then mic, deepgram, projection, camera, sceneDesc
+// ... then projection, deepgram, mic, sceneDesc, camera, activeApp, screenDesc, screenCapture, axFocus
 ```
 
 ---
