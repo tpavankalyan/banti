@@ -82,6 +82,7 @@
 		SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000009 /* MockFrameDifferencer.swift */; };
 		SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001B /* MockScreenFrameDifferencer.swift */; };
 		SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */; };
+		SC0000000000000000000020 /* ScreenChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001F /* ScreenChangeDetectionActor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -172,6 +173,7 @@
 		SCD000000000000000000009 /* MockFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFrameDifferencer.swift; sourceTree = "<group>"; };
 		SC000000000000000000001B /* MockScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockScreenFrameDifferencer.swift; sourceTree = "<group>"; };
 		SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActorTests.swift; sourceTree = "<group>"; };
+		SC000000000000000000001F /* ScreenChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -334,6 +336,7 @@
 				SC0000000000000000000006 /* ScreenCaptureActor.swift */,
 				SC0000000000000000000007 /* ScreenDescriptionActor.swift */,
 				SC0000000000000000000019 /* ScreenFrameDifferencer.swift */,
+				SC000000000000000000001F /* ScreenChangeDetectionActor.swift */,
 			);
 			path = Screen;
 			sourceTree = "<group>";
@@ -504,6 +507,7 @@
 			SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */,
 			SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */,
 			SC000000000000000000001A /* ScreenFrameDifferencer.swift in Sources */,
+			SC0000000000000000000020 /* ScreenChangeDetectionActor.swift in Sources */,
 			CS0000000000000000000004 /* ContextSnapshotActor.swift in Sources */,
 				CS0000000000000000000006 /* TurnEvent.swift in Sources */,
 				CS0000000000000000000008 /* TurnDetectorActor.swift in Sources */,
