@@ -18,4 +18,5 @@ enum EnvKey {
     static let cartesiaAPIKey            = "CARTESIA_API_KEY"
     static let cartesiaVoiceID           = "CARTESIA_VOICE_ID"
     static let sceneChangeThreshold      = "SCENE_CHANGE_THRESHOLD"
+    static let screenChangeThreshold     = "SCREEN_CHANGE_THRESHOLD"
 }

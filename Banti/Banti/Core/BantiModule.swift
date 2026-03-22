@@ -23,6 +23,7 @@ struct Capability: Hashable, Sendable {
     static let activeAppTracking = Capability("active-app-tracking")
     static let axObservation     = Capability("ax-observation")
     static let sceneChangeDetection = Capability("scene-change-detection")
+    static let screenChangeDetection = Capability("screen-change-detection")
 }
 
 enum ModuleHealth: Sendable {
