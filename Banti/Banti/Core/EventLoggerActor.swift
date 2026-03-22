@@ -58,8 +58,16 @@ actor EventLoggerActor: BantiModule {
             guard let self else { return }
             await self.logAXFocus(event)
         })
+        subscriptionIDs.append(await eventHub.subscribe(SpeakChunkEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.logSpeakChunk(event)
+        })
+        subscriptionIDs.append(await eventHub.subscribe(InterruptEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.logInterrupt(event)
+        })
         _health = .healthy
-        logger.notice("EventLoggerActor started — subscribed to 10 event types")
+        logger.notice("EventLoggerActor started — subscribed to 12 event types")
     }
 
     func stop() async {
@@ -119,5 +127,13 @@ actor EventLoggerActor: BantiModule {
     private func logAXFocus(_ event: AXFocusEvent) {
         let selection = event.selectedText.map { " selected='\(String($0.prefix(40)))'" } ?? ""
         logger.notice("AXFocus kind=\(event.changeKind.rawValue, privacy: .public) app=\(event.appName, privacy: .public) role=\(event.elementRole, privacy: .public)\(selection, privacy: .public)")
+    }
+
+    private func logSpeakChunk(_ event: SpeakChunkEvent) {
+        logger.notice("SpeakChunk epoch=\(event.epoch) text=\(String(event.text.prefix(60)), privacy: .public)")
+    }
+
+    private func logInterrupt(_ event: InterruptEvent) {
+        logger.notice("Interrupt epoch=\(event.epoch)")
     }
 }
