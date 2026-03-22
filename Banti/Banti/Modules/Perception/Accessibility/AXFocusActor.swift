@@ -49,7 +49,7 @@ actor AXFocusActor: BantiModule {
 
         // Check accessibility permission. Per spec: no retry on permission failure.
         guard AXIsProcessTrustedWithOptions(
-            [kAXTrustedCheckOptionPrompt: true] as CFDictionary
+            ["AXTrustedCheckOptionPrompt": true] as CFDictionary
         ) else {
             let err = AXPermissionError.notGranted
             _health = .failed(error: err)
@@ -110,11 +110,11 @@ actor AXFocusActor: BantiModule {
     func handleNotification(pid: pid_t, notification: String) async {
         let changeKind: AXChangeKind
         switch notification {
-        case kAXFocusedUIElementChangedNotification as String:
+        case kAXFocusedUIElementChangedNotification:
             changeKind = .focusChanged
-        case kAXSelectedTextChangedNotification as String:
+        case kAXSelectedTextChangedNotification:
             changeKind = .selectionChanged
-        case kAXValueChangedNotification as String:
+        case kAXValueChangedNotification:
             changeKind = .valueChanged
         default:
             return
@@ -145,6 +145,8 @@ actor AXFocusActor: BantiModule {
 
     private func registerObserver(forPid pid: pid_t) async {
         guard pid != currentPid else { return }
+        // Never observe our own process — it would create a feedback loop as the UI re-renders.
+        guard pid != pid_t(ProcessInfo.processInfo.processIdentifier) else { return }
         removeCurrentObserver()
         currentPid = pid
 
@@ -217,7 +219,9 @@ actor AXFocusActor: BantiModule {
         let focusedElement = focusedRef as! AXUIElement
 
         let role = axString(focusedElement, kAXRoleAttribute) ?? "Unknown"
-        let title = axString(focusedElement, kAXTitleAttribute) ?? axString(focusedElement, kAXDescriptionAttribute)
+        let titleAttr = axString(focusedElement, kAXTitleAttribute)
+        let descAttr = axString(focusedElement, kAXDescriptionAttribute)
+        let title = titleAttr ?? descAttr
         let windowTitle = axWindowTitle(focusedElement)
 
         let rawSelected = axString(focusedElement, kAXSelectedTextAttribute)

@@ -54,6 +54,13 @@
 		AX0000000000000000000012 /* AXEventBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000002 /* AXEventBridge.swift */; };
 		AX0000000000000000000013 /* AXFocusActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000003 /* AXFocusActor.swift */; };
 		AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000004 /* AXFocusActorTests.swift */; };
+		SC0000000000000000000011 /* ActiveAppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000001 /* ActiveAppEvent.swift */; };
+		SC0000000000000000000012 /* ScreenFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000002 /* ScreenFrameEvent.swift */; };
+		SC0000000000000000000013 /* ScreenDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000003 /* ScreenDescriptionEvent.swift */; };
+		SC0000000000000000000014 /* ScreenLatestFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000004 /* ScreenLatestFrameBuffer.swift */; };
+		SC0000000000000000000015 /* ActiveAppActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000005 /* ActiveAppActor.swift */; };
+		SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000006 /* ScreenCaptureActor.swift */; };
+		SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000007 /* ScreenDescriptionActor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,6 +123,13 @@
 		AX0000000000000000000002 /* AXEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXEventBridge.swift; sourceTree = "<group>"; };
 		AX0000000000000000000003 /* AXFocusActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusActor.swift; sourceTree = "<group>"; };
 		AX0000000000000000000004 /* AXFocusActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AXFocusActorTests.swift; sourceTree = "<group>"; };
+		SC0000000000000000000001 /* ActiveAppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppEvent.swift; sourceTree = "<group>"; };
+		SC0000000000000000000002 /* ScreenFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameEvent.swift; sourceTree = "<group>"; };
+		SC0000000000000000000003 /* ScreenDescriptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionEvent.swift; sourceTree = "<group>"; };
+		SC0000000000000000000004 /* ScreenLatestFrameBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenLatestFrameBuffer.swift; sourceTree = "<group>"; };
+		SC0000000000000000000005 /* ActiveAppActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppActor.swift; sourceTree = "<group>"; };
+		SC0000000000000000000006 /* ScreenCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActor.swift; sourceTree = "<group>"; };
+		SC0000000000000000000007 /* ScreenDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -169,6 +183,9 @@
 				97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */,
 				985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */,
 				AX0000000000000000000001 /* AXFocusEvent.swift */,
+			SC0000000000000000000001 /* ActiveAppEvent.swift */,
+			SC0000000000000000000002 /* ScreenFrameEvent.swift */,
+			SC0000000000000000000003 /* ScreenDescriptionEvent.swift */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -248,8 +265,19 @@
 				4E904FCD47CCCF1B27EF352F /* Microphone */,
 				0F35798E2A7CB504C3EB213D /* Camera */,
 				AX0000000000000000000021 /* Accessibility */,
+			SC0000000000000000000021 /* Screen */,
 			);
 			path = Perception;
+			sourceTree = "<group>";
+		};
+		SC0000000000000000000021 /* Screen */ = {
+			isa = PBXGroup;
+			children = (
+				SC0000000000000000000005 /* ActiveAppActor.swift */,
+				SC0000000000000000000006 /* ScreenCaptureActor.swift */,
+				SC0000000000000000000007 /* ScreenDescriptionActor.swift */,
+			);
+			path = Screen;
 			sourceTree = "<group>";
 		};
 		C953B92410F4480EFB6823E3 /* Action */ = {
@@ -271,6 +299,7 @@
 				36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */,
 				71C80B79F8548D794F3499FE /* Events */,
 				C77D57CECB17053FE847E1DE /* CameraLatestFrameBuffer.swift */,
+			SC0000000000000000000004 /* ScreenLatestFrameBuffer.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -404,6 +433,13 @@
 				AX0000000000000000000011 /* AXFocusEvent.swift in Sources */,
 				AX0000000000000000000012 /* AXEventBridge.swift in Sources */,
 				AX0000000000000000000013 /* AXFocusActor.swift in Sources */,
+			SC0000000000000000000011 /* ActiveAppEvent.swift in Sources */,
+			SC0000000000000000000012 /* ScreenFrameEvent.swift in Sources */,
+			SC0000000000000000000013 /* ScreenDescriptionEvent.swift in Sources */,
+			SC0000000000000000000014 /* ScreenLatestFrameBuffer.swift in Sources */,
+			SC0000000000000000000015 /* ActiveAppActor.swift in Sources */,
+			SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */,
+			SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
