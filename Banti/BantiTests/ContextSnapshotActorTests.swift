@@ -31,7 +31,8 @@ final class ContextSnapshotActorTests: XCTestCase {
         let now = Date()
         return ScreenDescriptionEvent(text: text,
                                       captureTime: now.addingTimeInterval(-1),
-                                      responseTime: now)
+                                      responseTime: now,
+                                      changeDistance: nil)
     }
 
     func makeSegment(text: String = "hello world", isFinal: Bool = true) -> TranscriptSegmentEvent {

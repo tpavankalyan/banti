@@ -12,7 +12,6 @@ actor ScreenDescriptionActor: BantiModule {
 
     private var subscriptionID: SubscriptionID?
     private var _health: ModuleHealth = .healthy
-    private var lastDescribedAt: Date?
     private var describedCount = 0
 
     init(eventHub: EventHubActor, config: ConfigActor, provider: (any VisionProvider)? = nil) {
@@ -24,18 +23,16 @@ actor ScreenDescriptionActor: BantiModule {
     func start() async throws {
         let provider = try await buildProvider()
 
-        let intervalS = Double((await config.value(for: EnvKey.screenDescriptionIntervalS))
-            .flatMap(Double.init) ?? 10.0)
         let prompt = (await config.value(for: EnvKey.screenDescriptionPrompt))
             ?? "Describe what is shown on this computer screen. Focus on the application in use, visible text, open documents, and what the user appears to be doing."
 
-        subscriptionID = await eventHub.subscribe(ScreenFrameEvent.self) { [weak self] event in
+        subscriptionID = await eventHub.subscribe(ScreenChangeEvent.self) { [weak self] event in
             guard let self else { return }
-            await self.handleFrame(event, provider: provider, intervalS: intervalS, prompt: prompt)
+            await self.handleChange(event, provider: provider, prompt: prompt)
         }
 
         _health = .healthy
-        logger.notice("ScreenDescriptionActor started (interval=\(intervalS)s)")
+        logger.notice("ScreenDescriptionActor started (change-driven)")
     }
 
     func stop() async {
@@ -47,31 +44,25 @@ actor ScreenDescriptionActor: BantiModule {
 
     func health() async -> ModuleHealth { _health }
 
-    private func handleFrame(
-        _ event: ScreenFrameEvent,
+    private func handleChange(
+        _ event: ScreenChangeEvent,
         provider: any VisionProvider,
-        intervalS: Double,
         prompt: String
     ) async {
-        if let last = lastDescribedAt, Date().timeIntervalSince(last) < intervalS {
-            return
-        }
-
-        lastDescribedAt = Date()
-        let captureTime = event.timestamp
+        let captureTime = event.captureTime
 
         do {
             let description = try await provider.describe(jpeg: event.jpeg, prompt: prompt)
             let responseTime = Date()
 
-            lastDescribedAt = responseTime
             describedCount += 1
             _health = .healthy
 
             let screenEvent = ScreenDescriptionEvent(
                 text: description,
                 captureTime: captureTime,
-                responseTime: responseTime
+                responseTime: responseTime,
+                changeDistance: event.changeDistance
             )
             await eventHub.publish(screenEvent)
 

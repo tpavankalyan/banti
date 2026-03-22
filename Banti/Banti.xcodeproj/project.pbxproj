@@ -83,6 +83,7 @@
 		SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001B /* MockScreenFrameDifferencer.swift */; };
 		SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */; };
 		SC0000000000000000000020 /* ScreenChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001F /* ScreenChangeDetectionActor.swift */; };
+		SC0000000000000000000024 /* ScreenDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000023 /* ScreenDescriptionActorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -174,6 +175,7 @@
 		SC000000000000000000001B /* MockScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockScreenFrameDifferencer.swift; sourceTree = "<group>"; };
 		SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActorTests.swift; sourceTree = "<group>"; };
 		SC000000000000000000001F /* ScreenChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActor.swift; sourceTree = "<group>"; };
+		SC0000000000000000000023 /* ScreenDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -272,6 +274,7 @@
 				CS0000000000000000000017 /* TTSActorTests.swift */,
 				SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */,
 				SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */,
+				SC0000000000000000000023 /* ScreenDescriptionActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -550,6 +553,7 @@
 				SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */,
 				SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */,
 				SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */,
+				SC0000000000000000000024 /* ScreenDescriptionActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
