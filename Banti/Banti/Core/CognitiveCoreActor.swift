@@ -397,6 +397,7 @@ actor CognitiveCoreActor: BantiModule {
         } catch {
             guard !Task.isCancelled else { return }
             logger.error("Stream threw: \(error.localizedDescription, privacy: .public)")
+            _health = .degraded(reason: error.localizedDescription)
         }
     }
 }

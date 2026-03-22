@@ -11,9 +11,9 @@ xcodebuild -project Banti.xcodeproj -scheme Banti -destination 'platform=macOS,a
 # Clear saved window state so SwiftUI always opens a fresh window
 rm -rf ~/Library/Saved\ Application\ State/com.banti.Banti.savedState 2>/dev/null || true
 
-APP=$(echo "$HOME"/Library/Developer/Xcode/DerivedData/Banti-*/Build/Products/Debug/Banti.app/Contents/MacOS/Banti)
+APP=$(ls -t "$HOME"/Library/Developer/Xcode/DerivedData/Banti-*/Build/Products/Debug/Banti.app/Contents/MacOS/Banti 2>/dev/null | head -1)
 
-if [ ! -f "$APP" ]; then
+if [ -z "$APP" ] || [ ! -f "$APP" ]; then
   echo "Build succeeded, but Banti binary not found."
   exit 1
 fi

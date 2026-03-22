@@ -79,6 +79,18 @@ final class EventLogViewModel: ObservableObject {
             guard let self else { return }
             await self.append(tag: "[AGENT]", text: self.format(event))
         })
+        subscriptionIDs.append(await eventHub.subscribe(TurnStartedEvent.self) { [weak self] _ in
+            guard let self else { return }
+            await self.append(tag: "[TURN]", text: "turn started")
+        })
+        subscriptionIDs.append(await eventHub.subscribe(TurnEndedEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.append(tag: "[TURN]", text: "turn ended: \(event.text)")
+        })
+        subscriptionIDs.append(await eventHub.subscribe(SpeakChunkEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.append(tag: "[SPEAK]", text: "epoch=\(event.epoch) \(event.text)")
+        })
         isListening = true
     }
 
