@@ -80,6 +80,8 @@
 		SCD000000000000000000006 /* SceneChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000005 /* SceneChangeEvent.swift */; };
 		SCD000000000000000000008 /* FrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000007 /* FrameDifferencer.swift */; };
 		SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000009 /* MockFrameDifferencer.swift */; };
+		SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001B /* MockScreenFrameDifferencer.swift */; };
+		SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -168,6 +170,8 @@
 		SCD000000000000000000005 /* SceneChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeEvent.swift; sourceTree = "<group>"; };
 		SCD000000000000000000007 /* FrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameDifferencer.swift; sourceTree = "<group>"; };
 		SCD000000000000000000009 /* MockFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFrameDifferencer.swift; sourceTree = "<group>"; };
+		SC000000000000000000001B /* MockScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockScreenFrameDifferencer.swift; sourceTree = "<group>"; };
+		SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -265,6 +269,7 @@
 				CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */,
 				CS0000000000000000000017 /* TTSActorTests.swift */,
 				SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */,
+				SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -290,6 +295,7 @@
 				9B83E289D3AADF25670B1B8D /* TestRecorder.swift */,
 				291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */,
 				SCD000000000000000000009 /* MockFrameDifferencer.swift */,
+				SC000000000000000000001B /* MockScreenFrameDifferencer.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -538,6 +544,8 @@
 				CS0000000000000000000018 /* TTSActorTests.swift in Sources */,
 				SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */,
 				SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */,
+				SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */,
+				SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
