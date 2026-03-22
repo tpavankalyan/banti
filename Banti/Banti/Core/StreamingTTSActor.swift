@@ -32,7 +32,15 @@ actor RealCartesiaWSProvider: CartesiaWebSocketProvider {
     }
 
     private func makeURL() -> URL {
-        URL(string: "wss://api.cartesia.ai/tts/websocket?api_key=\(apiKey)&cartesia_version=\(cartesiaVersion)")!
+        var components = URLComponents()
+        components.scheme = "wss"
+        components.host = "api.cartesia.ai"
+        components.path = "/tts/websocket"
+        components.queryItems = [
+            URLQueryItem(name: "api_key", value: apiKey),
+            URLQueryItem(name: "cartesia_version", value: cartesiaVersion)
+        ]
+        return components.url!  // Safe: scheme/host/path are hardcoded literals, only query values are user-provided
     }
 
     func connect() async throws -> AsyncThrowingStream<Data, Error> {
@@ -110,6 +118,10 @@ actor StreamingTTSActor: BantiModule {
 
     // Task that owns the WebSocket audio loop; cancelled in stop()
     private var connectTask: Task<Void, Never>?
+
+    // Set to true in stop() so handleDisconnect()'s retry loop can exit even
+    // when running in an event-handler Task (not connectTask) where Task.isCancelled won't fire.
+    private var isStopped = false
 
     // Audio engine
     private let audioEngine = AVAudioEngine()
@@ -189,6 +201,7 @@ actor StreamingTTSActor: BantiModule {
     }
 
     func stop() async {
+        isStopped = true
         connectTask?.cancel()
         connectTask = nil
         for s in subscriptionIDs { await eventHub.unsubscribe(s) }
@@ -249,7 +262,7 @@ actor StreamingTTSActor: BantiModule {
         var delay = reconnectBaseDelay
         while true {
             try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled && !isStopped else { return }
             do {
                 let stream = try await wsProvider.connect()
                 _health = .healthy
