@@ -39,11 +39,11 @@ struct BantiApp: App {
     private let screenDesc: ScreenDescriptionActor
     private let activeApp: ActiveAppActor
     private let axFocus: AXFocusActor
-    private let contextSnapshot: ContextSnapshotActor
     private let turnDetector: TurnDetectorActor
-    private let agentBridge: AgentBridgeActor
+    private let perceptionLog: PerceptionLogActor
+    private let cognitiveCore: CognitiveCoreActor
     private let memoryWriteBack: MemoryWriteBackActor
-    private let tts: TTSActor
+    private let streamingTTS: StreamingTTSActor
 
     init() {
         let envPath = Self.resolveEnvPath()
@@ -65,12 +65,12 @@ struct BantiApp: App {
         let screenDescActor = ScreenDescriptionActor(eventHub: hub, config: cfg)
         let activeAppActor = ActiveAppActor(eventHub: hub)
         let axFocusActor = AXFocusActor(eventHub: hub, config: cfg)
-        let contextSnapshotActor = ContextSnapshotActor(eventHub: hub)
         let turnDetectorActor = TurnDetectorActor(eventHub: hub)
-        let agentBridgeActor = AgentBridgeActor(eventHub: hub, contextSnapshot: contextSnapshotActor, config: cfg)
+        let perceptionLogActor = PerceptionLogActor(eventHub: hub)
+        let cognitiveCoreActor = CognitiveCoreActor(eventHub: hub, perceptionLog: perceptionLogActor, config: cfg)
         let memoryWriteBackActor = MemoryWriteBackActor(eventHub: hub,
                                                         memoryClient: SidecarMemoryClient(baseURL: SidecarMemoryClient.defaultBaseURL))
-        let ttsActor = TTSActor(eventHub: hub, config: cfg)
+        let streamingTTSActor = StreamingTTSActor(eventHub: hub, config: cfg)
 
         self.eventHub = hub
         self.config = cfg
@@ -88,11 +88,11 @@ struct BantiApp: App {
         self.screenDesc = screenDescActor
         self.activeApp = activeAppActor
         self.axFocus = axFocusActor
-        self.contextSnapshot = contextSnapshotActor
         self.turnDetector = turnDetectorActor
-        self.agentBridge = agentBridgeActor
+        self.perceptionLog = perceptionLogActor
+        self.cognitiveCore = cognitiveCoreActor
         self.memoryWriteBack = memoryWriteBackActor
-        self.tts = ttsActor
+        self.streamingTTS = streamingTTSActor
 
         let vm = EventLogViewModel(eventHub: hub)
         _viewModel = StateObject(wrappedValue: vm)
@@ -110,9 +110,9 @@ struct BantiApp: App {
                 camera: cameraActor, sceneChangeDetector: sceneChangeDetectorActor, sceneDesc: sceneDescActor,
                 screenCapture: screenCaptureActor, screenChangeDetector: screenChangeDetectorActor,
                 screenDesc: screenDescActor, activeApp: activeAppActor, axFocus: axFocusActor,
-                contextSnapshot: contextSnapshotActor, turnDetector: turnDetectorActor,
-                agentBridge: agentBridgeActor, memoryWriteBack: memoryWriteBackActor,
-                tts: ttsActor, vm: vm
+                turnDetector: turnDetectorActor,
+                perceptionLog: perceptionLogActor, cognitiveCore: cognitiveCoreActor,
+                memoryWriteBack: memoryWriteBackActor, streamingTTS: streamingTTSActor, vm: vm
             )
         }
     }
@@ -137,11 +137,11 @@ struct BantiApp: App {
         screenDesc: ScreenDescriptionActor,
         activeApp: ActiveAppActor,
         axFocus: AXFocusActor,
-        contextSnapshot: ContextSnapshotActor,
         turnDetector: TurnDetectorActor,
-        agentBridge: AgentBridgeActor,
+        perceptionLog: PerceptionLogActor,
+        cognitiveCore: CognitiveCoreActor,
         memoryWriteBack: MemoryWriteBackActor,
-        tts: TTSActor,
+        streamingTTS: StreamingTTSActor,
         vm: EventLogViewModel
     ) async {
         let logger = Logger(subsystem: "com.banti.app", category: "Lifecycle")
@@ -164,15 +164,15 @@ struct BantiApp: App {
                            dependencies: [screenChangeDetector.id])
         // AX permission won't change without user action in System Settings — no retry.
         await sup.register(axFocus, restartPolicy: .never)
-        // Cognitive pipeline: context → turn detection → LLM bridge → memory write-back
-        await sup.register(contextSnapshot, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        // Cognitive pipeline: perception log → turn detection → cognitive core → memory write-back + streaming TTS
+        await sup.register(perceptionLog, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(turnDetector, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-        await sup.register(agentBridge, restartPolicy: .onFailure(maxRetries: 3, backoff: 2),
-                           dependencies: [contextSnapshot.id, turnDetector.id])
+        await sup.register(cognitiveCore, restartPolicy: .onFailure(maxRetries: 3, backoff: 2),
+                           dependencies: [perceptionLog.id, turnDetector.id])
         await sup.register(memoryWriteBack, restartPolicy: .onFailure(maxRetries: 3, backoff: 1),
-                           dependencies: [agentBridge.id])
-        await sup.register(tts, restartPolicy: .onFailure(maxRetries: 3, backoff: 1),
-                           dependencies: [agentBridge.id])
+                           dependencies: [cognitiveCore.id])
+        await sup.register(streamingTTS, restartPolicy: .onFailure(maxRetries: 3, backoff: 1),
+                           dependencies: [cognitiveCore.id])
 
         do {
             // vm.startListening() MUST come before sup.startAll() — ensures EventLogViewModel

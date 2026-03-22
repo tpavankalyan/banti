@@ -8,82 +8,82 @@
 
 /* Begin PBXBuildFile section */
 		0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */; };
-		0498E2A12AC3CBD3EB2743F9 /* VisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */; };
 		05921957817FAB229F388097 /* DeepgramParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */; };
+		060EC984E1C91CD9961BF752 /* ScreenChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5167163D28D550BE468A4D2C /* ScreenChangeDetectionActorTests.swift */; };
 		0CC6D3D986052CE2EB88181C /* AudioRingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03835485E37E03DA196D1659 /* AudioRingBuffer.swift */; };
-		123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */; };
+		12653712CABF7A8B87C51C6C /* ScreenChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB7027E00803661C4F439F2 /* ScreenChangeEvent.swift */; };
 		13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */; };
 		16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */; };
-
-		AA00000000000000000000A1 /* EventLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B1 /* EventLogEntry.swift */; };
-		AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B3 /* EventLogViewModel.swift */; };
-		AA00000000000000000000A4 /* EventLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B4 /* EventLogView.swift */; };
-		22BEE8AF2932BFB1F467192E /* CameraLatestFrameBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */; };
+		168DEB9EB0CFFAF1627A5BF2 /* SceneDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD4B8C364EA5C4A1F0CB2B9 /* SceneDescriptionActorTests.swift */; };
+		18D61035558A44D4B2B6D034 /* MockFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786977FED980AA3953B4C902 /* MockFrameDifferencer.swift */; };
+		1C4086DC9C75D099C265107C /* TurnEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F98127909528A59B3EBABFD9 /* TurnEvent.swift */; };
+		1E0E0070D3B76CDC06205756 /* AXFocusEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0873D68A6A4C153A3C0B5B08 /* AXFocusEvent.swift */; };
+		20F305D4B6EB3C5949927D99 /* ScreenFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC5CB87D6F0B0309C8894A9 /* ScreenFrameEvent.swift */; };
+		21D8589C4AEEDF30C5BFAA5F /* SceneDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C558EA2E3273CB2A1C4F8C26 /* SceneDescriptionEvent.swift */; };
 		26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */; };
+		274D4896FD4E44BE75EFB12F /* SceneChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4EB9A4705019035338F2C2 /* SceneChangeDetectionActorTests.swift */; };
 		2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */; };
-		2DF9B44B116C102396E6F4CD /* CameraLatestFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C77D57CECB17053FE847E1DE /* CameraLatestFrameBuffer.swift */; };
+		2E3CE7A405E7BEACAABFEEE0 /* CameraLatestFrameBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D7C2AD03A01F0873BF5E4E /* CameraLatestFrameBufferTests.swift */; };
+		30C2DC0382579E2545E61346 /* EventLogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6E18CE709CBAC1BBF7FABF /* EventLogViewModelTests.swift */; };
 		32D41898F2B2592CA0AFC21E /* MicrophoneCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3B55E561509BA7F23CC609 /* MicrophoneCaptureActor.swift */; };
+		34C2A8119D4FCF9675FAB7DD /* VisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601DAE8AEB2E9310DA771D82 /* VisionProvider.swift */; };
+		39BA40B5EAD8E8202D8FCDCA /* EventLoggerActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6726D5D949181481CCA51E1F /* EventLoggerActor.swift */; };
+		3E7850193DD34B0BE4C1450D /* CognitiveCoreActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700A2EBA95A9DEFE0783BF9C /* CognitiveCoreActor.swift */; };
+		406343F3BB034AEFB5A2A9A2 /* ScreenLatestFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EAB862355E93FB5888F06E /* ScreenLatestFrameBuffer.swift */; };
+		456B07507025945C4F4019C9 /* StreamingTTSActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30F1EA128E1C8B379AA81E8 /* StreamingTTSActor.swift */; };
 		49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168FA5F5D4BBBBC4654987A1 /* Environment.swift */; };
-		4CEFEE9F801D61EA0C5EB2C7 /* SceneDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */; };
+		4974A104780C275015A848FC /* CameraFrameActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC74C421A27CDC690414C5A /* CameraFrameActor.swift */; };
+		4D0EB0FBC65D4CD8AE4A1E12 /* ClaudeVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 318E4F611F34BF915A30788D /* ClaudeVisionProvider.swift */; };
 		5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */; };
-
+		51C4F4E90A30812865E49C57 /* PerceptionLogActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B44A1126FA73A94DBF5DF0E /* PerceptionLogActorTests.swift */; };
 		5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */; };
 		5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B83E289D3AADF25670B1B8D /* TestRecorder.swift */; };
+		5B681E87641F26FF14103B3B /* ScreenDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1CA796F706D99188FDD9279 /* ScreenDescriptionActorTests.swift */; };
 		5B9022A6DAF0D8DDDA01B484 /* BantiModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43B02A7E9EE573D65014D4D /* BantiModule.swift */; };
+		5C99F5AE9183AA62F463E769 /* SceneDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4E5FAAA6B47DD99A52BA1 /* SceneDescriptionActor.swift */; };
 		5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256C24808236AB6EB630838D /* ModuleStatusEvent.swift */; };
+		61E218F7A69F09EDAAE2223C /* ScreenDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE30BB6479FAE9604896B405 /* ScreenDescriptionEvent.swift */; };
 		63D2638DC97C505F744CDFC6 /* AudioFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */; };
-		67C47B2F7CA0BD797D192FCD /* CameraFrameActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */; };
-		7EBDAA36BEB59F7C103EA064 /* CameraFrameActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60D84126027B0503C76FF09 /* CameraFrameActor.swift */; };
+		6E1767E76B5DEA612FF89545 /* CameraFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D3707AAB46AC0E50D7017E2 /* CameraFrameEvent.swift */; };
+		7034803DB69889590DA98D1E /* AXEventBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B70D259255ACF48B7585ED3A /* AXEventBridge.swift */; };
+		706307043149DF4E4A1AECD9 /* SpeakChunkEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FEB8E76E0759446EFD50742 /* SpeakChunkEvent.swift */; };
+		716A34CD91A03821A3E7F4D1 /* CameraFrameActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95D7FC170590688B8DAA89C /* CameraFrameActorTests.swift */; };
+		736C20B2AF65CD05F3F1A599 /* InterruptEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD0947F7D95487CC838B24D /* InterruptEvent.swift */; };
+		811A02F0BF1449BAEB492F4F /* MockVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 286D3C4E4F8955B4F407463F /* MockVisionProvider.swift */; };
+		81E12D4114C1290F287454D1 /* TurnDetectorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3702A507014165869DC6D055 /* TurnDetectorActor.swift */; };
+		86D29C9F642186F95AF93B9A /* ClaudeVisionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03834A156D0AA2B2DC50B0B /* ClaudeVisionProviderTests.swift */; };
 		87192CC8452BC41457542D70 /* EventHubActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */; };
 		8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3875E1430258F8FE36EA5C52 /* ConfigActor.swift */; };
+		8FB048924620B2AE86A3F332 /* MemoryWriteBackActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4EB33E4B693349BC716CD00 /* MemoryWriteBackActor.swift */; };
+		914DD21EA5D1BB1C7F4D4D49 /* AXFocusActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918C9171048F6CEEAD674ED0 /* AXFocusActor.swift */; };
+		9429620D13ABE5B1626406DD /* CognitiveCoreActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7731A91D114DA7FA1615CC67 /* CognitiveCoreActorTests.swift */; };
+		969970C37CCEEC8C9DC08F42 /* MemoryWriteBackActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 559FAD22030D2ECFCD745548 /* MemoryWriteBackActorTests.swift */; };
 		A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */; };
+		A1F7619C7A4AA112DC5E9E43 /* FrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5B57D68585A15A5529F048 /* FrameDifferencer.swift */; };
 		A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */; };
-		AA00000000000000000000A2 /* EventLogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B2 /* EventLogViewModelTests.swift */; };
-		ABF33C207DDBDF6412B11A55 /* CameraFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */; };
+		AB04C1FF4C8E78984B69A213 /* ScreenCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584FB2D7A40062E4E388733 /* ScreenCaptureActor.swift */; };
+		AF162F12BEF2D8258D0CA042 /* ScreenDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A27AFE9E5577065AFEB5E3 /* ScreenDescriptionActor.swift */; };
+		B0C5BFB93DF98B9C691F4B4A /* PerceptionLogActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFABC13FD1DA2D0BF501D70D /* PerceptionLogActor.swift */; };
+		B2CD1C6CA28F56C373AB7189 /* EventLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77F3110C0511F98CF7D8BDE2 /* EventLogViewModel.swift */; };
 		B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */; };
+		BD2D595762C21F17D78CEEC4 /* ScreenChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35270271B1F4A498C3C6B270 /* ScreenChangeDetectionActor.swift */; };
 		BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */; };
 		C55985138258E88026B90693 /* BantiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A5232F659BAB269BF7D63C /* BantiApp.swift */; };
-		C9A8761EEC27AA7C6B83B7AD /* ClaudeVisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */; };
-		B403AFB1548B41248A2730C6 /* EventLoggerActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */; };
+		C5A4CA6D7989074AB4F9A97D /* EventLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C8B55B456F08A735A37F0F /* EventLogEntry.swift */; };
+		C8E95663352678F273398F0F /* StreamingTTSActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2DBEA627CD64908B336565 /* StreamingTTSActorTests.swift */; };
+		C9C4B28C13ED74B52A6C59BE /* SceneChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4057EDFB2DDC2E2C25756863 /* SceneChangeEvent.swift */; };
+		D8DF30E090A24E8BBA26A878 /* SceneChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA190EE5702F5A3486339973 /* SceneChangeDetectionActor.swift */; };
 		DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */; };
 		E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */; };
-		F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */; };
-		A1B2C3D4E5F601234567890A /* SceneDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */; };
-		A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */; };
-		AX0000000000000000000011 /* AXFocusEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000001 /* AXFocusEvent.swift */; };
-		AX0000000000000000000012 /* AXEventBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000002 /* AXEventBridge.swift */; };
-		AX0000000000000000000013 /* AXFocusActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000003 /* AXFocusActor.swift */; };
-		AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000004 /* AXFocusActorTests.swift */; };
-		CS0000000000000000000002 /* ContextSnapshotActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000001 /* ContextSnapshotActorTests.swift */; };
-		CS0000000000000000000004 /* ContextSnapshotActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000003 /* ContextSnapshotActor.swift */; };
-		CS0000000000000000000006 /* TurnEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000005 /* TurnEvent.swift */; };
-		CS0000000000000000000008 /* TurnDetectorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000007 /* TurnDetectorActor.swift */; };
-		CS000000000000000000000A /* TurnDetectorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000009 /* TurnDetectorActorTests.swift */; };
-		CS000000000000000000000C /* AgentResponseEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS000000000000000000000B /* AgentResponseEvent.swift */; };
-		CS000000000000000000000E /* AgentBridgeActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS000000000000000000000D /* AgentBridgeActor.swift */; };
-		CS0000000000000000000010 /* AgentBridgeActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS000000000000000000000F /* AgentBridgeActorTests.swift */; };
-		CS0000000000000000000012 /* MemoryWriteBackActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000011 /* MemoryWriteBackActor.swift */; };
-		CS0000000000000000000014 /* MemoryWriteBackActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */; };
-		CS0000000000000000000016 /* TTSActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000015 /* TTSActor.swift */; };
-		CS0000000000000000000018 /* TTSActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000017 /* TTSActorTests.swift */; };
-		SC0000000000000000000011 /* ActiveAppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000001 /* ActiveAppEvent.swift */; };
-		SC0000000000000000000012 /* ScreenFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000002 /* ScreenFrameEvent.swift */; };
-		SC0000000000000000000013 /* ScreenDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000003 /* ScreenDescriptionEvent.swift */; };
-		SC0000000000000000000014 /* ScreenLatestFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000004 /* ScreenLatestFrameBuffer.swift */; };
-		SC0000000000000000000015 /* ActiveAppActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000005 /* ActiveAppActor.swift */; };
-		SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000006 /* ScreenCaptureActor.swift */; };
-		SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000007 /* ScreenDescriptionActor.swift */; };
-		SC0000000000000000000018 /* ScreenChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000008 /* ScreenChangeEvent.swift */; };
-		SC000000000000000000001A /* ScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000019 /* ScreenFrameDifferencer.swift */; };
-		SCD000000000000000000002 /* SceneChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000001 /* SceneChangeDetectionActor.swift */; };
-		SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */; };
-		SCD000000000000000000006 /* SceneChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000005 /* SceneChangeEvent.swift */; };
-		SCD000000000000000000008 /* FrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000007 /* FrameDifferencer.swift */; };
-		SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000009 /* MockFrameDifferencer.swift */; };
-		SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001B /* MockScreenFrameDifferencer.swift */; };
-		SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */; };
-		SC0000000000000000000020 /* ScreenChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC000000000000000000001F /* ScreenChangeDetectionActor.swift */; };
-		SC0000000000000000000024 /* ScreenDescriptionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000023 /* ScreenDescriptionActorTests.swift */; };
+		E6CF9D36D36B7C2E7CF31147 /* MockScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE863C9B278C7E560C1E58F /* MockScreenFrameDifferencer.swift */; };
+		E7105CF84D666F0CBD5AAEAB /* TurnDetectorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FC7A687A3A0B7E083D4CD3 /* TurnDetectorActorTests.swift */; };
+		EA3FEDE23F07D8B87EE8B731 /* CameraLatestFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C57C3E475911F190FDBEC2 /* CameraLatestFrameBuffer.swift */; };
+		EAFAD0EB7150048F1865FF68 /* ScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35A0869BF014E80A1E69895 /* ScreenFrameDifferencer.swift */; };
+		EDDF50F11397BD837EB0BFFD /* AgentResponseEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3DE3F95E5A5CAAD67B66636 /* AgentResponseEvent.swift */; };
+		EE10FB98B83B296A40576220 /* AXFocusActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAD7E67F99E2A0333D66D17 /* AXFocusActorTests.swift */; };
+		EEB170745A7923B1A775BFA4 /* ActiveAppActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 198975339E161A9BC617A535 /* ActiveAppActor.swift */; };
+		F25225D84EC9FC7DD17782A0 /* EventLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D6A874BDAB4A0C135F2233 /* EventLogView.swift */; };
+		FB8C9BEEB24A864E16495BC5 /* ActiveAppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CB3B36FB59063D65830D36 /* ActiveAppEvent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,98 +99,128 @@
 /* Begin PBXFileReference section */
 		03835485E37E03DA196D1659 /* AudioRingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRingBuffer.swift; sourceTree = "<group>"; };
 		07A5232F659BAB269BF7D63C /* BantiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiApp.swift; sourceTree = "<group>"; };
+		0873D68A6A4C153A3C0B5B08 /* AXFocusEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusEvent.swift; sourceTree = "<group>"; };
+		0BC5CB87D6F0B0309C8894A9 /* ScreenFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameEvent.swift; sourceTree = "<group>"; };
 		168FA5F5D4BBBBC4654987A1 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
-		19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProviderTests.swift; sourceTree = "<group>"; };
+		198975339E161A9BC617A535 /* ActiveAppActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppActor.swift; sourceTree = "<group>"; };
 		1A3B55E561509BA7F23CC609 /* MicrophoneCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneCaptureActor.swift; sourceTree = "<group>"; };
 		256C24808236AB6EB630838D /* ModuleStatusEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleStatusEvent.swift; sourceTree = "<group>"; };
+		25CB3B36FB59063D65830D36 /* ActiveAppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppEvent.swift; sourceTree = "<group>"; };
 		27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionEvent.swift; sourceTree = "<group>"; };
-		291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockVisionProvider.swift; sourceTree = "<group>"; };
+		286D3C4E4F8955B4F407463F /* MockVisionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockVisionProvider.swift; sourceTree = "<group>"; };
+		318E4F611F34BF915A30788D /* ClaudeVisionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProvider.swift; sourceTree = "<group>"; };
+		35270271B1F4A498C3C6B270 /* ScreenChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActor.swift; sourceTree = "<group>"; };
 		36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateRegistryActor.swift; sourceTree = "<group>"; };
+		3702A507014165869DC6D055 /* TurnDetectorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnDetectorActor.swift; sourceTree = "<group>"; };
 		3875E1430258F8FE36EA5C52 /* ConfigActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActor.swift; sourceTree = "<group>"; };
+		3B44A1126FA73A94DBF5DF0E /* PerceptionLogActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionLogActorTests.swift; sourceTree = "<group>"; };
+		3DD0947F7D95487CC838B24D /* InterruptEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterruptEvent.swift; sourceTree = "<group>"; };
+		4057EDFB2DDC2E2C25756863 /* SceneChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeEvent.swift; sourceTree = "<group>"; };
 		421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramParsingTests.swift; sourceTree = "<group>"; };
-		48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraFrameActorTests.swift; sourceTree = "<group>"; };
-		AA00000000000000000000B1 /* EventLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogEntry.swift; sourceTree = "<group>"; };
-		AA00000000000000000000B3 /* EventLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModel.swift; sourceTree = "<group>"; };
-		AA00000000000000000000B4 /* EventLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogView.swift; sourceTree = "<group>"; };
+		4AAD7E67F99E2A0333D66D17 /* AXFocusActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusActorTests.swift; sourceTree = "<group>"; };
+		5167163D28D550BE468A4D2C /* ScreenChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActorTests.swift; sourceTree = "<group>"; };
+		53FC7A687A3A0B7E083D4CD3 /* TurnDetectorActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnDetectorActorTests.swift; sourceTree = "<group>"; };
+		559FAD22030D2ECFCD745548 /* MemoryWriteBackActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteBackActorTests.swift; sourceTree = "<group>"; };
+		5FE863C9B278C7E560C1E58F /* MockScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockScreenFrameDifferencer.swift; sourceTree = "<group>"; };
+		601DAE8AEB2E9310DA771D82 /* VisionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProvider.swift; sourceTree = "<group>"; };
+		60D6A874BDAB4A0C135F2233 /* EventLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogView.swift; sourceTree = "<group>"; };
+		61C57C3E475911F190FDBEC2 /* CameraLatestFrameBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraLatestFrameBuffer.swift; sourceTree = "<group>"; };
 		637D4C47575CEAE1410E4D31 /* BantiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BantiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VisionProvider.swift; sourceTree = "<group>"; };
+		6726D5D949181481CCA51E1F /* EventLoggerActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLoggerActor.swift; sourceTree = "<group>"; };
+		6AC74C421A27CDC690414C5A /* CameraFrameActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameActor.swift; sourceTree = "<group>"; };
+		700A2EBA95A9DEFE0783BF9C /* CognitiveCoreActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CognitiveCoreActor.swift; sourceTree = "<group>"; };
+		7731A91D114DA7FA1615CC67 /* CognitiveCoreActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CognitiveCoreActorTests.swift; sourceTree = "<group>"; };
+		77F3110C0511F98CF7D8BDE2 /* EventLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModel.swift; sourceTree = "<group>"; };
+		786977FED980AA3953B4C902 /* MockFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFrameDifferencer.swift; sourceTree = "<group>"; };
+		7A6E18CE709CBAC1BBF7FABF /* EventLogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModelTests.swift; sourceTree = "<group>"; };
+		7B5B57D68585A15A5529F048 /* FrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameDifferencer.swift; sourceTree = "<group>"; };
+		7D3707AAB46AC0E50D7017E2 /* CameraFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameEvent.swift; sourceTree = "<group>"; };
 		8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawTranscriptEvent.swift; sourceTree = "<group>"; };
+		8FEB8E76E0759446EFD50742 /* SpeakChunkEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakChunkEvent.swift; sourceTree = "<group>"; };
+		918C9171048F6CEEAD674ED0 /* AXFocusActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusActor.swift; sourceTree = "<group>"; };
 		97241A3C384AE2666045545C /* TranscriptProjectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActor.swift; sourceTree = "<group>"; };
-		97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraFrameEvent.swift; sourceTree = "<group>"; };
-		985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneDescriptionEvent.swift; sourceTree = "<group>"; };
 		9B83E289D3AADF25670B1B8D /* TestRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRecorder.swift; sourceTree = "<group>"; };
 		9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigActorTests.swift; sourceTree = "<group>"; };
+		9E4EB9A4705019035338F2C2 /* SceneChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActorTests.swift; sourceTree = "<group>"; };
 		A3F20B78389B9959D613AA9D /* DeepgramStreamingActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramStreamingActor.swift; sourceTree = "<group>"; };
+		A4EB33E4B693349BC716CD00 /* MemoryWriteBackActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteBackActor.swift; sourceTree = "<group>"; };
 		A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPerceptionModule.swift; sourceTree = "<group>"; };
-		D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLoggerActor.swift; sourceTree = "<group>"; };
 		ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHubActor.swift; sourceTree = "<group>"; };
+		AE30BB6479FAE9604896B405 /* ScreenDescriptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionEvent.swift; sourceTree = "<group>"; };
 		AF1C8B04BDD355530465BB17 /* Banti.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Banti.entitlements; sourceTree = "<group>"; };
 		AF385C45F59FF8A8BD7E1C51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B03834A156D0AA2B2DC50B0B /* ClaudeVisionProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProviderTests.swift; sourceTree = "<group>"; };
+		B0C8B55B456F08A735A37F0F /* EventLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogEntry.swift; sourceTree = "<group>"; };
+		B1CA796F706D99188FDD9279 /* ScreenDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActorTests.swift; sourceTree = "<group>"; };
+		B2EAB862355E93FB5888F06E /* ScreenLatestFrameBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenLatestFrameBuffer.swift; sourceTree = "<group>"; };
+		B584FB2D7A40062E4E388733 /* ScreenCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActor.swift; sourceTree = "<group>"; };
+		B70D259255ACF48B7585ED3A /* AXEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXEventBridge.swift; sourceTree = "<group>"; };
+		B8B4E5FAAA6B47DD99A52BA1 /* SceneDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActor.swift; sourceTree = "<group>"; };
+		C35A0869BF014E80A1E69895 /* ScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameDifferencer.swift; sourceTree = "<group>"; };
 		C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActorTests.swift; sourceTree = "<group>"; };
-		C77D57CECB17053FE847E1DE /* CameraLatestFrameBuffer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraLatestFrameBuffer.swift; sourceTree = "<group>"; };
-		CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraLatestFrameBufferTests.swift; sourceTree = "<group>"; };
+		C558EA2E3273CB2A1C4F8C26 /* SceneDescriptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionEvent.swift; sourceTree = "<group>"; };
+		CA190EE5702F5A3486339973 /* SceneChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActor.swift; sourceTree = "<group>"; };
 		D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHubActorTests.swift; sourceTree = "<group>"; };
-		D60D84126027B0503C76FF09 /* CameraFrameActor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraFrameActor.swift; sourceTree = "<group>"; };
+		D8A27AFE9E5577065AFEB5E3 /* ScreenDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActor.swift; sourceTree = "<group>"; };
+		D95D7FC170590688B8DAA89C /* CameraFrameActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameActorTests.swift; sourceTree = "<group>"; };
+		DA2DBEA627CD64908B336565 /* StreamingTTSActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingTTSActorTests.swift; sourceTree = "<group>"; };
 		DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateRegistryActorTests.swift; sourceTree = "<group>"; };
 		DC916A1BAE4C1951451BEF82 /* Banti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Banti.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSupervisorActor.swift; sourceTree = "<group>"; };
 		DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFrameEvent.swift; sourceTree = "<group>"; };
+		E3DE3F95E5A5CAAD67B66636 /* AgentResponseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentResponseEvent.swift; sourceTree = "<group>"; };
 		E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptProjectionActorTests.swift; sourceTree = "<group>"; };
-		AA00000000000000000000B2 /* EventLogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLogViewModelTests.swift; sourceTree = "<group>"; };
+		EAD4B8C364EA5C4A1F0CB2B9 /* SceneDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActorTests.swift; sourceTree = "<group>"; };
+		EFABC13FD1DA2D0BF501D70D /* PerceptionLogActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerceptionLogActor.swift; sourceTree = "<group>"; };
 		F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegmentEvent.swift; sourceTree = "<group>"; };
-		F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClaudeVisionProvider.swift; sourceTree = "<group>"; };
+		F30F1EA128E1C8B379AA81E8 /* StreamingTTSActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingTTSActor.swift; sourceTree = "<group>"; };
 		F43B02A7E9EE573D65014D4D /* BantiModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BantiModule.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActor.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionActorTests.swift; sourceTree = "<group>"; };
-		AX0000000000000000000001 /* AXFocusEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusEvent.swift; sourceTree = "<group>"; };
-		AX0000000000000000000002 /* AXEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXEventBridge.swift; sourceTree = "<group>"; };
-		AX0000000000000000000003 /* AXFocusActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusActor.swift; sourceTree = "<group>"; };
-		AX0000000000000000000004 /* AXFocusActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AXFocusActorTests.swift; sourceTree = "<group>"; };
-		CS0000000000000000000001 /* ContextSnapshotActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSnapshotActorTests.swift; sourceTree = "<group>"; };
-		CS0000000000000000000003 /* ContextSnapshotActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSnapshotActor.swift; sourceTree = "<group>"; };
-		CS0000000000000000000005 /* TurnEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnEvent.swift; sourceTree = "<group>"; };
-		CS0000000000000000000007 /* TurnDetectorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnDetectorActor.swift; sourceTree = "<group>"; };
-		CS0000000000000000000009 /* TurnDetectorActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnDetectorActorTests.swift; sourceTree = "<group>"; };
-		CS000000000000000000000B /* AgentResponseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentResponseEvent.swift; sourceTree = "<group>"; };
-		CS000000000000000000000D /* AgentBridgeActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentBridgeActor.swift; sourceTree = "<group>"; };
-		CS000000000000000000000F /* AgentBridgeActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentBridgeActorTests.swift; sourceTree = "<group>"; };
-		CS0000000000000000000011 /* MemoryWriteBackActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteBackActor.swift; sourceTree = "<group>"; };
-		CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteBackActorTests.swift; sourceTree = "<group>"; };
-		CS0000000000000000000015 /* TTSActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSActor.swift; sourceTree = "<group>"; };
-		CS0000000000000000000017 /* TTSActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSActorTests.swift; sourceTree = "<group>"; };
-		SC0000000000000000000001 /* ActiveAppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppEvent.swift; sourceTree = "<group>"; };
-		SC0000000000000000000002 /* ScreenFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameEvent.swift; sourceTree = "<group>"; };
-		SC0000000000000000000003 /* ScreenDescriptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionEvent.swift; sourceTree = "<group>"; };
-		SC0000000000000000000004 /* ScreenLatestFrameBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenLatestFrameBuffer.swift; sourceTree = "<group>"; };
-		SC0000000000000000000005 /* ActiveAppActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppActor.swift; sourceTree = "<group>"; };
-		SC0000000000000000000006 /* ScreenCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActor.swift; sourceTree = "<group>"; };
-		SC0000000000000000000007 /* ScreenDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActor.swift; sourceTree = "<group>"; };
-		SC0000000000000000000008 /* ScreenChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeEvent.swift; sourceTree = "<group>"; };
-		SC0000000000000000000019 /* ScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameDifferencer.swift; sourceTree = "<group>"; };
-		SCD000000000000000000001 /* SceneChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActor.swift; sourceTree = "<group>"; };
-		SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActorTests.swift; sourceTree = "<group>"; };
-		SCD000000000000000000005 /* SceneChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeEvent.swift; sourceTree = "<group>"; };
-		SCD000000000000000000007 /* FrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameDifferencer.swift; sourceTree = "<group>"; };
-		SCD000000000000000000009 /* MockFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFrameDifferencer.swift; sourceTree = "<group>"; };
-		SC000000000000000000001B /* MockScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockScreenFrameDifferencer.swift; sourceTree = "<group>"; };
-		SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActorTests.swift; sourceTree = "<group>"; };
-		SC000000000000000000001F /* ScreenChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeDetectionActor.swift; sourceTree = "<group>"; };
-		SC0000000000000000000023 /* ScreenDescriptionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActorTests.swift; sourceTree = "<group>"; };
+		F4D7C2AD03A01F0873BF5E4E /* CameraLatestFrameBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraLatestFrameBufferTests.swift; sourceTree = "<group>"; };
+		F98127909528A59B3EBABFD9 /* TurnEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnEvent.swift; sourceTree = "<group>"; };
+		FDB7027E00803661C4F439F2 /* ScreenChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeEvent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		0F35798E2A7CB504C3EB213D /* Camera */ = {
+		04E758C85141E5FBBAE14845 /* Accessibility */ = {
 			isa = PBXGroup;
 			children = (
-				7297CC34E70D9D5115206275 /* Providers */,
-				8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */,
-				D60D84126027B0503C76FF09 /* CameraFrameActor.swift */,
-				A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */,
-				SCD000000000000000000007 /* FrameDifferencer.swift */,
-				SCD000000000000000000001 /* SceneChangeDetectionActor.swift */,
+				B70D259255ACF48B7585ED3A /* AXEventBridge.swift */,
+				918C9171048F6CEEAD674ED0 /* AXFocusActor.swift */,
 			);
-			name = Camera;
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		1E163985C5B8502BCF6DC9DD /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				6AC74C421A27CDC690414C5A /* CameraFrameActor.swift */,
+				7B5B57D68585A15A5529F048 /* FrameDifferencer.swift */,
+				CA190EE5702F5A3486339973 /* SceneChangeDetectionActor.swift */,
+				B8B4E5FAAA6B47DD99A52BA1 /* SceneDescriptionActor.swift */,
+				601DAE8AEB2E9310DA771D82 /* VisionProvider.swift */,
+				44439ACAF76E0FBFFA5880A4 /* Providers */,
+			);
 			path = Camera;
+			sourceTree = "<group>";
+		};
+		2B7D545AF161A610430A0E17 /* Screen */ = {
+			isa = PBXGroup;
+			children = (
+				198975339E161A9BC617A535 /* ActiveAppActor.swift */,
+				B584FB2D7A40062E4E388733 /* ScreenCaptureActor.swift */,
+				35270271B1F4A498C3C6B270 /* ScreenChangeDetectionActor.swift */,
+				D8A27AFE9E5577065AFEB5E3 /* ScreenDescriptionActor.swift */,
+				C35A0869BF014E80A1E69895 /* ScreenFrameDifferencer.swift */,
+			);
+			path = Screen;
+			sourceTree = "<group>";
+		};
+		44439ACAF76E0FBFFA5880A4 /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				318E4F611F34BF915A30788D /* ClaudeVisionProvider.swift */,
+			);
+			path = Providers;
 			sourceTree = "<group>";
 		};
 		4E904FCD47CCCF1B27EF352F /* Microphone */ = {
@@ -224,57 +254,50 @@
 		71C80B79F8548D794F3499FE /* Events */ = {
 			isa = PBXGroup;
 			children = (
+				25CB3B36FB59063D65830D36 /* ActiveAppEvent.swift */,
+				E3DE3F95E5A5CAAD67B66636 /* AgentResponseEvent.swift */,
 				DFD1FA1A1D1265444177044B /* AudioFrameEvent.swift */,
+				0873D68A6A4C153A3C0B5B08 /* AXFocusEvent.swift */,
+				7D3707AAB46AC0E50D7017E2 /* CameraFrameEvent.swift */,
+				3DD0947F7D95487CC838B24D /* InterruptEvent.swift */,
 				256C24808236AB6EB630838D /* ModuleStatusEvent.swift */,
 				8BC9FD0C909B82FFC37776F4 /* RawTranscriptEvent.swift */,
+				4057EDFB2DDC2E2C25756863 /* SceneChangeEvent.swift */,
+				C558EA2E3273CB2A1C4F8C26 /* SceneDescriptionEvent.swift */,
+				FDB7027E00803661C4F439F2 /* ScreenChangeEvent.swift */,
+				AE30BB6479FAE9604896B405 /* ScreenDescriptionEvent.swift */,
+				0BC5CB87D6F0B0309C8894A9 /* ScreenFrameEvent.swift */,
+				8FEB8E76E0759446EFD50742 /* SpeakChunkEvent.swift */,
 				F01DB98C39543E07587402A1 /* TranscriptSegmentEvent.swift */,
-				97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */,
-				985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */,
-				AX0000000000000000000001 /* AXFocusEvent.swift */,
-				SCD000000000000000000005 /* SceneChangeEvent.swift */,
-			SC0000000000000000000008 /* ScreenChangeEvent.swift */,
-			SC0000000000000000000001 /* ActiveAppEvent.swift */,
-			SC0000000000000000000002 /* ScreenFrameEvent.swift */,
-			SC0000000000000000000003 /* ScreenDescriptionEvent.swift */,
-				CS0000000000000000000005 /* TurnEvent.swift */,
-				CS000000000000000000000B /* AgentResponseEvent.swift */,
+				F98127909528A59B3EBABFD9 /* TurnEvent.swift */,
 			);
 			path = Events;
-			sourceTree = "<group>";
-		};
-		7297CC34E70D9D5115206275 /* Providers */ = {
-			isa = PBXGroup;
-			children = (
-				F32934994EFA9CB38D03C676 /* ClaudeVisionProvider.swift */,
-			);
-			name = Providers;
-			path = Providers;
 			sourceTree = "<group>";
 		};
 		89811AB7C011280EDA787521 /* BantiTests */ = {
 			isa = PBXGroup;
 			children = (
+				4AAD7E67F99E2A0333D66D17 /* AXFocusActorTests.swift */,
+				D95D7FC170590688B8DAA89C /* CameraFrameActorTests.swift */,
+				F4D7C2AD03A01F0873BF5E4E /* CameraLatestFrameBufferTests.swift */,
+				B03834A156D0AA2B2DC50B0B /* ClaudeVisionProviderTests.swift */,
+				7731A91D114DA7FA1615CC67 /* CognitiveCoreActorTests.swift */,
 				9BD7938B53B7B6E73741A722 /* ConfigActorTests.swift */,
 				421A7D16D1EBBEB924F4E229 /* DeepgramParsingTests.swift */,
 				D59989797E6EBBFC0CF35411 /* EventHubActorTests.swift */,
+				7A6E18CE709CBAC1BBF7FABF /* EventLogViewModelTests.swift */,
+				559FAD22030D2ECFCD745548 /* MemoryWriteBackActorTests.swift */,
 				C49E18F66D7464B034E556F3 /* ModuleSupervisorActorTests.swift */,
+				3B44A1126FA73A94DBF5DF0E /* PerceptionLogActorTests.swift */,
+				9E4EB9A4705019035338F2C2 /* SceneChangeDetectionActorTests.swift */,
+				EAD4B8C364EA5C4A1F0CB2B9 /* SceneDescriptionActorTests.swift */,
+				5167163D28D550BE468A4D2C /* ScreenChangeDetectionActorTests.swift */,
+				B1CA796F706D99188FDD9279 /* ScreenDescriptionActorTests.swift */,
 				DC0AA8FF292C791F7E834BEB /* StateRegistryActorTests.swift */,
+				DA2DBEA627CD64908B336565 /* StreamingTTSActorTests.swift */,
 				E90B42354A4336C695DFC877 /* TranscriptProjectionActorTests.swift */,
-				AA00000000000000000000B2 /* EventLogViewModelTests.swift */,
+				53FC7A687A3A0B7E083D4CD3 /* TurnDetectorActorTests.swift */,
 				A1C4138736FD814449A0DDF7 /* Helpers */,
-				CEA6EF182C29F059A4895C79 /* CameraLatestFrameBufferTests.swift */,
-				19E962EC804A109398225489 /* ClaudeVisionProviderTests.swift */,
-				48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */,
-				A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */,
-				AX0000000000000000000004 /* AXFocusActorTests.swift */,
-			CS0000000000000000000001 /* ContextSnapshotActorTests.swift */,
-				CS0000000000000000000009 /* TurnDetectorActorTests.swift */,
-				CS000000000000000000000F /* AgentBridgeActorTests.swift */,
-				CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */,
-				CS0000000000000000000017 /* TTSActorTests.swift */,
-				SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */,
-				SC000000000000000000001D /* ScreenChangeDetectionActorTests.swift */,
-				SC0000000000000000000023 /* ScreenDescriptionActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -296,59 +319,24 @@
 		A1C4138736FD814449A0DDF7 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				786977FED980AA3953B4C902 /* MockFrameDifferencer.swift */,
 				A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */,
+				5FE863C9B278C7E560C1E58F /* MockScreenFrameDifferencer.swift */,
+				286D3C4E4F8955B4F407463F /* MockVisionProvider.swift */,
 				9B83E289D3AADF25670B1B8D /* TestRecorder.swift */,
-				291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */,
-				SCD000000000000000000009 /* MockFrameDifferencer.swift */,
-				SC000000000000000000001B /* MockScreenFrameDifferencer.swift */,
 			);
 			path = Helpers;
-			sourceTree = "<group>";
-		};
-		AD08A2BAA8402AA0BBC4EF61 /* Brain */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Brain;
-			sourceTree = "<group>";
-		};
-		AX0000000000000000000021 /* Accessibility */ = {
-			isa = PBXGroup;
-			children = (
-				AX0000000000000000000002 /* AXEventBridge.swift */,
-				AX0000000000000000000003 /* AXFocusActor.swift */,
-			);
-			path = Accessibility;
 			sourceTree = "<group>";
 		};
 		C01ED59DB1A997668CDAA07B /* Perception */ = {
 			isa = PBXGroup;
 			children = (
+				04E758C85141E5FBBAE14845 /* Accessibility */,
+				1E163985C5B8502BCF6DC9DD /* Camera */,
 				4E904FCD47CCCF1B27EF352F /* Microphone */,
-				0F35798E2A7CB504C3EB213D /* Camera */,
-				AX0000000000000000000021 /* Accessibility */,
-			SC0000000000000000000021 /* Screen */,
+				2B7D545AF161A610430A0E17 /* Screen */,
 			);
 			path = Perception;
-			sourceTree = "<group>";
-		};
-		SC0000000000000000000021 /* Screen */ = {
-			isa = PBXGroup;
-			children = (
-				SC0000000000000000000005 /* ActiveAppActor.swift */,
-				SC0000000000000000000006 /* ScreenCaptureActor.swift */,
-				SC0000000000000000000007 /* ScreenDescriptionActor.swift */,
-				SC0000000000000000000019 /* ScreenFrameDifferencer.swift */,
-				SC000000000000000000001F /* ScreenChangeDetectionActor.swift */,
-			);
-			path = Screen;
-			sourceTree = "<group>";
-		};
-		C953B92410F4480EFB6823E3 /* Action */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Action;
 			sourceTree = "<group>";
 		};
 		CF111AEB773FC75010AEEEB2 /* Core */ = {
@@ -356,19 +344,19 @@
 			children = (
 				03835485E37E03DA196D1659 /* AudioRingBuffer.swift */,
 				F43B02A7E9EE573D65014D4D /* BantiModule.swift */,
-				D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */,
-			CS0000000000000000000003 /* ContextSnapshotActor.swift */,
-				CS0000000000000000000007 /* TurnDetectorActor.swift */,
-				CS000000000000000000000D /* AgentBridgeActor.swift */,
-				CS0000000000000000000011 /* MemoryWriteBackActor.swift */,
-				CS0000000000000000000015 /* TTSActor.swift */,
+				61C57C3E475911F190FDBEC2 /* CameraLatestFrameBuffer.swift */,
+				700A2EBA95A9DEFE0783BF9C /* CognitiveCoreActor.swift */,
 				ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */,
+				6726D5D949181481CCA51E1F /* EventLoggerActor.swift */,
+				A4EB33E4B693349BC716CD00 /* MemoryWriteBackActor.swift */,
 				DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */,
 				27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */,
+				EFABC13FD1DA2D0BF501D70D /* PerceptionLogActor.swift */,
+				B2EAB862355E93FB5888F06E /* ScreenLatestFrameBuffer.swift */,
 				36E000CF46FD9F55801192E4 /* StateRegistryActor.swift */,
+				F30F1EA128E1C8B379AA81E8 /* StreamingTTSActor.swift */,
+				3702A507014165869DC6D055 /* TurnDetectorActor.swift */,
 				71C80B79F8548D794F3499FE /* Events */,
-				C77D57CECB17053FE847E1DE /* CameraLatestFrameBuffer.swift */,
-			SC0000000000000000000004 /* ScreenLatestFrameBuffer.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -376,8 +364,6 @@
 		D33BC650CEE24862C26B1F4B /* Modules */ = {
 			isa = PBXGroup;
 			children = (
-				C953B92410F4480EFB6823E3 /* Action */,
-				AD08A2BAA8402AA0BBC4EF61 /* Brain */,
 				C01ED59DB1A997668CDAA07B /* Perception */,
 			);
 			path = Modules;
@@ -386,9 +372,9 @@
 		ED09E317743B18AEFA4FEA53 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				AA00000000000000000000B1 /* EventLogEntry.swift */,
-				AA00000000000000000000B3 /* EventLogViewModel.swift */,
-				AA00000000000000000000B4 /* EventLogView.swift */,
+				B0C8B55B456F08A735A37F0F /* EventLogEntry.swift */,
+				60D6A874BDAB4A0C135F2233 /* EventLogView.swift */,
+				77F3110C0511F98CF7D8BDE2 /* EventLogViewModel.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -416,6 +402,8 @@
 			dependencies = (
 			);
 			name = Banti;
+			packageProductDependencies = (
+			);
 			productName = Banti;
 			productReference = DC916A1BAE4C1951451BEF82 /* Banti.app */;
 			productType = "com.apple.product-type.application";
@@ -432,6 +420,8 @@
 				230BC844B3A273C2690995B5 /* PBXTargetDependency */,
 			);
 			name = BantiTests;
+			packageProductDependencies = (
+			);
 			productName = BantiTests;
 			productReference = 637D4C47575CEAE1410E4D31 /* BantiTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -472,56 +462,58 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7034803DB69889590DA98D1E /* AXEventBridge.swift in Sources */,
+				914DD21EA5D1BB1C7F4D4D49 /* AXFocusActor.swift in Sources */,
+				1E0E0070D3B76CDC06205756 /* AXFocusEvent.swift in Sources */,
+				EEB170745A7923B1A775BFA4 /* ActiveAppActor.swift in Sources */,
+				FB8C9BEEB24A864E16495BC5 /* ActiveAppEvent.swift in Sources */,
+				EDDF50F11397BD837EB0BFFD /* AgentResponseEvent.swift in Sources */,
 				63D2638DC97C505F744CDFC6 /* AudioFrameEvent.swift in Sources */,
 				0CC6D3D986052CE2EB88181C /* AudioRingBuffer.swift in Sources */,
 				C55985138258E88026B90693 /* BantiApp.swift in Sources */,
 				5B9022A6DAF0D8DDDA01B484 /* BantiModule.swift in Sources */,
+				4974A104780C275015A848FC /* CameraFrameActor.swift in Sources */,
+				6E1767E76B5DEA612FF89545 /* CameraFrameEvent.swift in Sources */,
+				EA3FEDE23F07D8B87EE8B731 /* CameraLatestFrameBuffer.swift in Sources */,
+				4D0EB0FBC65D4CD8AE4A1E12 /* ClaudeVisionProvider.swift in Sources */,
+				3E7850193DD34B0BE4C1450D /* CognitiveCoreActor.swift in Sources */,
 				8A63AAFC48F079FBD15F40A2 /* ConfigActor.swift in Sources */,
 				E541B46D3B9578CDFE5E5A4C /* DeepgramStreamingActor.swift in Sources */,
 				49725AD6DF735CA69CE0F481 /* Environment.swift in Sources */,
-				B403AFB1548B41248A2730C6 /* EventLoggerActor.swift in Sources */,
 				DC4CF54255F06DFCE7368939 /* EventHubActor.swift in Sources */,
+				C5A4CA6D7989074AB4F9A97D /* EventLogEntry.swift in Sources */,
+				F25225D84EC9FC7DD17782A0 /* EventLogView.swift in Sources */,
+				B2CD1C6CA28F56C373AB7189 /* EventLogViewModel.swift in Sources */,
+				39BA40B5EAD8E8202D8FCDCA /* EventLoggerActor.swift in Sources */,
+				A1F7619C7A4AA112DC5E9E43 /* FrameDifferencer.swift in Sources */,
+				736C20B2AF65CD05F3F1A599 /* InterruptEvent.swift in Sources */,
+				8FB048924620B2AE86A3F332 /* MemoryWriteBackActor.swift in Sources */,
 				32D41898F2B2592CA0AFC21E /* MicrophoneCaptureActor.swift in Sources */,
 				5F74B686C2DBB214FD615DE8 /* ModuleStatusEvent.swift in Sources */,
 				0116B4A85E4A5E34794F131A /* ModuleSupervisorActor.swift in Sources */,
 				B88977CC8414AD0014A55966 /* PerceptionEvent.swift in Sources */,
+				B0C5BFB93DF98B9C691F4B4A /* PerceptionLogActor.swift in Sources */,
 				16776A30DF1530F1EC2EC696 /* RawTranscriptEvent.swift in Sources */,
+				D8DF30E090A24E8BBA26A878 /* SceneChangeDetectionActor.swift in Sources */,
+				C9C4B28C13ED74B52A6C59BE /* SceneChangeEvent.swift in Sources */,
+				5C99F5AE9183AA62F463E769 /* SceneDescriptionActor.swift in Sources */,
+				21D8589C4AEEDF30C5BFAA5F /* SceneDescriptionEvent.swift in Sources */,
+				AB04C1FF4C8E78984B69A213 /* ScreenCaptureActor.swift in Sources */,
+				BD2D595762C21F17D78CEEC4 /* ScreenChangeDetectionActor.swift in Sources */,
+				12653712CABF7A8B87C51C6C /* ScreenChangeEvent.swift in Sources */,
+				AF162F12BEF2D8258D0CA042 /* ScreenDescriptionActor.swift in Sources */,
+				61E218F7A69F09EDAAE2223C /* ScreenDescriptionEvent.swift in Sources */,
+				EAFAD0EB7150048F1865FF68 /* ScreenFrameDifferencer.swift in Sources */,
+				20F305D4B6EB3C5949927D99 /* ScreenFrameEvent.swift in Sources */,
+				406343F3BB034AEFB5A2A9A2 /* ScreenLatestFrameBuffer.swift in Sources */,
+				706307043149DF4E4A1AECD9 /* SpeakChunkEvent.swift in Sources */,
 				5A5BF4464FED5939D4622A71 /* StateRegistryActor.swift in Sources */,
+				456B07507025945C4F4019C9 /* StreamingTTSActor.swift in Sources */,
 				2C38E4D9CFA93B0577181FB7 /* TranscriptProjectionActor.swift in Sources */,
 				BE278D1526BF8DD19C53CF77 /* TranscriptSegmentEvent.swift in Sources */,
-				AA00000000000000000000A1 /* EventLogEntry.swift in Sources */,
-				AA00000000000000000000A3 /* EventLogViewModel.swift in Sources */,
-				AA00000000000000000000A4 /* EventLogView.swift in Sources */,
-				2DF9B44B116C102396E6F4CD /* CameraLatestFrameBuffer.swift in Sources */,
-				ABF33C207DDBDF6412B11A55 /* CameraFrameEvent.swift in Sources */,
-				4CEFEE9F801D61EA0C5EB2C7 /* SceneDescriptionEvent.swift in Sources */,
-				0498E2A12AC3CBD3EB2743F9 /* VisionProvider.swift in Sources */,
-				C9A8761EEC27AA7C6B83B7AD /* ClaudeVisionProvider.swift in Sources */,
-				7EBDAA36BEB59F7C103EA064 /* CameraFrameActor.swift in Sources */,
-				A1B2C3D4E5F601234567890A /* SceneDescriptionActor.swift in Sources */,
-				AX0000000000000000000011 /* AXFocusEvent.swift in Sources */,
-				AX0000000000000000000012 /* AXEventBridge.swift in Sources */,
-				AX0000000000000000000013 /* AXFocusActor.swift in Sources */,
-			SC0000000000000000000011 /* ActiveAppEvent.swift in Sources */,
-			SC0000000000000000000012 /* ScreenFrameEvent.swift in Sources */,
-			SC0000000000000000000013 /* ScreenDescriptionEvent.swift in Sources */,
-			SC0000000000000000000014 /* ScreenLatestFrameBuffer.swift in Sources */,
-			SC0000000000000000000015 /* ActiveAppActor.swift in Sources */,
-			SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */,
-			SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */,
-			SC000000000000000000001A /* ScreenFrameDifferencer.swift in Sources */,
-			SC0000000000000000000020 /* ScreenChangeDetectionActor.swift in Sources */,
-			CS0000000000000000000004 /* ContextSnapshotActor.swift in Sources */,
-				CS0000000000000000000006 /* TurnEvent.swift in Sources */,
-				CS0000000000000000000008 /* TurnDetectorActor.swift in Sources */,
-				CS000000000000000000000C /* AgentResponseEvent.swift in Sources */,
-				CS000000000000000000000E /* AgentBridgeActor.swift in Sources */,
-				CS0000000000000000000012 /* MemoryWriteBackActor.swift in Sources */,
-				CS0000000000000000000016 /* TTSActor.swift in Sources */,
-				SCD000000000000000000006 /* SceneChangeEvent.swift in Sources */,
-				SC0000000000000000000018 /* ScreenChangeEvent.swift in Sources */,
-				SCD000000000000000000008 /* FrameDifferencer.swift in Sources */,
-				SCD000000000000000000002 /* SceneChangeDetectionActor.swift in Sources */,
+				81E12D4114C1290F287454D1 /* TurnDetectorActor.swift in Sources */,
+				1C4086DC9C75D099C265107C /* TurnEvent.swift in Sources */,
+				34C2A8119D4FCF9675FAB7DD /* VisionProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -529,31 +521,31 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE10FB98B83B296A40576220 /* AXFocusActorTests.swift in Sources */,
+				716A34CD91A03821A3E7F4D1 /* CameraFrameActorTests.swift in Sources */,
+				2E3CE7A405E7BEACAABFEEE0 /* CameraLatestFrameBufferTests.swift in Sources */,
+				86D29C9F642186F95AF93B9A /* ClaudeVisionProviderTests.swift in Sources */,
+				9429620D13ABE5B1626406DD /* CognitiveCoreActorTests.swift in Sources */,
 				A0C5595C99E8F714511907BC /* ConfigActorTests.swift in Sources */,
 				05921957817FAB229F388097 /* DeepgramParsingTests.swift in Sources */,
 				87192CC8452BC41457542D70 /* EventHubActorTests.swift in Sources */,
+				30C2DC0382579E2545E61346 /* EventLogViewModelTests.swift in Sources */,
+				969970C37CCEEC8C9DC08F42 /* MemoryWriteBackActorTests.swift in Sources */,
+				18D61035558A44D4B2B6D034 /* MockFrameDifferencer.swift in Sources */,
 				13AC4A829C8A428BD2F2E84D /* MockPerceptionModule.swift in Sources */,
+				E6CF9D36D36B7C2E7CF31147 /* MockScreenFrameDifferencer.swift in Sources */,
+				811A02F0BF1449BAEB492F4F /* MockVisionProvider.swift in Sources */,
 				26059399C43305A9080890C7 /* ModuleSupervisorActorTests.swift in Sources */,
+				51C4F4E90A30812865E49C57 /* PerceptionLogActorTests.swift in Sources */,
+				274D4896FD4E44BE75EFB12F /* SceneChangeDetectionActorTests.swift in Sources */,
+				168DEB9EB0CFFAF1627A5BF2 /* SceneDescriptionActorTests.swift in Sources */,
+				060EC984E1C91CD9961BF752 /* ScreenChangeDetectionActorTests.swift in Sources */,
+				5B681E87641F26FF14103B3B /* ScreenDescriptionActorTests.swift in Sources */,
 				5035974F97216606123E6743 /* StateRegistryActorTests.swift in Sources */,
+				C8E95663352678F273398F0F /* StreamingTTSActorTests.swift in Sources */,
 				5A7A7E6AA5E7F7210D806B29 /* TestRecorder.swift in Sources */,
 				A9E47F46030D9279CA94BFD7 /* TranscriptProjectionActorTests.swift in Sources */,
-				AA00000000000000000000A2 /* EventLogViewModelTests.swift in Sources */,
-				22BEE8AF2932BFB1F467192E /* CameraLatestFrameBufferTests.swift in Sources */,
-				123B05F76B2854A2E46600D2 /* MockVisionProvider.swift in Sources */,
-				F5F9568CFC31AAA9875A1174 /* ClaudeVisionProviderTests.swift in Sources */,
-				67C47B2F7CA0BD797D192FCD /* CameraFrameActorTests.swift in Sources */,
-				A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */,
-				AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */,
-			CS0000000000000000000002 /* ContextSnapshotActorTests.swift in Sources */,
-				CS000000000000000000000A /* TurnDetectorActorTests.swift in Sources */,
-				CS0000000000000000000010 /* AgentBridgeActorTests.swift in Sources */,
-				CS0000000000000000000014 /* MemoryWriteBackActorTests.swift in Sources */,
-				CS0000000000000000000018 /* TTSActorTests.swift in Sources */,
-				SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */,
-				SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */,
-				SC000000000000000000001C /* MockScreenFrameDifferencer.swift in Sources */,
-				SC000000000000000000001E /* ScreenChangeDetectionActorTests.swift in Sources */,
-				SC0000000000000000000024 /* ScreenDescriptionActorTests.swift in Sources */,
+				E7105CF84D666F0CBD5AAEAB /* TurnDetectorActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
