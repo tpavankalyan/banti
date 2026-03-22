@@ -73,6 +73,11 @@
 		SC0000000000000000000015 /* ActiveAppActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000005 /* ActiveAppActor.swift */; };
 		SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000006 /* ScreenCaptureActor.swift */; };
 		SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000007 /* ScreenDescriptionActor.swift */; };
+		SCD000000000000000000002 /* SceneChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000001 /* SceneChangeDetectionActor.swift */; };
+		SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */; };
+		SCD000000000000000000006 /* SceneChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000005 /* SceneChangeEvent.swift */; };
+		SCD000000000000000000008 /* FrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000007 /* FrameDifferencer.swift */; };
+		SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000009 /* MockFrameDifferencer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -154,6 +159,11 @@
 		SC0000000000000000000005 /* ActiveAppActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppActor.swift; sourceTree = "<group>"; };
 		SC0000000000000000000006 /* ScreenCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActor.swift; sourceTree = "<group>"; };
 		SC0000000000000000000007 /* ScreenDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActor.swift; sourceTree = "<group>"; };
+		SCD000000000000000000001 /* SceneChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActor.swift; sourceTree = "<group>"; };
+		SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActorTests.swift; sourceTree = "<group>"; };
+		SCD000000000000000000005 /* SceneChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeEvent.swift; sourceTree = "<group>"; };
+		SCD000000000000000000007 /* FrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameDifferencer.swift; sourceTree = "<group>"; };
+		SCD000000000000000000009 /* MockFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFrameDifferencer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -164,6 +174,8 @@
 				8B9CD568A828DDF7FFCB465E /* VisionProvider.swift */,
 				D60D84126027B0503C76FF09 /* CameraFrameActor.swift */,
 				A1B2C3D4E5F601234567890B /* SceneDescriptionActor.swift */,
+				SCD000000000000000000007 /* FrameDifferencer.swift */,
+				SCD000000000000000000001 /* SceneChangeDetectionActor.swift */,
 			);
 			name = Camera;
 			path = Camera;
@@ -207,6 +219,7 @@
 				97A14A3D15A6456186008FAE /* CameraFrameEvent.swift */,
 				985C33481F5491E7DA5B5C4E /* SceneDescriptionEvent.swift */,
 				AX0000000000000000000001 /* AXFocusEvent.swift */,
+				SCD000000000000000000005 /* SceneChangeEvent.swift */,
 			SC0000000000000000000001 /* ActiveAppEvent.swift */,
 			SC0000000000000000000002 /* ScreenFrameEvent.swift */,
 			SC0000000000000000000003 /* ScreenDescriptionEvent.swift */,
@@ -246,6 +259,7 @@
 				CS000000000000000000000F /* AgentBridgeActorTests.swift */,
 				CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */,
 				CS0000000000000000000017 /* TTSActorTests.swift */,
+				SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -270,6 +284,7 @@
 				A6B9A7F74C631BB2A66D4D66 /* MockPerceptionModule.swift */,
 				9B83E289D3AADF25670B1B8D /* TestRecorder.swift */,
 				291E8308FA354B58655DE1E0 /* MockVisionProvider.swift */,
+				SCD000000000000000000009 /* MockFrameDifferencer.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -483,6 +498,9 @@
 				CS000000000000000000000E /* AgentBridgeActor.swift in Sources */,
 				CS0000000000000000000012 /* MemoryWriteBackActor.swift in Sources */,
 				CS0000000000000000000016 /* TTSActor.swift in Sources */,
+				SCD000000000000000000006 /* SceneChangeEvent.swift in Sources */,
+				SCD000000000000000000008 /* FrameDifferencer.swift in Sources */,
+				SCD000000000000000000002 /* SceneChangeDetectionActor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -510,6 +528,8 @@
 				CS0000000000000000000010 /* AgentBridgeActorTests.swift in Sources */,
 				CS0000000000000000000014 /* MemoryWriteBackActorTests.swift in Sources */,
 				CS0000000000000000000018 /* TTSActorTests.swift in Sources */,
+				SCD000000000000000000010 /* MockFrameDifferencer.swift in Sources */,
+				SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
