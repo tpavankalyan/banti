@@ -71,7 +71,7 @@ private final class PerceptionLogBox: @unchecked Sendable {
     private var _entries: [PerceptionLogEntry] = []
     private var _activeApp: ActiveAppEvent?
     private var _axFocus: AXFocusEvent?
-    var recentWindowSeconds: TimeInterval
+    let recentWindowSeconds: TimeInterval
 
     init(recentWindowSeconds: TimeInterval) {
         self.recentWindowSeconds = recentWindowSeconds
@@ -141,6 +141,8 @@ actor PerceptionLogActor: BantiModule {
 
     func health() async -> ModuleHealth { _health }
 
+    /// `log()` is nonisolated so CognitiveCoreActor can call it synchronously
+    /// inside its own actor turn without a suspension point during streaming.
     nonisolated func log() -> PerceptionLog {
         box.snapshot()
     }
@@ -154,7 +156,7 @@ actor PerceptionLogActor: BantiModule {
 
     private func handle(_ e: SceneDescriptionEvent) {
         insert(PerceptionLogEntry(timestamp: e.timestamp, kind: .sceneDescription,
-                                  summary: e.text, changeDistance: Float?(e.changeDistance)))
+                                  summary: e.text, changeDistance: e.changeDistance))
     }
 
     private func handle(_ e: TranscriptSegmentEvent) {
