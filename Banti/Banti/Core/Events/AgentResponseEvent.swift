@@ -10,15 +10,8 @@ struct AgentResponseEvent: PerceptionEvent {
     /// Claude's response text.
     let responseText: String
 
-    init(userText: String, responseText: String) {
-        self.id = UUID()
-        self.timestamp = Date()
-        self.sourceModule = ModuleID("agent-bridge")
-        self.userText = userText
-        self.responseText = responseText
-    }
-
-    init(userText: String, responseText: String, sourceModule: ModuleID) {
+    init(userText: String, responseText: String,
+         sourceModule: ModuleID = ModuleID("agent-bridge")) {
         self.id = UUID()
         self.timestamp = Date()
         self.sourceModule = sourceModule

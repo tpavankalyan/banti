@@ -6,6 +6,7 @@ struct SpeakChunkEvent: PerceptionEvent {
     let timestamp: Date
     let sourceModule: ModuleID
     let text: String
+    /// Epoch from CognitiveCoreActor; StreamingTTSActor discards chunks whose epoch is stale.
     let epoch: Int
 
     init(text: String, epoch: Int) {

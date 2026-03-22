@@ -6,6 +6,7 @@ struct InterruptEvent: PerceptionEvent {
     let id: UUID
     let timestamp: Date
     let sourceModule: ModuleID
+    /// New epoch value; StreamingTTSActor must SET (not increment) its own epoch to this value.
     let epoch: Int
 
     init(epoch: Int) {
