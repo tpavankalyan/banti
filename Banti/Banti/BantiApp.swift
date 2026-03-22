@@ -35,6 +35,7 @@ struct BantiApp: App {
     private let sceneChangeDetector: SceneChangeDetectionActor
     private let sceneDesc: SceneDescriptionActor
     private let screenCapture: ScreenCaptureActor
+    private let screenChangeDetector: ScreenChangeDetectionActor
     private let screenDesc: ScreenDescriptionActor
     private let activeApp: ActiveAppActor
     private let axFocus: AXFocusActor
@@ -60,6 +61,7 @@ struct BantiApp: App {
         let sceneChangeDetectorActor = SceneChangeDetectionActor(eventHub: hub, config: cfg)
         let sceneDescActor = SceneDescriptionActor(eventHub: hub, config: cfg)
         let screenCaptureActor = ScreenCaptureActor(eventHub: hub, config: cfg)
+        let screenChangeDetectorActor = ScreenChangeDetectionActor(eventHub: hub, config: cfg)
         let screenDescActor = ScreenDescriptionActor(eventHub: hub, config: cfg)
         let activeAppActor = ActiveAppActor(eventHub: hub)
         let axFocusActor = AXFocusActor(eventHub: hub, config: cfg)
@@ -82,6 +84,7 @@ struct BantiApp: App {
         self.sceneChangeDetector = sceneChangeDetectorActor
         self.sceneDesc = sceneDescActor
         self.screenCapture = screenCaptureActor
+        self.screenChangeDetector = screenChangeDetectorActor
         self.screenDesc = screenDescActor
         self.activeApp = activeAppActor
         self.axFocus = axFocusActor
@@ -105,8 +108,8 @@ struct BantiApp: App {
             await Self.bootstrap(
                 sup: sup, eventLogger: loggerActor, mic: mic, dg: dg, proj: proj,
                 camera: cameraActor, sceneChangeDetector: sceneChangeDetectorActor, sceneDesc: sceneDescActor,
-                screenCapture: screenCaptureActor, screenDesc: screenDescActor,
-                activeApp: activeAppActor, axFocus: axFocusActor,
+                screenCapture: screenCaptureActor, screenChangeDetector: screenChangeDetectorActor,
+                screenDesc: screenDescActor, activeApp: activeAppActor, axFocus: axFocusActor,
                 contextSnapshot: contextSnapshotActor, turnDetector: turnDetectorActor,
                 agentBridge: agentBridgeActor, memoryWriteBack: memoryWriteBackActor,
                 tts: ttsActor, vm: vm
@@ -130,6 +133,7 @@ struct BantiApp: App {
         sceneChangeDetector: SceneChangeDetectionActor,
         sceneDesc: SceneDescriptionActor,
         screenCapture: ScreenCaptureActor,
+        screenChangeDetector: ScreenChangeDetectionActor,
         screenDesc: ScreenDescriptionActor,
         activeApp: ActiveAppActor,
         axFocus: AXFocusActor,
@@ -151,8 +155,13 @@ struct BantiApp: App {
         await sup.register(sceneChangeDetector, restartPolicy: .onFailure(maxRetries: 3, backoff: 1), dependencies: [sceneDesc.id])
         await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneChangeDetector.id])
         await sup.register(activeApp, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-        await sup.register(screenDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-        await sup.register(screenCapture, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [screenDesc.id])
+        // Registration order is LOAD-BEARING: screenDesc must subscribe before screenChangeDetector,
+        // screenChangeDetector must subscribe before screenCapture starts publishing.
+        await sup.register(screenDesc,           restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
+        await sup.register(screenChangeDetector, restartPolicy: .onFailure(maxRetries: 3, backoff: 1),
+                           dependencies: [screenDesc.id])
+        await sup.register(screenCapture,        restartPolicy: .onFailure(maxRetries: 3, backoff: 2),
+                           dependencies: [screenChangeDetector.id])
         // AX permission won't change without user action in System Settings — no retry.
         await sup.register(axFocus, restartPolicy: .never)
         // Cognitive pipeline: context → turn detection → LLM bridge → memory write-back
