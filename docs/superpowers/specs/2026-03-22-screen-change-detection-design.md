@@ -199,13 +199,18 @@ let screenChange    = ScreenChangeDetectionActor(eventHub: eventHub, config: con
 let screenDesc      = ScreenDescriptionActor(eventHub: eventHub, config: config)
 let activeApp       = ActiveAppActor(eventHub: eventHub)
 
-// Registration order determines start order. Actors at the subscriber end of the
-// pipeline must be registered (and therefore started) before producers begin publishing.
-// The `dependencies:` parameter here follows the same convention as the camera pipeline:
-// it is used for restart ordering only — if screenCapture crashes and restarts,
-// the supervisor ensures screenChange is healthy first. EventHub subscriptions are
-// established in start(), so registration order (not dependencies) governs initial
-// subscription setup.
+// Registration order is LOAD-BEARING for initial startup:
+// Actors are started in registration order. ScreenDescriptionActor must be
+// started (and therefore subscribed to ScreenChangeEvent) before
+// ScreenChangeDetectionActor starts publishing. Likewise, ScreenChangeDetectionActor
+// must be subscribed to ScreenFrameEvent before ScreenCaptureActor starts.
+// DO NOT reorder these registrations.
+//
+// The `dependencies:` parameter governs restart ordering only — if screenCapture
+// crashes and restarts, the supervisor waits for screenChange to be healthy first
+// before restarting it. The same applies to screenChange → screenDesc.
+// EventHub subscriptions are established in start(), so registration order (not
+// dependencies) is what ensures correct subscription setup on initial launch.
 await supervisor.register(activeApp,     restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
 await supervisor.register(screenDesc,    restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
 await supervisor.register(screenChange,  restartPolicy: .onFailure(maxRetries: 3, backoff: 1),
