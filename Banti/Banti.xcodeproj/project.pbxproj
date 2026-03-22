@@ -74,6 +74,7 @@
 		SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000006 /* ScreenCaptureActor.swift */; };
 		SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000007 /* ScreenDescriptionActor.swift */; };
 		SC0000000000000000000018 /* ScreenChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000008 /* ScreenChangeEvent.swift */; };
+		SC000000000000000000001A /* ScreenFrameDifferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000019 /* ScreenFrameDifferencer.swift */; };
 		SCD000000000000000000002 /* SceneChangeDetectionActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000001 /* SceneChangeDetectionActor.swift */; };
 		SCD000000000000000000004 /* SceneChangeDetectionActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */; };
 		SCD000000000000000000006 /* SceneChangeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCD000000000000000000005 /* SceneChangeEvent.swift */; };
@@ -161,6 +162,7 @@
 		SC0000000000000000000006 /* ScreenCaptureActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActor.swift; sourceTree = "<group>"; };
 		SC0000000000000000000007 /* ScreenDescriptionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionActor.swift; sourceTree = "<group>"; };
 		SC0000000000000000000008 /* ScreenChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChangeEvent.swift; sourceTree = "<group>"; };
+		SC0000000000000000000019 /* ScreenFrameDifferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameDifferencer.swift; sourceTree = "<group>"; };
 		SCD000000000000000000001 /* SceneChangeDetectionActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActor.swift; sourceTree = "<group>"; };
 		SCD000000000000000000003 /* SceneChangeDetectionActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeDetectionActorTests.swift; sourceTree = "<group>"; };
 		SCD000000000000000000005 /* SceneChangeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneChangeEvent.swift; sourceTree = "<group>"; };
@@ -325,6 +327,7 @@
 				SC0000000000000000000005 /* ActiveAppActor.swift */,
 				SC0000000000000000000006 /* ScreenCaptureActor.swift */,
 				SC0000000000000000000007 /* ScreenDescriptionActor.swift */,
+				SC0000000000000000000019 /* ScreenFrameDifferencer.swift */,
 			);
 			path = Screen;
 			sourceTree = "<group>";
@@ -494,6 +497,7 @@
 			SC0000000000000000000015 /* ActiveAppActor.swift in Sources */,
 			SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */,
 			SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */,
+			SC000000000000000000001A /* ScreenFrameDifferencer.swift in Sources */,
 			CS0000000000000000000004 /* ContextSnapshotActor.swift in Sources */,
 				CS0000000000000000000006 /* TurnEvent.swift in Sources */,
 				CS0000000000000000000008 /* TurnDetectorActor.swift in Sources */,
