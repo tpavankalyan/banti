@@ -17,4 +17,5 @@ enum EnvKey {
     static let axSelectedTextMaxChars    = "AX_SELECTED_TEXT_MAX_CHARS"
     static let cartesiaAPIKey            = "CARTESIA_API_KEY"
     static let cartesiaVoiceID           = "CARTESIA_VOICE_ID"
+    static let sceneChangeThreshold      = "SCENE_CHANGE_THRESHOLD"
 }
