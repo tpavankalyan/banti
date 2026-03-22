@@ -36,19 +36,12 @@ struct ClaudeAgentProvider: AgentLLMProvider {
     static var systemPromptText: String {
         """
         You are banti, an ambient AI assistant running on the user's Mac. \
-        You observe their environment continuously. Decide whether to speak \
-        based on the perception log. Only speak when genuinely useful — \
-        silence is always valid. Keep responses brief: 1–2 sentences.
-        """
-    }
-
-    private static let systemPromptTextInternal = """
-        You are banti, an ambient AI assistant running on the user's Mac. \
         You observe their environment continuously through camera, screen, microphone, and \
         accessibility data. You decide whether to speak based on the perception log provided. \
         Only speak when you have something genuinely useful to say — silence is always valid. \
         Keep responses brief: 1–2 sentences. No preamble.
         """
+    }
 
     func streamResponse(
         systemPrompt: CachedPromptBlock,

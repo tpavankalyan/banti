@@ -63,7 +63,7 @@ final class CognitiveCoreActorTests: XCTestCase {
         let deadline = Date().addingTimeInterval(2)
         while await !condition() {
             guard Date() < deadline else { return }
-            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(10))
         }
     }
 
@@ -112,6 +112,7 @@ final class CognitiveCoreActorTests: XCTestCase {
 
         await hub.publish(makeScreenDesc(dist: 0.8))
         await hub.publish(makeScreenDesc(dist: 0.8))
+        await waitUntil { await stub.callCount >= 1 }
         try await Task.sleep(for: .milliseconds(200))
 
         XCTAssertEqual(stub.callCount, 1, "Second event within interval should be coalesced")
