@@ -8,15 +8,11 @@ actor SceneDescriptionActor: BantiModule {
     private let logger = Logger(subsystem: "com.banti.scene-description", category: "Scene")
     private let eventHub: EventHubActor
     private let config: ConfigActor
-    // Stored for forward-compatibility only. VLM calls are stateless HTTP — there is no stream
-    // to resume, so replay is not used on reconnect. Future analysis actors that do need replay
-    // (e.g. motion detection) must explicitly cap replayed frames to avoid N VLM calls on restart.
-    private let replayProvider: (any CameraFrameReplayProvider)?
     private let overrideProvider: (any VisionProvider)?
+    private let replayProvider: (any CameraFrameReplayProvider)?
 
     private var subscriptionID: SubscriptionID?
     private var _health: ModuleHealth = .healthy
-    private var lastDescribedAt: Date?
     private var describedCount = 0
 
     init(
@@ -33,19 +29,16 @@ actor SceneDescriptionActor: BantiModule {
 
     func start() async throws {
         let provider = try await buildProvider()
-
-        let intervalS = Double((await config.value(for: EnvKey.sceneDescriptionIntervalS))
-            .flatMap(Double.init) ?? 5.0)
         let prompt = (await config.value(for: EnvKey.sceneDescriptionPrompt))
             ?? "Describe the visual scene concisely, focusing on people, objects, and activities."
 
-        subscriptionID = await eventHub.subscribe(CameraFrameEvent.self) { [weak self] event in
+        subscriptionID = await eventHub.subscribe(SceneChangeEvent.self) { [weak self] event in
             guard let self else { return }
-            await self.handleFrame(event, provider: provider, intervalS: intervalS, prompt: prompt)
+            await self.handleChange(event, provider: provider, prompt: prompt)
         }
 
         _health = .healthy
-        logger.notice("SceneDescriptionActor started (interval=\(intervalS)s)")
+        logger.notice("SceneDescriptionActor started (change-driven)")
     }
 
     func stop() async {
@@ -55,38 +48,30 @@ actor SceneDescriptionActor: BantiModule {
         }
     }
 
-    func health() -> ModuleHealth { _health }
+    func health() async -> ModuleHealth { _health }
 
-    private func handleFrame(
-        _ event: CameraFrameEvent,
+    private func handleChange(
+        _ event: SceneChangeEvent,
         provider: any VisionProvider,
-        intervalS: Double,
         prompt: String
     ) async {
-        if let last = lastDescribedAt, Date().timeIntervalSince(last) < intervalS {
-            return
-        }
-
-        lastDescribedAt = Date()   // set before VLM call so interval is enforced even on failure
-        let captureTime = event.timestamp
-
         do {
             let description = try await provider.describe(jpeg: event.jpeg, prompt: prompt)
             let responseTime = Date()
 
-            lastDescribedAt = responseTime
             describedCount += 1
             _health = .healthy
 
             let sceneEvent = SceneDescriptionEvent(
                 text: description,
-                captureTime: captureTime,
-                responseTime: responseTime
+                captureTime: event.captureTime,
+                responseTime: responseTime,
+                changeDistance: event.changeDistance
             )
             await eventHub.publish(sceneEvent)
 
             if describedCount == 1 || describedCount.isMultiple(of: 10) {
-                logger.notice("Published scene #\(self.describedCount): \(description.prefix(60), privacy: .public)")
+                logger.notice("Published scene desc #\(self.describedCount): \(description.prefix(60), privacy: .public)")
             }
         } catch {
             logger.error("VisionProvider error: \(error.localizedDescription, privacy: .public)")
@@ -105,7 +90,7 @@ actor SceneDescriptionActor: BantiModule {
         case "claude":
             let key = try await config.require(EnvKey.anthropicAPIKey)
             let model = (await config.value(for: EnvKey.anthropicVisionModel)) ?? ClaudeVisionProvider.defaultModel
-            logger.notice("Vision using Claude (\(model, privacy: .public))")
+            logger.notice("Scene vision using Claude (\(model, privacy: .public))")
             return ClaudeVisionProvider(apiKey: key, model: model)
 
         default:

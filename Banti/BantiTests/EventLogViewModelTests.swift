@@ -31,7 +31,8 @@ final class EventLogViewModelTests: XCTestCase {
         let now = Date()
         return SceneDescriptionEvent(text: text,
                                      captureTime: now.addingTimeInterval(-1),
-                                     responseTime: now)
+                                     responseTime: now,
+                                     changeDistance: 0.0)
     }
 
     func makeModuleStatus() -> ModuleStatusEvent {

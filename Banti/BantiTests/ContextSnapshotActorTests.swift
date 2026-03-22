@@ -23,7 +23,8 @@ final class ContextSnapshotActorTests: XCTestCase {
         let now = Date()
         return SceneDescriptionEvent(text: text,
                                      captureTime: now.addingTimeInterval(-1),
-                                     responseTime: now)
+                                     responseTime: now,
+                                     changeDistance: 0.0)
     }
 
     func makeScreen(text: String = "Xcode editor with Swift code") -> ScreenDescriptionEvent {
