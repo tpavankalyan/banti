@@ -8,7 +8,7 @@ final class PerceptionLogActorTests: XCTestCase {
         let deadline = Date().addingTimeInterval(2)
         while await !condition() {
             guard Date() < deadline else { return }
-            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(10))
         }
     }
 
@@ -110,7 +110,7 @@ final class PerceptionLogActorTests: XCTestCase {
         for i in 1...4 {
             await hub.publish(makeScreenDesc(text: "entry \(i)"))
         }
-        await waitUntil { await log.log().entries.count == 3 }
+        await waitUntil { await log.log().entries.contains { $0.summary == "entry 4" } }
 
         let entries = await log.log().entries
         XCTAssertEqual(entries.count, 3)
