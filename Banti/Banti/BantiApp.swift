@@ -32,6 +32,7 @@ struct BantiApp: App {
     private let deepgram: DeepgramStreamingActor
     private let projection: TranscriptProjectionActor
     private let camera: CameraFrameActor
+    private let sceneChangeDetector: SceneChangeDetectionActor
     private let sceneDesc: SceneDescriptionActor
     private let screenCapture: ScreenCaptureActor
     private let screenDesc: ScreenDescriptionActor
@@ -56,7 +57,8 @@ struct BantiApp: App {
         let dg = DeepgramStreamingActor(eventHub: hub, config: cfg, replayProvider: mic)
         let proj = TranscriptProjectionActor(eventHub: hub)
         let cameraActor = CameraFrameActor(eventHub: hub, config: cfg)
-        let sceneDescActor = SceneDescriptionActor(eventHub: hub, config: cfg, replayProvider: cameraActor)
+        let sceneChangeDetectorActor = SceneChangeDetectionActor(eventHub: hub, config: cfg)
+        let sceneDescActor = SceneDescriptionActor(eventHub: hub, config: cfg)
         let screenCaptureActor = ScreenCaptureActor(eventHub: hub, config: cfg)
         let screenDescActor = ScreenDescriptionActor(eventHub: hub, config: cfg)
         let activeAppActor = ActiveAppActor(eventHub: hub)
@@ -77,6 +79,7 @@ struct BantiApp: App {
         self.deepgram = dg
         self.projection = proj
         self.camera = cameraActor
+        self.sceneChangeDetector = sceneChangeDetectorActor
         self.sceneDesc = sceneDescActor
         self.screenCapture = screenCaptureActor
         self.screenDesc = screenDescActor
@@ -101,7 +104,7 @@ struct BantiApp: App {
         Task {
             await Self.bootstrap(
                 sup: sup, eventLogger: loggerActor, mic: mic, dg: dg, proj: proj,
-                camera: cameraActor, sceneDesc: sceneDescActor,
+                camera: cameraActor, sceneChangeDetector: sceneChangeDetectorActor, sceneDesc: sceneDescActor,
                 screenCapture: screenCaptureActor, screenDesc: screenDescActor,
                 activeApp: activeAppActor, axFocus: axFocusActor,
                 contextSnapshot: contextSnapshotActor, turnDetector: turnDetectorActor,
@@ -124,6 +127,7 @@ struct BantiApp: App {
         dg: DeepgramStreamingActor,
         proj: TranscriptProjectionActor,
         camera: CameraFrameActor,
+        sceneChangeDetector: SceneChangeDetectionActor,
         sceneDesc: SceneDescriptionActor,
         screenCapture: ScreenCaptureActor,
         screenDesc: ScreenDescriptionActor,
@@ -144,7 +148,8 @@ struct BantiApp: App {
         await sup.register(dg, restartPolicy: .onFailure(maxRetries: 5, backoff: 1))
         await sup.register(mic, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [dg.id, proj.id])
         await sup.register(sceneDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
-        await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneDesc.id])
+        await sup.register(sceneChangeDetector, restartPolicy: .onFailure(maxRetries: 3, backoff: 1), dependencies: [sceneDesc.id])
+        await sup.register(camera, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [sceneChangeDetector.id])
         await sup.register(activeApp, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(screenDesc, restartPolicy: .onFailure(maxRetries: 3, backoff: 1))
         await sup.register(screenCapture, restartPolicy: .onFailure(maxRetries: 3, backoff: 2), dependencies: [screenDesc.id])
