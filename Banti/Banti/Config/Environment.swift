@@ -15,4 +15,6 @@ enum EnvKey {
     static let screenDescriptionPrompt   = "SCREEN_DESCRIPTION_PROMPT"
     static let axDebounceMs              = "AX_DEBOUNCE_MS"
     static let axSelectedTextMaxChars    = "AX_SELECTED_TEXT_MAX_CHARS"
+    static let cartesiaAPIKey            = "CARTESIA_API_KEY"
+    static let cartesiaVoiceID           = "CARTESIA_VOICE_ID"
 }

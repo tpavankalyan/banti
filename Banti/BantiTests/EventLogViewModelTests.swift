@@ -235,6 +235,49 @@ final class EventLogViewModelTests: XCTestCase {
         XCTAssertTrue(vm.entries.last?.text.contains("scene 500") == true)
     }
 
+    // MARK: - AgentResponseEvent
+
+    func makeAgentResponse(userText: String = "what is this?",
+                           responseText: String = "That is Figma.") -> AgentResponseEvent {
+        AgentResponseEvent(userText: userText, responseText: responseText)
+    }
+
+    func testAgentResponseCreatesEntry() async {
+        let hub = EventHubActor()
+        let vm = EventLogViewModel(eventHub: hub)
+        await vm.startListening()
+
+        await hub.publish(makeAgentResponse())
+        await waitForEntries(vm, count: 1)
+
+        XCTAssertEqual(vm.entries.count, 1)
+        XCTAssertEqual(vm.entries[0].tag, "[AGENT]")
+    }
+
+    func testAgentResponseEntryContainsResponseText() async {
+        let hub = EventHubActor()
+        let vm = EventLogViewModel(eventHub: hub)
+        await vm.startListening()
+
+        await hub.publish(makeAgentResponse(responseText: "use a computed property"))
+        await waitForEntries(vm, count: 1)
+
+        XCTAssertTrue(vm.entries[0].text.contains("use a computed property"),
+                      "Entry text should contain response text")
+    }
+
+    func testAgentResponseEntryContainsUserText() async {
+        let hub = EventHubActor()
+        let vm = EventLogViewModel(eventHub: hub)
+        await vm.startListening()
+
+        await hub.publish(makeAgentResponse(userText: "explain closures"))
+        await waitForEntries(vm, count: 1)
+
+        XCTAssertTrue(vm.entries[0].text.contains("explain closures"),
+                      "Entry text should contain user text")
+    }
+
     // MARK: - isListening state
 
     func testIsListeningInitiallyFalse() {

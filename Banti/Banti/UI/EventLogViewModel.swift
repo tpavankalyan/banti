@@ -77,6 +77,10 @@ final class EventLogViewModel: ObservableObject {
             guard let self else { return }
             await self.append(tag: "[AX]", text: self.format(event))
         })
+        subscriptionIDs.append(await eventHub.subscribe(AgentResponseEvent.self) { [weak self] event in
+            guard let self else { return }
+            await self.append(tag: "[AGENT]", text: self.format(event))
+        })
         isListening = true
     }
 
@@ -169,6 +173,10 @@ final class EventLogViewModel: ObservableObject {
     private func format(_ e: ActiveAppEvent) -> String {
         let prev = e.previousAppName.map { "\($0) → " } ?? ""
         return "\(prev)\(e.appName) (\(e.bundleIdentifier))"
+    }
+
+    private func format(_ e: AgentResponseEvent) -> String {
+        "Q: \(e.userText) | A: \(e.responseText)"
     }
 
     private func format(_ e: AXFocusEvent) -> String {

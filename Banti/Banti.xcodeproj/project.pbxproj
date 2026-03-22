@@ -54,6 +54,18 @@
 		AX0000000000000000000012 /* AXEventBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000002 /* AXEventBridge.swift */; };
 		AX0000000000000000000013 /* AXFocusActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000003 /* AXFocusActor.swift */; };
 		AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AX0000000000000000000004 /* AXFocusActorTests.swift */; };
+		CS0000000000000000000002 /* ContextSnapshotActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000001 /* ContextSnapshotActorTests.swift */; };
+		CS0000000000000000000004 /* ContextSnapshotActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000003 /* ContextSnapshotActor.swift */; };
+		CS0000000000000000000006 /* TurnEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000005 /* TurnEvent.swift */; };
+		CS0000000000000000000008 /* TurnDetectorActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000007 /* TurnDetectorActor.swift */; };
+		CS000000000000000000000A /* TurnDetectorActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000009 /* TurnDetectorActorTests.swift */; };
+		CS000000000000000000000C /* AgentResponseEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS000000000000000000000B /* AgentResponseEvent.swift */; };
+		CS000000000000000000000E /* AgentBridgeActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS000000000000000000000D /* AgentBridgeActor.swift */; };
+		CS0000000000000000000010 /* AgentBridgeActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS000000000000000000000F /* AgentBridgeActorTests.swift */; };
+		CS0000000000000000000012 /* MemoryWriteBackActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000011 /* MemoryWriteBackActor.swift */; };
+		CS0000000000000000000014 /* MemoryWriteBackActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */; };
+		CS0000000000000000000016 /* TTSActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000015 /* TTSActor.swift */; };
+		CS0000000000000000000018 /* TTSActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS0000000000000000000017 /* TTSActorTests.swift */; };
 		SC0000000000000000000011 /* ActiveAppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000001 /* ActiveAppEvent.swift */; };
 		SC0000000000000000000012 /* ScreenFrameEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000002 /* ScreenFrameEvent.swift */; };
 		SC0000000000000000000013 /* ScreenDescriptionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0000000000000000000003 /* ScreenDescriptionEvent.swift */; };
@@ -123,6 +135,18 @@
 		AX0000000000000000000002 /* AXEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXEventBridge.swift; sourceTree = "<group>"; };
 		AX0000000000000000000003 /* AXFocusActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXFocusActor.swift; sourceTree = "<group>"; };
 		AX0000000000000000000004 /* AXFocusActorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AXFocusActorTests.swift; sourceTree = "<group>"; };
+		CS0000000000000000000001 /* ContextSnapshotActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSnapshotActorTests.swift; sourceTree = "<group>"; };
+		CS0000000000000000000003 /* ContextSnapshotActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSnapshotActor.swift; sourceTree = "<group>"; };
+		CS0000000000000000000005 /* TurnEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnEvent.swift; sourceTree = "<group>"; };
+		CS0000000000000000000007 /* TurnDetectorActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnDetectorActor.swift; sourceTree = "<group>"; };
+		CS0000000000000000000009 /* TurnDetectorActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnDetectorActorTests.swift; sourceTree = "<group>"; };
+		CS000000000000000000000B /* AgentResponseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentResponseEvent.swift; sourceTree = "<group>"; };
+		CS000000000000000000000D /* AgentBridgeActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentBridgeActor.swift; sourceTree = "<group>"; };
+		CS000000000000000000000F /* AgentBridgeActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentBridgeActorTests.swift; sourceTree = "<group>"; };
+		CS0000000000000000000011 /* MemoryWriteBackActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteBackActor.swift; sourceTree = "<group>"; };
+		CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteBackActorTests.swift; sourceTree = "<group>"; };
+		CS0000000000000000000015 /* TTSActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSActor.swift; sourceTree = "<group>"; };
+		CS0000000000000000000017 /* TTSActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSActorTests.swift; sourceTree = "<group>"; };
 		SC0000000000000000000001 /* ActiveAppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppEvent.swift; sourceTree = "<group>"; };
 		SC0000000000000000000002 /* ScreenFrameEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenFrameEvent.swift; sourceTree = "<group>"; };
 		SC0000000000000000000003 /* ScreenDescriptionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenDescriptionEvent.swift; sourceTree = "<group>"; };
@@ -186,6 +210,8 @@
 			SC0000000000000000000001 /* ActiveAppEvent.swift */,
 			SC0000000000000000000002 /* ScreenFrameEvent.swift */,
 			SC0000000000000000000003 /* ScreenDescriptionEvent.swift */,
+				CS0000000000000000000005 /* TurnEvent.swift */,
+				CS000000000000000000000B /* AgentResponseEvent.swift */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -215,6 +241,11 @@
 				48C9179D9E4D60085741EEF8 /* CameraFrameActorTests.swift */,
 				A1B2C3D4E5F601234567890D /* SceneDescriptionActorTests.swift */,
 				AX0000000000000000000004 /* AXFocusActorTests.swift */,
+			CS0000000000000000000001 /* ContextSnapshotActorTests.swift */,
+				CS0000000000000000000009 /* TurnDetectorActorTests.swift */,
+				CS000000000000000000000F /* AgentBridgeActorTests.swift */,
+				CS0000000000000000000013 /* MemoryWriteBackActorTests.swift */,
+				CS0000000000000000000017 /* TTSActorTests.swift */,
 			);
 			path = BantiTests;
 			sourceTree = "<group>";
@@ -293,6 +324,11 @@
 				03835485E37E03DA196D1659 /* AudioRingBuffer.swift */,
 				F43B02A7E9EE573D65014D4D /* BantiModule.swift */,
 				D90720EB6D024EE78C5BE52F /* EventLoggerActor.swift */,
+			CS0000000000000000000003 /* ContextSnapshotActor.swift */,
+				CS0000000000000000000007 /* TurnDetectorActor.swift */,
+				CS000000000000000000000D /* AgentBridgeActor.swift */,
+				CS0000000000000000000011 /* MemoryWriteBackActor.swift */,
+				CS0000000000000000000015 /* TTSActor.swift */,
 				ABC1BEA213B7113BA74DC8A6 /* EventHubActor.swift */,
 				DE7C84911B649803DA6B062F /* ModuleSupervisorActor.swift */,
 				27FA4FE960A78FDABE3B28C3 /* PerceptionEvent.swift */,
@@ -440,6 +476,13 @@
 			SC0000000000000000000015 /* ActiveAppActor.swift in Sources */,
 			SC0000000000000000000016 /* ScreenCaptureActor.swift in Sources */,
 			SC0000000000000000000017 /* ScreenDescriptionActor.swift in Sources */,
+			CS0000000000000000000004 /* ContextSnapshotActor.swift in Sources */,
+				CS0000000000000000000006 /* TurnEvent.swift in Sources */,
+				CS0000000000000000000008 /* TurnDetectorActor.swift in Sources */,
+				CS000000000000000000000C /* AgentResponseEvent.swift in Sources */,
+				CS000000000000000000000E /* AgentBridgeActor.swift in Sources */,
+				CS0000000000000000000012 /* MemoryWriteBackActor.swift in Sources */,
+				CS0000000000000000000016 /* TTSActor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -462,6 +505,11 @@
 				67C47B2F7CA0BD797D192FCD /* CameraFrameActorTests.swift in Sources */,
 				A1B2C3D4E5F601234567890C /* SceneDescriptionActorTests.swift in Sources */,
 				AX0000000000000000000014 /* AXFocusActorTests.swift in Sources */,
+			CS0000000000000000000002 /* ContextSnapshotActorTests.swift in Sources */,
+				CS000000000000000000000A /* TurnDetectorActorTests.swift in Sources */,
+				CS0000000000000000000010 /* AgentBridgeActorTests.swift in Sources */,
+				CS0000000000000000000014 /* MemoryWriteBackActorTests.swift in Sources */,
+				CS0000000000000000000018 /* TTSActorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

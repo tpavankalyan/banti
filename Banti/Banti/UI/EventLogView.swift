@@ -91,6 +91,7 @@ struct EventLogView: View {
         case "[SCRFRM]":  return .teal
         case "[APP]":     return .mint
         case "[AX]":      return .pink
+        case "[AGENT]":   return .yellow
         default:          return .primary
         }
     }
